@@ -1,0 +1,100 @@
+@import "tailwindcss";
+
+@theme {
+  --color-night-950: #030509;
+  --color-night-900: #060a14;
+  --color-night-800: #0a0f1c;
+  --color-night-700: #111a2e;
+  --color-night-600: #1a2740;
+
+  --color-gold-300: #f5d782;
+  --color-gold-400: #eac75f;
+  --color-gold-500: #e8c15a;
+  --color-gold-600: #b98a2f;
+  --color-gold-700: #8a6420;
+
+  --color-cream: #f4f1ea;
+  --color-mist: #9aa3b2;
+
+  --font-display: var(--font-playfair), Georgia, serif;
+  --font-sans: var(--font-grotesk), system-ui, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-night-950);
+  color: var(--color-cream);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: var(--color-gold-500);
+  color: var(--color-night-950);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-night-950);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-night-600);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-gold-700);
+}
+
+/* Texto com contorno dourado (estilo "wireframe" dos vídeos de referência) */
+.text-outline-gold {
+  color: transparent;
+  -webkit-text-stroke: 1px var(--color-gold-600);
+}
+
+/* Vinheta suave sobre o globo para fundir com o fundo */
+.earth-vignette {
+  background:
+    radial-gradient(ellipse 62% 55% at 50% 46%, transparent 58%, var(--color-night-950) 100%),
+    linear-gradient(to top, var(--color-night-950) 0%, transparent 22%, transparent 82%, var(--color-night-950) 100%);
+}
+
+/* Grão subtil de filme para dar textura cósmica */
+.film-grain::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .animate-fade-up {
+    animation: none;
+  }
+}
