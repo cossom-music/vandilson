@@ -387,13 +387,27 @@ body {
 }
 
 /* ─── Discografia — planetas dos lançamentos ─── */
-/* Anel tipo Saturno — elipse tracejada achatada, atravessa o planeta */
+/* Dimensão FIXA e igual para todos os planetas — alinhados e uniformes.
+   A variabilidade vive no tom, nos continentes e na luz, não no raio. */
+.planet-body {
+  width: min(78%, 200px);
+}
+
+/* Anel tipo Saturno — elipse tracejada achatada, em DUAS metades:
+   a de trás fica atrás do corpo (z-0), a da frente passa à frente (z-20).
+   O clip desenha só a metade de cada camada — juntas, envolvem o planeta. */
 .planet-ring {
   width: 150%;
   height: 34%;
   transform: translate(-50%, -50%) rotate(-16deg);
   border: 1px dashed rgba(154, 160, 168, 0.45);
   border-radius: 50%;
+}
+.planet-ring--back {
+  clip-path: inset(0 50% 0 0); /* só a metade esquerda (atrás) */
+}
+.planet-ring--front {
+  clip-path: inset(0 0 0 50%); /* só a metade direita (frente) */
 }
 
 /* Manchas de superfície — nuvens/mares subtis, rotação única por planeta.

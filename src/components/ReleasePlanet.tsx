@@ -4,17 +4,20 @@ import { useMemo } from "react";
 import { socials } from "@/content";
 
 /**
- * ReleasePlanet — um lançamento como um PLANETA: círculo com corpo de vidro
- * escuro e limbo prateado (a mesma assinatura do sol da Sintonia e do
- * eclipse do Sobre), mas cada planeta é diferente:
+ * ReleasePlanet — um lançamento como um PLANETA SÓLIDO:
  *
- *   · tamanho próprio (planetas não têm todos o mesmo raio);
- *   · fase do limbo própria (a luz vem de ângulos diferentes);
- *   · anel opcional (tipo Saturno) — o mais recente leva anel;
- *   · manchas de superfície únicas, geradas de forma determinística a partir
- *     do nome (sem Math.random → sem desvio de hidratação).
- *
- * Usado na homepage (pilha de planetas) e na página /discografia.
+ *   · corpo SÓLIDO com um tom mínimo próprio (aços frios/quentes muito
+ *     dessaturados — nada de cores vivas, a paleta continua prata/preto);
+ *   · CONTINENTES em dot-matrix (o mesmo motivo do globo do herói),
+ *     únicos por planeta — gerados de forma determinística a partir do
+ *     nome (sem Math.random → SSR e cliente idênticos, zero hidratação);
+ *   · DIMENSÕES IGUAIS: todos os planetas partilham o mesmo diâmetro
+ *     (a variabilidade ficou apenas no tom, continentes e luz);
+ *   · iluminação: terminador escuro do lado oposto à luz + limbo prateado;
+ *   · rotação lenta contínua dos continentes (duração e sentido próprios);
+ *   · anel (tipo Saturno) no lançamento mais recente — desenhado em duas
+ *     metades para ENVELOPAR o planeta: a parte de trás fica atrás do
+ *     corpo, a parte da frente passa à frente (como na realidade).
  */
 export default function ReleasePlanet({
   title,
@@ -33,77 +36,136 @@ export default function ReleasePlanet({
   className?: string;
 }) {
   // Distintividade determinística — cada planeta é único, mas o SSR e o
-  // cliente geram exatamente os mesmos valores (sem Math.random).
+  // cliente geram exatamente os mesmos valores.
   const planet = useMemo(() => {
     let h = 0;
     for (let i = 0; i < title.length; i++) h = (h * 31 + title.charCodeAt(i)) >>> 0;
-    const rand = (slot: number) => ((h >> (slot * 5)) % 1000) / 1000;
+    // LCG determinístico a partir do hash — sequência estável
+    let s = h || 1;
+    const rand = () => {
+      s = (s * 1664525 + 1013904223) >>> 0;
+      return s / 4294967296;
+    };
+
+    // Tom sólido mínimo — 4 aços dessaturados, todos escuros e "site"
+    const tints = ["#232a33", "#2a2825", "#22282a", "#282530"];
+    const tint = tints[Math.floor(rand() * tints.length)];
+
+    // Continentes: 4–6 blobs, cada um um aglomerado de pontos dot-matrix
+    const blobs = 4 + Math.floor(rand() * 3);
+    const dots: { x: number; y: number; r: number }[] = [];
+    for (let b = 0; b < blobs; b++) {
+      const cx = 12 + rand() * 76; // % do mapa
+      const cy = 18 + rand() * 64;
+      const spread = 7 + rand() * 13; // raio do continente em %
+      const count = 14 + Math.floor(rand() * 16);
+      for (let d = 0; d < count; d++) {
+        // Distribuição gaussiana aproximada (soma de 2 uniformes)
+        const gx = (rand() + rand() - 1) * spread;
+        const gy = (rand() + rand() - 1) * spread * 0.75;
+        const x = cx + gx;
+        const y = cy + gy;
+        if (x < 3 || x > 97 || y < 5 || y > 95) continue;
+        dots.push({
+          x: Math.round(x * 10) / 10,
+          y: Math.round(y * 10) / 10,
+          r: Math.round((0.9 + rand() * 0.9) * 100) / 100,
+        });
+      }
+    }
+
     return {
-      // Diâmetro relativo: entre 78% e 100% do tamanho da célula
-      sizePct: 78 + rand(0) * 22,
-      // Ângulo da luz (fase do limbo): a luz vem de direções diferentes
-      lightDeg: 200 + rand(1) * 140,
-      // Rotação das manchas de superfície
-      spotRot: rand(2) * 360,
-      // Intensidade do limbo (0.55–0.95)
-      rimStrength: 0.55 + rand(3) * 0.4,
-      // Duração da rotação da superfície: 60–110 s — lenta, meditativa,
-      // e diferente por planeta (como dias de duração distintos)
-      spinDuration: 60 + rand(4) * 50,
-      // Direção da rotação (planetas reais giram em sentidos diferentes)
-      spinReverse: rand(5) > 0.6,
+      tint,
+      dots,
+      // Ângulo da luz (terminador): a luz vem de direções diferentes
+      lightDeg: 200 + rand() * 140,
+      // Rotação inicial dos continentes
+      spotRot: Math.round(rand() * 360),
+      // Duração da rotação: 60–110 s — lenta, meditativa, própria
+      spinDuration: 60 + rand() * 50,
+      // Direção da rotação
+      spinReverse: rand() > 0.6,
     };
   }, [title]);
 
   // O anel (tipo Saturno) fica no lançamento mais recente — index 0
   const hasRing = index === 0;
 
-  const body = `radial-gradient(circle at ${Math.round(planet.lightDeg)}deg, rgba(13,15,18,0.95) 0%, rgba(13,15,18,0.75) 48%, rgba(198,202,208,${(0.28 * planet.rimStrength).toFixed(3)}) 76%, rgba(232,236,242,${(0.9 * planet.rimStrength).toFixed(3)}) 97%, rgba(255,255,255,${planet.rimStrength.toFixed(3)}) 100%)`;
+  // Iluminação estática: brilho do lado da luz, sombra no terminador.
+  const shade = `radial-gradient(circle at ${Math.round(planet.lightDeg)}deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.03) 30%, rgba(0,0,0,0) 48%, rgba(0,0,0,0.42) 82%, rgba(0,0,0,0.6) 100%)`;
 
   return (
-    <div className={`group relative ${className}`}>
-      {/* Anel — elipse tracejada que atravessa o planeta (o mais recente) */}
+    <div className={`group relative flex items-center justify-center ${className}`}>
+      {/* ── Anel — metade de TRÁS (fica atrás do corpo do planeta) ── */}
       {hasRing && (
         <span
           aria-hidden="true"
-          className="planet-ring pointer-events-none absolute left-1/2 top-1/2 z-0 opacity-70 transition-opacity duration-300 group-hover:opacity-100"
+          className="planet-ring planet-ring--back pointer-events-none absolute left-1/2 top-1/2 z-0 opacity-70 transition-opacity duration-300 group-hover:opacity-100"
         />
       )}
 
-      {/* O planeta */}
+      {/* O planeta — corpo SÓLIDO no tom próprio, dimensão fixa */}
       <div
-        className="relative z-10 mx-auto flex aspect-square items-center justify-center rounded-full"
+        className="planet-body relative z-10 flex aspect-square items-center justify-center overflow-hidden rounded-full"
         style={{
-          width: `${planet.sizePct.toFixed(1)}%`,
-          background: body,
-          boxShadow: `0 0 ${size === "lg" ? 26 : 16}px rgba(198,202,208,${(0.14 + planet.rimStrength * 0.12).toFixed(3)}), inset 0 0 ${size === "lg" ? 18 : 10}px rgba(0,0,0,0.55)`,
+          background: planet.tint,
+          boxShadow: `0 0 ${size === "lg" ? 26 : 16}px rgba(198,202,208,0.18), inset 0 0 ${size === "lg" ? 20 : 12}px rgba(0,0,0,0.45)`,
         }}
       >
-        {/* Manchas de superfície — textura única, em rotação lenta contínua
-            (composited: só transform, custo ~zero). O delay negativo faz
-            cada planeta começar num ponto diferente da sua rotação. */}
+        {/* Continentes em dot-matrix — rotação lenta contínua (GPU) */}
+        <svg
+          aria-hidden="true"
+          className={`planet-spots pointer-events-none absolute inset-0 h-full w-full ${planet.spinReverse ? "planet-spin-reverse" : "planet-spin"}`}
+          viewBox="0 0 100 100"
+          preserveAspectRatio="none"
+          style={{
+            transform: `rotate(${planet.spotRot}deg)`,
+            animationDuration: `${planet.spinDuration.toFixed(0)}s`,
+            animationDelay: `${((-planet.spotRot / 360) * planet.spinDuration).toFixed(1)}s`,
+          }}
+        >
+          {planet.dots.map((d, i) => (
+            <circle
+              key={i}
+              cx={d.x}
+              cy={d.y}
+              r={d.r}
+              fill="rgba(216,219,224,0.22)"
+            />
+          ))}
+        </svg>
+
+        {/* Terminador + limbo — estático (a luz não gira com o planeta) */}
         <span
           aria-hidden="true"
-          className={`planet-spots pointer-events-none absolute inset-0 rounded-full ${planet.spinReverse ? "planet-spin-reverse" : "planet-spin"}`}
+          className="pointer-events-none absolute inset-0 rounded-full"
           style={{
-            transform: `rotate(${Math.round(planet.spotRot)}deg)`,
-            animationDuration: `${planet.spinDuration.toFixed(0)}s`,
-            animationDelay: `${(-planet.spotRot / 360 * planet.spinDuration).toFixed(1)}s`,
+            background: shade,
+            boxShadow: `inset 0 0 ${size === "lg" ? 14 : 8}px rgba(232,236,242,0.25)`,
           }}
         />
 
-        {/* Texto — centralizado, legível sobre o corpo escuro */}
+        {/* Texto — centralizado, legível sobre o corpo sólido */}
         <div className="relative z-10 flex flex-col items-center gap-1 px-3 text-center">
-          <span className="text-[10px] uppercase tracking-[0.3em] text-silver-500">
+          <span className="text-[10px] uppercase tracking-[0.3em] text-silver-400">
             {type} · {year}
           </span>
           <span
             className={`font-display text-white ${size === "lg" ? "text-2xl" : "text-base md:text-lg"}`}
+            style={{ textShadow: "0 1px 8px rgba(0,0,0,0.6)" }}
           >
             {title}
           </span>
         </div>
       </div>
+
+      {/* ── Anel — metade da FRENTE (passa À FRENTE do corpo) ── */}
+      {hasRing && (
+        <span
+          aria-hidden="true"
+          className="planet-ring planet-ring--front pointer-events-none absolute left-1/2 top-1/2 z-20 opacity-70 transition-opacity duration-300 group-hover:opacity-100"
+        />
+      )}
     </div>
   );
 }

@@ -385,7 +385,7 @@ function DiscografiaContent() {
       </div>
 
       {/* CTA — liquid glass; só entra depois de a pilha abrir por completo */}
-      <div data-cta className="mt-10 flex justify-center md:mt-20">
+      <div data-cta className="mt-16 flex justify-center md:mt-24">
         <LiquidGlassLink filterId="glass-discografia-cta" href="/discografia">
           {homeSections.music.cta}
         </LiquidGlassLink>
