@@ -57,14 +57,18 @@ export default function HomeIntro() {
     // A música começa invisível (o GSAP controla opacity + visibility)
     gsap.set(music, { autoAlpha: 0, y: 64 });
 
-    // Timeline única com scrub sobre todo o container
+    // Timeline única com scrub EXATO sobre todo o container.
+    // scrub: true (e não um valor suavizado) — o scroll controla a animação
+    // 1:1, sem atraso. Com scrub suavizado, a timeline ficava a "apanhar" o
+    // scroll: o sticky soltava e a secção seguinte entrava enquanto os
+    // planetas ainda voavam (o descontrolo que o utilizador viu).
     const tl = gsap.timeline({
       defaults: { ease: "none" },
       scrollTrigger: {
         trigger: container,
         start: "top top",
         end: "bottom bottom",
-        scrub: 0.6,
+        scrub: true,
       },
     });
 
@@ -232,10 +236,12 @@ export default function HomeIntro() {
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_46%_at_50%_58%,rgba(202,204,208,0.10)_0%,rgba(58,58,58,0.05)_45%,rgba(3,5,9,0.9)_100%)]" />
         </div>
 
-        {/* Secção de Música — sobrepõe o globo e entra em fade in */}
+        {/* Secção de Música — sobrepõe o globo e entra em fade in.
+            overflow-x-hidden: com a pilha de planetas em voo, nenhum
+            transform pode criar scroll horizontal no mobile. */}
         <section
           data-music
-          className="invisible absolute inset-0 z-30 overflow-y-auto opacity-0"
+          className="invisible absolute inset-0 z-30 overflow-x-hidden overflow-y-auto opacity-0"
         >
           <div className="flex min-h-full items-center">
             <DiscografiaContent />
@@ -339,7 +345,7 @@ function HeroSignatures() {
 /** Conteúdo da secção Discografia — compacto para caber num ecrã (100svh). */
 function DiscografiaContent() {
   return (
-    <div className="mx-auto w-full max-w-6xl px-6 py-10">
+    <div className="mx-auto w-full max-w-6xl px-6 py-8 md:py-10">
       <p className="text-xs uppercase tracking-[0.35em] text-mist">
         {homeSections.music.eyebrow}
       </p>
@@ -357,13 +363,13 @@ function DiscografiaContent() {
           próprios (ver ReleasePlanet) — consistentes com o sistema visual. */}
       <div
         data-release-grid
-        className="relative mt-10 grid grid-cols-2 gap-6 md:grid-cols-4 md:gap-8"
+        className="relative mt-8 grid grid-cols-2 gap-6 md:mt-10 md:grid-cols-4 md:gap-8"
       >
         {releases.map((r, i) => (
           <Link key={r.title} href="/discografia" className="group block">
             <div
               data-release-card
-              className="flex h-40 w-full flex-col items-center justify-center transition-transform duration-500 group-hover:-translate-y-1 md:h-48"
+              className="flex h-32 w-full flex-col items-center justify-center transition-transform duration-500 group-hover:-translate-y-1 md:h-48"
             >
               <ReleasePlanet
                 index={i}
@@ -379,7 +385,7 @@ function DiscografiaContent() {
       </div>
 
       {/* CTA — liquid glass; só entra depois de a pilha abrir por completo */}
-      <div data-cta className="mt-14 flex justify-center md:mt-20">
+      <div data-cta className="mt-10 flex justify-center md:mt-20">
         <LiquidGlassLink filterId="glass-discografia-cta" href="/discografia">
           {homeSections.music.cta}
         </LiquidGlassLink>
