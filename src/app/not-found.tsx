@@ -1,4 +1,4 @@
-import Link from "next/link";
+import LiquidGlassLink from "@/components/ui/LiquidGlassLink";
 
 export default function NotFound() {
   return (
@@ -10,12 +10,9 @@ export default function NotFound() {
       <p className="mt-4 max-w-md text-mist">
         A página que procura saiu da órbita. Volte ao ponto de partida.
       </p>
-      <Link
-        href="/"
-        className="mt-8 rounded-full bg-white px-8 py-3 text-sm font-medium text-night-950 transition-transform hover:scale-105"
-      >
+      <LiquidGlassLink href="/" className="mt-8">
         Voltar ao início
-      </Link>
+      </LiquidGlassLink>
     </div>
   );
 }
