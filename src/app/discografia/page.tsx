@@ -11,8 +11,11 @@ export const metadata: Metadata = {
 };
 
 export default function DiscografiaPage() {
+  // overflow-x-clip: o anel do 1.º planeta (150% da largura) sangra para
+  // fora do viewport em mobile e criava overflow horizontal — clipamos na
+  // borda do ecrã (mesmo padrão do HomeOutro). Em md+ o anel cabe no viewport.
   return (
-    <div className="mx-auto max-w-6xl px-6 pb-24 pt-32">
+    <div className="mx-auto max-w-6xl overflow-x-clip px-6 pb-24 pt-32 md:overflow-x-visible">
       <SectionHeading eyebrow="Discografia" title="Discografia" />
 
       <p className="mt-4 max-w-xl text-mist">
@@ -27,16 +30,6 @@ export default function DiscografiaPage() {
           </Reveal>
         ))}
       </div>
-
-      <Reveal delay={0.2}>
-        <div className="mt-16 rounded-2xl border border-white/10 bg-night-900/60 p-8 text-center">
-          <p className="font-display text-2xl text-cream">Player completo em breve</p>
-          <p className="mx-auto mt-2 max-w-md text-sm text-mist">
-            Aqui ficará o embed oficial do Spotify/YouTube do artista. Os links
-            acima já levam às plataformas.
-          </p>
-        </div>
-      </Reveal>
     </div>
   );
 }
