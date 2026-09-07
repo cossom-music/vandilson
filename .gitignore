@@ -16,3 +16,10 @@ next-env.d.ts
 model-videos/
 freebuff/
 .freebuff/
+
+# Artefactos locais de desenvolvimento
+build.log
+dev.log
+dev.pid
+credentials.txt
+public/videos/

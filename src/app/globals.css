@@ -1,17 +1,17 @@
 @import "tailwindcss";
 
 @theme {
-  --color-night-950: #030509;
-  --color-night-900: #060a14;
-  --color-night-800: #0a0f1c;
-  --color-night-700: #111a2e;
-  --color-night-600: #1a2740;
+  --color-night-950: #050607;
+  --color-night-900: #08090b;
+  --color-night-800: #0d0f12;
+  --color-night-700: #14161a;
+  --color-night-600: #1e2024;
 
-  --color-gold-300: #f5d782;
-  --color-gold-400: #eac75f;
-  --color-gold-500: #e8c15a;
-  --color-gold-600: #b98a2f;
-  --color-gold-700: #8a6420;
+  --color-silver-300: #d8dbe0;
+  --color-silver-400: #c6cad0;
+  --color-silver-500: #a9adb5;
+  --color-silver-600: #7d828b;
+  --color-silver-700: #585c64;
 
   --color-cream: #f4f1ea;
   --color-mist: #9aa3b2;
@@ -33,7 +33,7 @@ body {
 }
 
 ::selection {
-  background: var(--color-gold-500);
+  background: var(--color-silver-400);
   color: var(--color-night-950);
 }
 
@@ -44,17 +44,29 @@ body {
   background: var(--color-night-950);
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-night-600);
+  background: #2a2e35;
   border-radius: 8px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-gold-700);
+  background: var(--color-silver-600);
 }
 
-/* Texto com contorno dourado (estilo "wireframe" dos vídeos de referência) */
-.text-outline-gold {
+/* Texto com contorno prateado (eco do limbo do vidro do globo) */
+.text-outline-silver {
   color: transparent;
-  -webkit-text-stroke: 1px var(--color-gold-600);
+  -webkit-text-stroke: 1px var(--color-silver-600);
+}
+
+/* E-mail de contacto — link tipográfico com sublinhado prateado */
+.contact-email {
+  background-image: linear-gradient(90deg, rgba(198, 202, 208, 0.55), rgba(198, 202, 208, 0.55));
+  background-repeat: no-repeat;
+  background-size: 100% 1px;
+  background-position: 0 100%;
+  transition: color 0.3s ease;
+}
+.contact-email:hover {
+  color: #ffffff;
 }
 
 /* Vinheta suave sobre o globo para fundir com o fundo */

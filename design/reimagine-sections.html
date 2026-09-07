@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vandilson Neto — Secções reimaginadas · monocromático</title>
+<!--
+  ASSUMPTIONS + REASONING (junior designer pass)
+  · Contexto: globo de vidro prata sobre preto puro (medido do vídeo de referência:
+    corpo ~#3a3a3a, limbo ~#808080, pontos ~#9c9c9c, fundo #000). Nenhum dourado.
+  · Sistema: prata em 5 degraus (silver-300 → 700) sobre night-950; o acento É o limbo
+    prateado (bordas finas + contornos de texto), não uma nova cor.
+  · Tipografia: Playfair Display (display) + Space Grotesk (corpo) — as mesmas do site,
+    mantendo a identidade; o monocromático vive nas CORES, não nas fontes.
+  · 4 secções mockup: Cartaz (música), Vinheta (sobre), Agenda (shows), Contactos.
+  · Placeholders honestos: sem fotos reais → molduras tracejadas com etiqueta.
+-->
+<style>
+  :root {
+    --night-950: #030509;
+    --night-900: #0d0f13;
+    --silver-300: #d8dbe0;
+    --silver-400: #c6cad0;
+    --silver-500: #a9adb5;
+    --silver-600: #7d828b;
+    --silver-700: #585c64;
+    --mist: #9aa3b2;
+    --serif: 'Playfair Display', Georgia, serif;
+    --sans: 'Space Grotesk', system-ui, sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #010203;
+    color: var(--silver-300);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 0 48px; }
+
+  /* ---- cabeçalho do documento (não faz parte do design) ---- */
+  .doc-head { padding: 72px 48px 8px; max-width: 1280px; margin: 0 auto; }
+  .doc-head h1 { font-family: var(--serif); font-size: 30px; color: #fff; font-weight: 500; }
+  .doc-head p { color: var(--mist); font-size: 14px; margin-top: 10px; max-width: 720px; line-height: 1.6; }
+  .doc-head .meta { font-family: monospace; font-size: 11px; color: var(--silver-600); margin-top: 14px; letter-spacing: .08em; }
+  .doc-head .meta b { color: var(--silver-400); font-weight: 500; }
+  .doc-head .swatches { display: flex; gap: 10px; margin-top: 18px; }
+  .doc-head .sw { width: 44px; height: 20px; border-radius: 4px; border: 1px solid rgba(255,255,255,.12); }
+  .divider { height: 1px; background: linear-gradient(90deg, transparent, rgba(198,202,208,.25), transparent); margin: 56px auto; max-width: 1280px; }
+
+  .section-tag { font-family: monospace; font-size: 11px; letter-spacing: .25em; color: var(--silver-600); text-transform: uppercase; margin-bottom: 22px; }
+  .section-tag::before { content: "§ "; color: var(--silver-500); }
+
+  /* ================= 1 · MÚSICA / CARTAZ ================= */
+  .poster { position: relative; overflow: hidden; border-radius: 18px; background: radial-gradient(120% 90% at 50% -20%, #16181d 0%, #0a0c10 55%, #04060a 100%); border: 1px solid rgba(255,255,255,.06); padding: 64px 0 72px; }
+  .poster .ring { position: absolute; left: 50%; top: 50%; border-radius: 50%; border: 1px solid rgba(198,202,208,.14); transform: translate(-50%,-50%); }
+  .poster .r1 { width: 560px; height: 560px; }
+  .poster .r2 { width: 760px; height: 760px; border-color: rgba(198,202,208,.07); }
+  .poster .r3 { width: 980px; height: 980px; border-color: rgba(198,202,208,.04); }
+  .poster .limbo { position: absolute; left: 50%; top: 50%; width: 560px; height: 560px; transform: translate(-50%,-50%); border-radius: 50%;
+    background: radial-gradient(circle at 50% 50%, transparent 62%, rgba(198,202,208,.10) 70%, transparent 74%); }
+  .poster-in { position: relative; text-align: center; }
+  .poster .kicker { font-size: 11px; letter-spacing: .45em; text-transform: uppercase; color: var(--silver-600); }
+  .poster h2 { font-family: var(--serif); font-weight: 500; font-size: 108px; line-height: .95; margin-top: 26px; color: transparent; -webkit-text-stroke: 1px var(--silver-400); }
+  .poster h2 span { display: block; font-style: italic; color: #fff; -webkit-text-stroke: 0; font-size: 92px; margin-top: 6px; }
+  .poster .single-line { margin-top: 34px; display: flex; align-items: center; justify-content: center; gap: 18px; color: var(--mist); font-size: 13px; letter-spacing: .18em; text-transform: uppercase; }
+  .poster .single-line .line { width: 64px; height: 1px; background: linear-gradient(90deg, transparent, var(--silver-700), transparent); }
+  .poster .latest { margin-top: 46px; display: inline-flex; align-items: center; gap: 20px; padding: 14px 26px 14px 14px; border: 1px solid rgba(255,255,255,.1); border-radius: 999px; background: rgba(13,15,19,.72); backdrop-filter: blur(6px); }
+  .poster .dot { width: 40px; height: 40px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #3a3f47, #101318 70%); border: 1px solid rgba(255,255,255,.16); }
+  .poster .latest b { color: #fff; font-weight: 500; font-size: 15px; display: block; text-align: left; }
+  .poster .latest small { color: var(--mist); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; }
+  .poster .latest .go { color: var(--silver-400); font-size: 18px; }
+
+  /* ================= 2 · SOBRE / VINHETA ================= */
+  .vignette { display: grid; grid-template-columns: 5fr 7fr; gap: 0; border: 1px solid rgba(255,255,255,.06); border-radius: 18px; overflow: hidden; background: #05070b; }
+  .vignette .photo { position: relative; min-height: 520px; border-right: 1px solid rgba(255,255,255,.06);
+    background: radial-gradient(90% 70% at 30% 25%, #171a20 0%, #0a0d12 55%, #04060a 100%); }
+  .vignette .photo .ph { position: absolute; inset: 22px; border: 1px dashed rgba(198,202,208,.25); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--silver-600); font-size: 12px; letter-spacing: .2em; text-transform: uppercase; }
+  .vignette .photo .grain { position: absolute; inset: 0; opacity: .5;
+    background-image: radial-gradient(rgba(198,202,208,.05) 1px, transparent 1px); background-size: 5px 5px; mask-image: radial-gradient(70% 60% at 40% 35%, #000 30%, transparent 75%); }
+  .vignette .txt { padding: 72px 64px; display: flex; flex-direction: column; justify-content: center; }
+  .vignette .kicker { font-size: 11px; letter-spacing: .45em; text-transform: uppercase; color: var(--silver-600); }
+  .vignette h3 { font-family: var(--serif); font-weight: 500; font-size: 44px; color: #fff; margin-top: 20px; line-height: 1.15; }
+  .vignette h3 em { font-style: italic; color: var(--silver-400); }
+  .vignette p { color: var(--mist); font-size: 15px; line-height: 1.8; margin-top: 24px; max-width: 46ch; }
+  .vignette .sig { margin-top: 34px; font-family: var(--serif); font-style: italic; color: var(--silver-500); font-size: 15px; }
+
+  /* ================= 3 · AGENDA ================= */
+  .agenda { border: 1px solid rgba(255,255,255,.06); border-radius: 18px; background: linear-gradient(180deg, #07090d, #04060a); padding: 64px; }
+  .agenda .head { display: flex; align-items: baseline; justify-content: space-between; }
+  .agenda h3 { font-family: var(--serif); font-weight: 500; font-size: 40px; color: #fff; }
+  .agenda .all { color: var(--silver-500); font-size: 12px; letter-spacing: .2em; text-transform: uppercase; }
+  .agenda table { width: 100%; border-collapse: collapse; margin-top: 38px; }
+  .agenda tr { border-top: 1px solid rgba(255,255,255,.07); }
+  .agenda td { padding: 26px 10px; vertical-align: middle; }
+  .agenda .date { font-family: monospace; color: var(--silver-500); font-size: 13px; letter-spacing: .12em; white-space: nowrap; width: 170px; }
+  .agenda .city { font-family: var(--serif); font-size: 30px; color: #fff; }
+  .agenda .venue { color: var(--mist); font-size: 13px; margin-top: 4px; }
+  .agenda .status { text-align: right; }
+  .agenda .pill { display: inline-block; padding: 8px 18px; border-radius: 999px; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; }
+  .agenda .on { border: 1px solid rgba(216,219,224,.4); color: #fff; }
+  .agenda .soon { border: 1px solid rgba(255,255,255,.12); color: var(--mist); }
+  .agenda .arrow { color: var(--silver-600); font-size: 20px; padding-left: 26px; }
+  .agenda tr:hover .city { color: var(--silver-400); }
+
+  /* ================= 4 · CONTACTOS ================= */
+  .contact { display: grid; grid-template-columns: 7fr 5fr; border: 1px solid rgba(255,255,255,.06); border-radius: 18px; overflow: hidden; }
+  .contact .left { padding: 72px 64px; background: radial-gradient(120% 100% at 0% 100%, #12151b 0%, #07090d 60%, #04060a 100%); }
+  .contact .kicker { font-size: 11px; letter-spacing: .45em; text-transform: uppercase; color: var(--silver-600); }
+  .contact h3 { font-family: var(--serif); font-weight: 500; font-size: 52px; color: #fff; margin-top: 20px; line-height: 1.05; }
+  .contact h3 em { font-style: italic; color: var(--silver-400); }
+  .contact .mail { display: inline-block; margin-top: 38px; font-family: var(--serif); font-size: 30px; color: #fff; text-decoration: none; border-bottom: 1px solid rgba(216,219,224,.35); padding-bottom: 8px; }
+  .contact .mail:hover { color: var(--silver-400); }
+  .contact .socials { margin-top: 44px; display: flex; gap: 26px; }
+  .contact .socials a { color: var(--mist); font-size: 13px; text-decoration: none; letter-spacing: .06em; }
+  .contact .socials a:hover { color: #fff; }
+  .contact form { padding: 72px 56px; border-left: 1px solid rgba(255,255,255,.06); display: flex; flex-direction: column; gap: 18px; background: rgba(5,7,11,.6); }
+  .contact label { font-size: 10px; letter-spacing: .3em; text-transform: uppercase; color: var(--silver-600); }
+  .contact input, .contact textarea { background: rgba(13,15,19,.7); border: 1px solid rgba(255,255,255,.09); border-radius: 12px; padding: 14px 16px; color: #fff; font-family: var(--sans); font-size: 14px; outline: none; transition: border-color .2s; }
+  .contact input:focus, .contact textarea:focus { border-color: rgba(216,219,224,.5); }
+  .contact textarea { min-height: 110px; resize: vertical; }
+  .contact button { margin-top: 8px; background: #e9ebef; color: #04060a; border: 0; border-radius: 999px; padding: 14px; font-family: var(--sans); font-weight: 500; font-size: 14px; cursor: pointer; letter-spacing: .02em; }
+  .contact button:hover { background: #fff; }
+
+  .footnote { max-width: 1280px; margin: 0 auto; padding: 0 48px 90px; color: var(--silver-600); font-size: 12px; line-height: 1.7; }
+</style>
+</head>
+<body>
+
+<header class="doc-head">
+  <h1>Secções reimaginadas · monocromático do globo</h1>
+  <p>Cartaz, Vinheta, Agenda e Contactos no mesmo universo do globo de vidro: prata sobre
+     preto puro, contorno de texto no limbo, nada de dourado. Tipografia e conteúdo do site,
+     apenas as cores mudam.</p>
+  <div class="swatches">
+    <div class="sw" style="background:#030509"></div>
+    <div class="sw" style="background:#0d0f13"></div>
+    <div class="sw" style="background:#585c64"></div>
+    <div class="sw" style="background:#7d828b"></div>
+    <div class="sw" style="background:#a9adb5"></div>
+    <div class="sw" style="background:#c6cad0"></div>
+    <div class="sw" style="background:#d8dbe0"></div>
+    <div class="sw" style="background:#ffffff"></div>
+  </div>
+  <p class="meta">PALETA <b>silver on black</b> · ACENTO <b>limbo do vidro</b> · TIPO <b>Playfair + Space Grotesk</b></p>
+</header>
+
+<!-- ============ 1 · MÚSICA / CARTAZ ============ -->
+<div class="wrap" style="margin-top:48px">
+  <div class="section-tag">01 · Música — Cartaz em contorno</div>
+  <div class="poster">
+    <div class="ring r3"></div><div class="ring r2"></div><div class="ring r1"></div>
+    <div class="limbo"></div>
+    <div class="poster-in">
+      <p class="kicker">Ouvir</p>
+      <h2>MÚSICA<span>a atravessar o mundo</span></h2>
+      <div class="single-line">
+        <span class="line"></span>
+        <span>Horizonte Infinito · single · 2026</span>
+        <span class="line"></span>
+      </div>
+      <div class="latest">
+        <div class="dot"></div>
+        <div><b>Horizonte Infinito</b><small>Último lançamento · ouvir agora</small></div>
+        <span class="go">→</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ============ 2 · SOBRE / VINHETA ============ -->
+<div class="wrap">
+  <div class="section-tag">02 · Sobre — Vinheta com grão</div>
+  <div class="vignette">
+    <div class="photo">
+      <div class="grain"></div>
+      <div class="ph">Retrato de Vandilson Neto — à espera</div>
+    </div>
+    <div class="txt">
+      <p class="kicker">Sobre</p>
+      <h3>Entre o íntimo <em>e o infinito</em></h3>
+      <p>Vandilson Neto transforma histórias em canções — do acústico ao eletrónico, com uma
+         honestidade rara. O seu som vive entre o popular e o experimental: saudade, cidade,
+         amor e partida.</p>
+      <p class="sig">— «cada disco é uma viagem, e o mundo é o mapa»</p>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ============ 3 · AGENDA ============ -->
+<div class="wrap">
+  <div class="section-tag">03 · Agenda — Linhas de horizonte</div>
+  <div class="agenda">
+    <div class="head">
+      <h3>Agenda</h3>
+      <span class="all">Ver tudo →</span>
+    </div>
+    <table>
+      <tr>
+        <td class="date">12 OUT 2026</td>
+        <td><div class="city">Lisboa</div><div class="venue">Grande Sala · Lisboa, PT</div></td>
+        <td class="status"><span class="pill on">À venda</span><span class="arrow">→</span></td>
+      </tr>
+      <tr>
+        <td class="date">25 OUT 2026</td>
+        <td><div class="city">Porto</div><div class="venue">Teatro · Porto, PT</div></td>
+        <td class="status"><span class="pill on">À venda</span><span class="arrow">→</span></td>
+      </tr>
+      <tr>
+        <td class="date">08 NOV 2026</td>
+        <td><div class="city">São Paulo</div><div class="venue">Casa de shows · São Paulo, BR</div></td>
+        <td class="status"><span class="pill soon">Em breve</span><span class="arrow">→</span></td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ============ 4 · CONTACTOS ============ -->
+<div class="wrap">
+  <div class="section-tag">04 · Contactos — Superfície e luz</div>
+  <div class="contact">
+    <div class="left">
+      <p class="kicker">Falar</p>
+      <h3>Vamos criar algo <em>extraordinário</em></h3>
+      <a class="mail" href="mailto:booking@vandilsonneto.com">booking@vandilsonneto.com</a>
+      <div class="socials">
+        <a href="#">Instagram</a><a href="#">YouTube</a><a href="#">Spotify</a><a href="#">Apple Music</a>
+      </div>
+    </div>
+    <form onsubmit="return false">
+      <label>Nome</label><input type="text" placeholder="O seu nome" />
+      <label>E-mail</label><input type="email" placeholder="voce@exemplo.com" />
+      <label>Mensagem</label><textarea placeholder="Booking, imprensa, colaborações…"></textarea>
+      <button type="submit">Enviar mensagem</button>
+    </form>
+  </div>
+</div>
+
+<p class="footnote">
+  Mockup de exploração — os 4 modelos usam apenas a paleta do globo (prata sobre preto,
+  acento = limbo do vidro). O branco cheio reserva-se a ações primárias (botão de envio,
+  CTAs) para manter a hierarquia. Fotografia do artista por preencher (moldura honesta).
+</p>
+
+</body>
+</html>

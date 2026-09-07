@@ -9,7 +9,7 @@ export default function SectionHeading({
 }) {
   return (
     <Reveal>
-      <p className="text-xs uppercase tracking-[0.35em] text-gold-400">{eyebrow}</p>
+      <p className="text-xs uppercase tracking-[0.35em] text-silver-500">{eyebrow}</p>
       <h2 className="mt-3 font-display text-4xl text-cream md:text-5xl">{title}</h2>
     </Reveal>
   );

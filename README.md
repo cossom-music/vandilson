@@ -1,16 +1,17 @@
 # Vandilson Neto — Site Oficial 🌍
 
 Website oficial do artista **Vandilson Neto** — Next.js 15, React 19, Tailwind CSS 4,
-Three.js (globo 3D da Terra), GSAP, Framer Motion e Supabase.
+vídeo do globo da Terra, GSAP, anime.js, Framer Motion e Supabase.
 
 ## Páginas
 
 | Rota | Descrição |
 | --- | --- |
-| `/` | Hero com globo 3D + nome do artista, último lançamento, bio teaser |
+| `/` | Herói imersivo com o globo em vídeo (zoom no scroll) → secções Música e Contacto |
 | `/musica` | Discografia + links para plataformas |
 | `/sobre` | Biografia, foto e próximos shows |
 | `/contactos` | Formulário de booking/contactos → Supabase |
+| `/teste-globo` | Página de diagnóstico do globo (pode ser removida) |
 
 ## Arrancar em desenvolvimento
 
@@ -48,12 +49,14 @@ Todo o texto, links e dados vivem num único ficheiro: **`src/content.ts`**.
 Substitua bio, links do Spotify/YouTube/Instagram, datas de shows e lançamentos aí —
 os componentes atualizam-se automaticamente.
 
-As texturas do planeta estão em `public/textures/` (NASA Blue Marble, domínio público).
+O vídeo do globo vive em `public/videos/earth-spin.mp4` (referência: `model-videos/Earth Spin.mp4`).
+Para trocar, basta substituir o ficheiro — o componente `src/components/earth/EarthVideo.tsx` trata do resto.
 
 ## Tecnologias
 
 - Next.js 15 (App Router) + TypeScript + Tailwind CSS 4
-- Three.js + @react-three/fiber + @react-three/drei — globo, nuvens, atmosfera, estrelas
-- GSAP + ScrollTrigger — reveals e parallax do hero
-- Framer Motion — micro-interações e transições
+- Vídeo do globo da Terra (`EarthVideo.tsx`) — loop, autoplay, fallback estático embutido
+- GSAP + ScrollTrigger — zoom do herói no scroll e fade para as secções
+- anime.js v4 — reveals de texto palavra a palavra
+- Framer Motion — micro-interações e transições (header, menu móvel)
 - Supabase — newsletter + mensagens de contacto

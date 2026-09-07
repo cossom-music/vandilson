@@ -46,7 +46,7 @@ export default function SobrePage() {
                   <span
                     className={`rounded-full px-3 py-1 text-xs ${
                       s.status === "À venda"
-                        ? "bg-gold-500/10 text-gold-400"
+                        ? "bg-silver-500/10 text-silver-300"
                         : s.status === "Esgotado"
                           ? "bg-red-500/10 text-red-400"
                           : "bg-white/5 text-mist"

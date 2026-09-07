@@ -25,11 +25,12 @@ export const socials = [
   { label: "Apple Music", handle: "Vandilson Neto", url: "https://music.apple.com/artist/vandilsonneto" },
 ];
 
+/**
+ * Contacto — o site não tem página de contactos: o e-mail é o único ponto
+ * de contacto, apresentado no fim da homepage e no rodapé.
+ */
 export const contact = {
   email: "booking@vandilsonneto.com",
-  phonePlaceholder: "+000 000 000 000",
-  bookingNote:
-    "Para contratações, shows e imprensa, utilize o formulário ou o e-mail acima. Respondemos em até 48 horas.",
 };
 
 export type Release = {
@@ -46,28 +47,28 @@ export const releases: Release[] = [
     year: "2026",
     type: "Single",
     cover: "Capa do single Horizonte Infinito (placeholder)",
-    gradient: "from-[#0a0f1c] via-[#1a2740] to-[#8a6420]",
+    gradient: "from-[#0d0f13] via-[#26292f] to-[#4a4e56]",
   },
   {
     title: "Cartas ao Mundo",
     year: "2025",
     type: "EP",
     cover: "Capa do EP Cartas ao Mundo (placeholder)",
-    gradient: "from-[#111a2e] via-[#0a0f1c] to-[#b98a2f]",
+    gradient: "from-[#16181d] via-[#0d0f13] to-[#585c64]",
   },
   {
     title: "Gravidade",
     year: "2024",
     type: "Álbum",
     cover: "Capa do álbum Gravidade (placeholder)",
-    gradient: "from-[#1a2740] via-[#111a2e] to-[#e8c15a]",
+    gradient: "from-[#23262c] via-[#16181d] to-[#6b7078]",
   },
   {
     title: "Primeiro Voo",
     year: "2022",
     type: "Álbum",
     cover: "Capa do álbum Primeiro Voo (placeholder)",
-    gradient: "from-[#060a14] via-[#1a2740] to-[#f5d782]",
+    gradient: "from-[#0d0f13] via-[#202329] to-[#3f434b]",
   },
 ];
 
@@ -83,6 +84,20 @@ export const shows: Show[] = [
   { date: "25 OUT 2026", city: "Porto", venue: "Teatro (placeholder)", status: "À venda" },
   { date: "08 NOV 2026", city: "São Paulo", venue: "Casa de shows (placeholder)", status: "Em breve" },
 ];
+
+export const homeSections = {
+  music: {
+    eyebrow: "Ouvir",
+    title: "Discografia",
+    cta: "Explorar toda a discografia",
+  },
+  contact: {
+    eyebrow: "Falar",
+    title: "Contacto",
+    intro:
+      "Booking, imprensa e colaborações — uma mensagem chega sempre ao destino.",
+  },
+};
 
 export const homeHighlights = {
   latest: {
