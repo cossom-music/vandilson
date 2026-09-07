@@ -251,7 +251,7 @@ export default function OrbitSystem() {
   return (
     <div
       ref={stageRef}
-      className="orbit-stage relative mx-auto w-[min(880px,94vw)]"
+      className="orbit-stage relative mx-auto w-[min(880px,86vw)] sm:w-[min(880px,92vw)]"
       style={{ aspectRatio: `${SPACE.w} / ${SPACE.h}` }}
     >
       {/* Anéis — um por rede */}

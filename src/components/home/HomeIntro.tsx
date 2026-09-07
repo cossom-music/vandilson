@@ -174,7 +174,7 @@ export default function HomeIntro() {
   if (reduced) {
     return (
       <div ref={scopeRef} className="relative">
-      <div className="relative h-[100svh] overflow-hidden">
+      <div className="relative h-[100lvh] overflow-hidden">
         {/* Reforço estelar local — atrás do globo */}
         <div
           aria-hidden="true"
@@ -198,7 +198,7 @@ export default function HomeIntro() {
 
   return (
     <div ref={scopeRef} className="relative h-[460svh]">
-      <div className="sticky top-0 h-[100svh] overflow-hidden">
+      <div className="sticky top-0 h-[100lvh] overflow-hidden">
         {/* Reforço estelar local — atrás do globo, mais denso que o canvas global */}
         <div
           aria-hidden="true"

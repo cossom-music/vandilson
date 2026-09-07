@@ -32,17 +32,18 @@ export default function Header() {
 
   const visible = !isHome || scrolled;
 
+  // Sempre MONTADO e fixo no topo — só desliza para fora no topo da
+  // homepage. Montar/desmontar (AnimatePresence) no primeiro scroll causava
+  // um salto visível no mobile (e podia coincidir com o refresh do
+  // ScrollTrigger) — agora é só transform + opacity, custo zero.
   return (
-    <AnimatePresence>
-      {visible && (
-        <motion.header
-          key="header"
-          initial={{ y: -72, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: -72, opacity: 0 }}
-          transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
-          className="fixed inset-x-0 top-0 z-50 border-b border-white/5 bg-night-950/70 backdrop-blur-md"
-        >
+    <motion.header
+      initial={{ y: -72, opacity: 0 }}
+      animate={visible ? { y: 0, opacity: 1 } : { y: -72, opacity: 0 }}
+      transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+      className="fixed inset-x-0 top-0 z-50 border-b border-white/5 bg-night-950/70 backdrop-blur-md"
+      aria-hidden={!visible}
+    >
           <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
             <Link
               href="/"
@@ -117,8 +118,6 @@ export default function Header() {
               </motion.nav>
             )}
           </AnimatePresence>
-        </motion.header>
-      )}
-    </AnimatePresence>
+    </motion.header>
   );
 }

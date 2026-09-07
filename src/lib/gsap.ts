@@ -6,6 +6,11 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
+  // Mobile: as barras de endereço dos navegadores fazem o viewport "respirar"
+  // (altura muda a cada scroll). Sem isto, o ScrollTrigger re-media tudo a
+  // meio do scroll e os pins "saltam" — a secção subia além do topo e
+  // depois voltava a encaixar (o lag visto em produção).
+  ScrollTrigger.config({ ignoreMobileResize: true });
 }
 
 /**

@@ -51,7 +51,7 @@ export default function HomeOutro() {
       <section
         id="home-contact"
         data-sintonia
-        className="relative border-t border-white/5 bg-night-950 py-24 md:py-32"
+        className="relative overflow-x-clip border-t border-white/5 bg-night-950 py-24 md:py-32"
       >
         {/* Reforço estelar local — atrás do sistema de órbitas */}
         <div

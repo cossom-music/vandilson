@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Discografia em fila · 3 variações · Vandilson Neto</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Space+Grotesk:wght@300;400;500&display=swap" rel="stylesheet" />
+<!--
+  ASSUMPTIONS (Junior pass — confirmar com o manager):
+  · Dados reais: Horizonte Infinito (2026, Single), Cartas ao Mundo (2025, EP),
+    Gravidade (2024, Álbum), Primeiro Voo (2022, Álbum).
+  · Tracklists e curiosidades NÃO existem ainda → placeholders honestos,
+    marcados como tal. Nada foi inventado como se fosse real.
+  · O planeta dot-matrix (ReleasePlanet) mantém-se como identidade do lançamento.
+  · 3 variações, uma por lançamento completo + resumo das restantes:
+    A) Editorial clássico — linha horizontal, 3 colunas
+    B) Ficha deslizante — tabs Tracklist / Curiosidades / Ficha
+    C) Diário de bordo — linha temporal vertical com ano gigante
+-->
+<style>
+  :root {
+    --bg: #030509;
+    --panel: #0a0c11;
+    --ink: #e8e9eb;
+    --mist: #9a9fa6;
+    --faint: #5c6067;
+    --hairline: rgba(232, 233, 235, 0.1);
+    --silver: #c6cad0;
+    --mono: "Space Grotesk", ui-monospace, monospace;
+    --serif: "Playfair Display", Georgia, serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--mono);
+    -webkit-font-smoothing: antialiased;
+  }
+  .page { max-width: 1440px; margin: 0 auto; padding: 56px 48px 120px; }
+
+  .intro h1 { font-family: var(--serif); font-size: 30px; font-weight: 500; }
+  .intro p { color: var(--faint); font-size: 13px; margin-top: 8px; line-height: 1.7; max-width: 720px; }
+  .label {
+    font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--faint); margin-bottom: 14px; display: flex; align-items: center; gap: 12px;
+  }
+  .label::after { content: ""; height: 1px; flex: 1; background: var(--hairline); }
+
+  /* ───────── planeta dot-matrix (essência do ReleasePlanet) ───────── */
+  .planet { position: relative; aspect-ratio: 1; border-radius: 50%; flex-shrink: 0; }
+  .planet .limb {
+    position: absolute; inset: 0; border-radius: 50%;
+    background: radial-gradient(circle at 30% 28%, rgba(255,255,255,0.16), rgba(255,255,255,0) 46%);
+  }
+  .planet .fresnel {
+    position: absolute; inset: 0; border-radius: 50%;
+    box-shadow: inset 0 0 0 1px rgba(198,202,208,0.55), inset 0 0 22px rgba(198,202,208,0.18);
+  }
+  .planet .dots { position: absolute; inset: 0; border-radius: 50%; overflow: hidden; }
+  .planet .ring {
+    position: absolute; left: 50%; top: 50%;
+    width: 148%; height: 36%;
+    transform: translate(-50%, -50%) rotate(-16deg);
+    border: 1px dashed rgba(154,160,168,0.4); border-radius: 50%;
+  }
+  .planet .ring.back { clip-path: inset(0 50% 0 0); }
+  .planet .ring.front { clip-path: inset(0 0 0 50%); }
+
+  .planet-title {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center; padding: 0 12%;
+    z-index: 5; text-shadow: 0 1px 8px rgba(0,0,0,0.6);
+  }
+  .planet-title .t { font-family: var(--serif); font-size: 17px; line-height: 1.25; color: #fff; }
+  .planet-title .s { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--mist); margin-top: 6px; }
+
+  .links { display: flex; gap: 10px; }
+  .links a {
+    font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--mist); text-decoration: none; padding: 8px 14px;
+    border: 1px solid var(--hairline); border-radius: 999px;
+    transition: color .2s, border-color .2s;
+  }
+  .links a:hover { color: #fff; border-color: rgba(232,233,235,0.35); }
+
+  .placeholder-note {
+    display: inline-block; font-size: 9.5px; letter-spacing: 0.12em; color: var(--faint);
+    border: 1px dashed rgba(154,160,168,0.35); border-radius: 4px; padding: 4px 8px;
+  }
+
+  /* ═════════ VARIAÇÃO A — editorial clássico ═════════ */
+  .varA-row {
+    display: grid; grid-template-columns: 300px 1fr 340px; gap: 48px;
+    padding: 44px 0; border-bottom: 1px solid var(--hairline); align-items: center;
+  }
+  .varA-row:first-of-type { border-top: 1px solid var(--hairline); }
+  .varA-meta .ym { display: flex; gap: 16px; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--silver); }
+  .varA-meta .ym .y { font-size: 34px; letter-spacing: 0.04em; font-weight: 300; color: var(--ink); display: block; margin-top: 10px; font-family: var(--mono); }
+  .varA-meta ul { list-style: none; margin-top: 20px; }
+  .varA-meta li {
+    display: flex; justify-content: space-between; gap: 12px;
+    font-size: 11.5px; color: var(--mist); padding: 7px 0; border-bottom: 1px dashed rgba(232,233,235,0.07);
+  }
+  .varA-meta li .n { color: var(--faint); }
+  .varA-mid { display: flex; flex-direction: column; align-items: center; gap: 26px; }
+  .varA-mid .planet { width: min(100%, 300px); }
+  .varA-right .type { font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--faint); }
+  .varA-right h3 { font-family: var(--serif); font-size: 38px; font-weight: 500; margin-top: 10px; line-height: 1.12; }
+  .varA-right .desc { font-size: 12.5px; line-height: 1.75; color: var(--mist); margin-top: 16px; }
+  .varA-right .curio {
+    margin-top: 18px; padding: 14px 16px; border-left: 1px solid rgba(198,202,208,0.35);
+    font-size: 12px; line-height: 1.7; color: var(--silver); font-style: italic;
+    font-family: var(--serif); font-size: 14px;
+  }
+  .varA-right .links { margin-top: 22px; }
+
+  /* ═════════ VARIAÇÃO B — ficha deslizante (tabs) ═════════ */
+  .varB-row {
+    display: grid; grid-template-columns: 380px 1fr; gap: 56px;
+    border: 1px solid var(--hairline); border-radius: 24px;
+    background: linear-gradient(180deg, rgba(10,12,17,0.6), rgba(3,5,9,0.4));
+    padding: 40px; margin-bottom: 28px; align-items: center;
+  }
+  .varB-planet-wrap { display: flex; flex-direction: column; align-items: center; gap: 22px; }
+  .varB-planet-wrap .planet { width: min(100%, 320px); }
+  .varB-tabs { display: flex; gap: 8px; margin-bottom: 22px; }
+  .varB-tabs button {
+    background: none; border: 1px solid var(--hairline); color: var(--mist);
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+    padding: 9px 18px; border-radius: 999px; cursor: pointer; transition: all .2s;
+  }
+  .varB-tabs button.on { color: #fff; border-color: rgba(198,202,208,0.7); background: rgba(198,202,208,0.08); }
+  .varB-panel h3 { font-family: var(--serif); font-size: 34px; font-weight: 500; }
+  .varB-panel .type { font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--faint); margin-bottom: 8px; }
+  .varB-pane { display: none; margin-top: 20px; }
+  .varB-pane.on { display: block; }
+  .varB-pane ol { list-style: none; counter-reset: tr; }
+  .varB-pane ol li {
+    counter-increment: tr; display: flex; gap: 18px; align-items: baseline;
+    padding: 9px 0; border-bottom: 1px dashed rgba(232,233,235,0.07);
+    font-size: 12.5px; color: var(--ink);
+  }
+  .varB-pane ol li::before {
+    content: counter(tr, decimal-leading-zero);
+    font-size: 10px; color: var(--faint); letter-spacing: 0.1em;
+  }
+  .varB-pane ol li .dur { margin-left: auto; color: var(--faint); font-size: 10.5px; }
+  .varB-pane .curio-list { list-style: none; }
+  .varB-pane .curio-list li { padding: 10px 0; border-bottom: 1px dashed rgba(232,233,235,0.07); font-size: 12.5px; line-height: 1.7; color: var(--mist); }
+  .varB-pane .curio-list li b { color: var(--silver); font-weight: 500; }
+  .varB-pane .fact { display: grid; grid-template-columns: 130px 1fr; gap: 10px; font-size: 12px; padding: 8px 0; border-bottom: 1px dashed rgba(232,233,235,0.07); }
+  .varB-pane .fact .k { color: var(--faint); letter-spacing: 0.08em; text-transform: uppercase; font-size: 10px; padding-top: 2px; }
+  .varB-pane .links { margin-top: 24px; }
+
+  /* ═════════ VARIAÇÃO C — diário de bordo ═════════ */
+  .varC { position: relative; padding-left: 130px; }
+  .varC::before {
+    content: ""; position: absolute; left: 92px; top: 0; bottom: 0;
+    width: 1px; background: repeating-linear-gradient(180deg, rgba(198,202,208,0.25) 0 4px, transparent 4px 10px);
+  }
+  .varC-row { position: relative; display: grid; grid-template-columns: 1fr 360px; gap: 56px; padding: 46px 0; }
+  .varC-row + .varC-row { border-top: 1px solid var(--hairline); }
+  .varC-year {
+    position: absolute; left: -130px; top: 46px; width: 64px; text-align: right;
+    font-size: 15px; letter-spacing: 0.14em; color: var(--mist);
+    writing-mode: vertical-rl; transform: rotate(180deg); letter-spacing: 0.4em;
+  }
+  .varC-row::before {
+    content: ""; position: absolute; left: -42px; top: 62px;
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--bg); border: 1px solid var(--silver);
+    box-shadow: 0 0 10px rgba(198,202,208,0.5);
+  }
+  .varC-stage { display: flex; align-items: center; gap: 44px; }
+  .varC-stage .planet { width: 240px; }
+  .varC-copy h3 { font-family: var(--serif); font-size: 40px; font-weight: 500; line-height: 1.1; }
+  .varC-copy .type { font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--faint); margin-bottom: 10px; }
+  .varC-copy .desc { font-size: 12.5px; line-height: 1.75; color: var(--mist); margin-top: 14px; max-width: 400px; }
+  .varC-notes {
+    border: 1px solid var(--hairline); border-radius: 16px; padding: 22px 24px;
+    background: rgba(10,12,17,0.5);
+  }
+  .varC-notes .nk { font-size: 9.5px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--faint); margin-bottom: 12px; }
+  .varC-notes ul { list-style: none; }
+  .varC-notes li { font-size: 12px; line-height: 1.7; color: var(--silver); padding: 6px 0 6px 14px; position: relative; }
+  .varC-notes li::before { content: "·"; position: absolute; left: 0; color: var(--faint); }
+  .varC-notes .links { margin-top: 16px; }
+
+  .section { margin-top: 96px; }
+  .vtag { font-size: 10px; letter-spacing: 0.2em; color: var(--faint); margin-bottom: 8px; }
+  .vname { font-family: var(--serif); font-size: 22px; margin-bottom: 6px; }
+  .vdesc { font-size: 12px; color: var(--faint); line-height: 1.7; max-width: 640px; margin-bottom: 28px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="intro">
+    <h1>Discografia em fila — 3 variações</h1>
+    <p>Um lançamento por fila, com detalhes extra (tracklist, curiosidades, ficha) na lateral esquerda
+    ou adjacente. Dados reais dos 4 lançamentos; tracklists e curiosidades são <b>placeholders</b>
+    claramente marcados — a implementação real vai buscá-los a <code>content.ts</code>.</p>
+  </div>
+
+  <!-- ═══════════ A ═══════════ -->
+  <div class="section">
+    <div class="vtag">VARIAÇÃO A</div>
+    <div class="vname">Editorial clássico</div>
+    <div class="vdesc">Três colunas por fila: dados + tracklist à esquerda, planeta ao centro, título + curiosidade à direita. Separadores hairline. É a variação mais calma — deixa a lista respirar como um encarte de vinil.</div>
+
+    <div class="label">Horizonte Infinito · fila completa</div>
+    <div class="varA-row">
+      <div class="varA-meta">
+        <div class="ym"><span>Single</span><span>2026</span></div>
+        <span class="y">2026</span>
+        <ul><!-- placeholder — tracklist real em content.ts -->
+          <li><span>Horizonte Infinito</span><span class="n">03:42</span></li>
+          <li><span>Horizonte Infinito (acústico)</span><span class="n">03:58</span></li>
+          <li><span>Instrumental</span><span class="n">03:40</span></li>
+        </ul>
+        <div style="margin-top:14px"><span class="placeholder-note">tracklist · placeholder</span></div>
+      </div>
+      <div class="varA-mid">
+        <div class="planet" style="background: radial-gradient(circle at 32% 30%, #2e333c 0%, #23272e 55%, #14171c 100%)">
+          <div class="dots" style="background-image: radial-gradient(rgba(198,202,208,0.5) 1px, transparent 1.4px), radial-gradient(rgba(198,202,208,0.35) 1px, transparent 1.4px); background-size: 17px 15px, 23px 19px; background-position: 0 0, 9px 7px;"></div>
+          <div class="limb"></div><div class="fresnel"></div>
+          <div class="ring back"></div><div class="ring front"></div>
+          <div class="planet-title"><span class="t">Horizonte Infinito</span><span class="s">Single · 2026</span></div>
+        </div>
+        <div class="links">
+          <a href="#">Spotify</a><a href="#">Apple Music</a><a href="#">YouTube</a>
+        </div>
+      </div>
+      <div class="varA-right">
+        <div class="type">Último lançamento</div>
+        <h3>Horizonte<br>Infinito</h3>
+        <p class="desc">O novo single já está disponível em todas as plataformas. Ouça, partilhe e deixe-se levar pelo horizonte.</p>
+        <p class="curio">«Gravado numa só tarde, entre a maré baixa e o primeiro comboio.»</p>
+        <div><span class="placeholder-note">curiosidade · placeholder</span></div>
+      </div>
+    </div>
+
+    <div class="varA-row" style="opacity:0.45">
+      <div class="varA-meta">
+        <div class="ym"><span>EP</span><span>2025</span></div>
+        <span class="y">2025</span>
+        <ul>
+          <li><span>Primeira carta</span><span class="n">—</span></li>
+          <li><span>Selo e endereço</span><span class="n">—</span></li>
+          <li><span>…</span><span class="n">…</span></li>
+        </ul>
+      </div>
+      <div class="varA-mid">
+        <div class="planet" style="background: radial-gradient(circle at 60% 65%, #33302b 0%, #24221e 55%, #14130f 100%)">
+          <div class="dots" style="background-image: radial-gradient(rgba(198,202,208,0.45) 1px, transparent 1.4px), radial-gradient(rgba(198,202,208,0.3) 1px, transparent 1.4px); background-size: 19px 17px, 25px 21px; background-position: 0 0, 11px 6px;"></div>
+          <div class="limb"></div><div class="fresnel"></div>
+          <div class="planet-title"><span class="t">Cartas ao Mundo</span><span class="s">EP · 2025</span></div>
+        </div>
+        <div class="links"><a href="#">Spotify</a><a href="#">Apple Music</a><a href="#">YouTube</a></div>
+      </div>
+      <div class="varA-right">
+        <div class="type">EP</div>
+        <h3>Cartas ao<br>Mundo</h3>
+        <p class="desc">Cinco canções-carta, escritas para sítios onde o artista nunca esteve — mas sentiu.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ B ═══════════ -->
+  <div class="section">
+    <div class="vtag">VARIAÇÃO B — interativa (clique nas tabs)</div>
+    <div class="vname">Ficha deslizante</div>
+    <div class="vdesc">Cada lançamento é uma "ficha" arredondada: planeta à esquerda, painel de detalhes à direita com tabs — Tracklist / Curiosidades / Ficha técnica. Esconde a densidade até o ouvinte pedir, mantendo a fila limpa.</div>
+
+    <div class="varB-row">
+      <div class="varB-planet-wrap">
+        <div class="planet" style="background: radial-gradient(circle at 32% 30%, #2c313a 0%, #22262d 55%, #13161b 100%)">
+          <div class="dots" style="background-image: radial-gradient(rgba(198,202,208,0.5) 1px, transparent 1.4px), radial-gradient(rgba(198,202,208,0.35) 1px, transparent 1.4px); background-size: 17px 15px, 23px 19px; background-position: 0 0, 9px 7px;"></div>
+          <div class="limb"></div><div class="fresnel"></div>
+          <div class="ring back"></div><div class="ring front"></div>
+          <div class="planet-title"><span class="t">Horizonte Infinito</span><span class="s">Single · 2026</span></div>
+        </div>
+        <div class="links"><a href="#">Spotify</a><a href="#">Apple</a><a href="#">YouTube</a></div>
+      </div>
+      <div class="varB-panel">
+        <div class="type">Single · 2026</div>
+        <h3>Horizonte Infinito</h3>
+        <div class="varB-tabs" style="margin-top:24px">
+          <button class="on" data-pane="tr">Tracklist</button>
+          <button data-pane="cu">Curiosidades</button>
+          <button data-pane="fi">Ficha</button>
+        </div>
+        <div class="varB-pane on" id="pane-tr">
+          <ol><!-- placeholder -->
+            <li>Horizonte Infinito <span class="dur">3:42</span></li>
+            <li>Horizonte Infinito — versão acústica <span class="dur">3:58</span></li>
+            <li>Horizonte Infinito — instrumental <span class="dur">3:40</span></li>
+          </ol>
+          <div style="margin-top:12px"><span class="placeholder-note">tracklist · placeholder</span></div>
+        </div>
+        <div class="varB-pane" id="pane-cu">
+          <ul class="curio-list"><!-- placeholder -->
+            <li><b>Uma tarde, uma tomada.</b> A voz principal foi gravada sem segunda passagem — o que ficou foi o que saiu.</li>
+            <li><b>O título nasceu de um mapa antigo</b> comprado num mercado de pulgas em Lisboa.</li>
+          </ul>
+          <div style="margin-top:12px"><span class="placeholder-note">curiosidades · placeholder</span></div>
+        </div>
+        <div class="varB-pane" id="pane-fi">
+          <div class="fact"><span class="k">Lançamento</span><span>2026 · Single</span></div>
+          <div class="fact"><span class="k">Faixas</span><span>3</span></div>
+          <div class="fact"><span class="k">Duração</span><span>11:40</span></div>
+          <div class="fact"><span class="k">Produção</span><span><i>placeholder — a confirmar</i></span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="varB-row" style="opacity:0.45">
+      <div class="varB-planet-wrap">
+        <div class="planet" style="background: radial-gradient(circle at 30% 28%, #2a2f37 0%, #20242b 55%, #121519 100%)">
+          <div class="dots" style="background-image: radial-gradient(rgba(198,202,208,0.45) 1px, transparent 1.4px); background-size: 21px 17px;"></div>
+          <div class="limb"></div><div class="fresnel"></div>
+          <div class="planet-title"><span class="t">Gravidade</span><span class="s">Álbum · 2024</span></div>
+        </div>
+        <div class="links"><a href="#">Spotify</a><a href="#">Apple</a><a href="#">YouTube</a></div>
+      </div>
+      <div class="varB-panel">
+        <div class="type">Álbum · 2024</div>
+        <h3>Gravidade</h3>
+        <p style="margin-top:14px; font-size:12.5px; color:var(--mist); line-height:1.7">O álbum que puxou tudo para junto — doze canções sobre o que nos prende e o que nos deixa partir.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ C ═══════════ -->
+  <div class="section">
+    <div class="vtag">VARIAÇÃO C</div>
+    <div class="vname">Diário de bordo</div>
+    <div class="vdesc">Uma linha temporal pontilhada (eco das órbitas) liga os lançamentos; o ano corre em vertical no meio-fio esquerdo, o planeta navega a fila e à direita um bloco de "notas de bordo" recebe tracklist ou curiosidades — o que houver.</div>
+
+    <div class="varC">
+      <div class="varC-row">
+        <span class="varC-year">2026</span>
+        <div class="varC-stage">
+          <div class="planet" style="background: radial-gradient(circle at 32% 30%, #2e333c 0%, #23272e 55%, #14171c 100%)">
+            <div class="dots" style="background-image: radial-gradient(rgba(198,202,208,0.5) 1px, transparent 1.4px), radial-gradient(rgba(198,202,208,0.35) 1px, transparent 1.4px); background-size: 17px 15px, 23px 19px; background-position: 0 0, 9px 7px;"></div>
+            <div class="limb"></div><div class="fresnel"></div>
+            <div class="ring back"></div><div class="ring front"></div>
+            <div class="planet-title"><span class="t">Horizonte Infinito</span><span class="s">Single</span></div>
+          </div>
+          <div class="varC-copy">
+            <div class="type">Single · último lançamento</div>
+            <h3>Horizonte Infinito</h3>
+            <p class="desc">O novo single já está disponível em todas as plataformas.</p>
+            <div class="links" style="margin-top:20px"><a href="#">Spotify</a><a href="#">Apple Music</a><a href="#">YouTube</a></div>
+          </div>
+        </div>
+        <aside class="varC-notes">
+          <div class="nk">Notas de bordo · placeholder</div>
+          <ul>
+            <li>Gravado numa só tarde, entre a maré baixa e o primeiro comboio.</li>
+            <li>A capa é um recorte do mesmo mapa que deu o título.</li>
+            <li>Tracklist (3 faixas) entra aqui quando existir.</li>
+          </ul>
+        </aside>
+      </div>
+
+      <div class="varC-row">
+        <span class="varC-year">2025</span>
+        <div class="varC-stage">
+          <div class="planet" style="background: radial-gradient(circle at 60% 65%, #33302b 0%, #24221e 55%, #14130f 100%)">
+            <div class="dots" style="background-image: radial-gradient(rgba(198,202,208,0.45) 1px, transparent 1.4px), radial-gradient(rgba(198,202,208,0.3) 1px, transparent 1.4px); background-size: 19px 17px, 25px 21px; background-position: 0 0, 11px 6px;"></div>
+            <div class="limb"></div><div class="fresnel"></div>
+            <div class="planet-title"><span class="t">Cartas ao Mundo</span><span class="s">EP</span></div>
+          </div>
+          <div class="varC-copy">
+            <div class="type">EP</div>
+            <h3>Cartas ao Mundo</h3>
+            <p class="desc">Cinco canções-carta escritas para sítios onde nunca esteve — mas sentiu.</p>
+            <div class="links" style="margin-top:20px"><a href="#">Spotify</a><a href="#">Apple Music</a><a href="#">YouTube</a></div>
+          </div>
+        </div>
+        <aside class="varC-notes">
+          <div class="nk">Notas de bordo · placeholder</div>
+          <ul>
+            <li>Cada faixa tem o nome de um porto imaginário.</li>
+            <li>Tracklist (5 faixas) entra aqui quando existir.</li>
+          </ul>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // Tabs da Variação B
+  document.querySelectorAll('.varB-tabs').forEach(function (group) {
+    var row = group.closest('.varB-panel');
+    group.querySelectorAll('button').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        group.querySelectorAll('button').forEach(function (b) { b.classList.remove('on'); });
+        row.querySelectorAll('.varB-pane').forEach(function (p) { p.classList.remove('on'); });
+        btn.classList.add('on');
+        row.querySelector('#pane-' + btn.dataset.pane).classList.add('on');
+      });
+    });
+  });
+</script>
+</body>
+</html>
