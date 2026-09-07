@@ -76,6 +76,358 @@ body {
     linear-gradient(to top, var(--color-night-950) 0%, transparent 22%, transparent 82%, var(--color-night-950) 100%);
 }
 
+/* ─── Secção Sintonia — sistema de órbitas (sol + redes) ─── */
+.orbit-sun {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(13, 15, 18, 0.9) 0%,
+    rgba(13, 15, 18, 0.55) 52%,
+    rgba(198, 202, 208, 0.3) 80%,
+    rgba(232, 236, 242, 0.85) 95%,
+    rgba(255, 255, 255, 0.95) 100%
+  );
+  box-shadow: 0 0 34px rgba(198, 202, 208, 0.16);
+  z-index: 20;
+}
+
+/* Halo que respira — animado por OPACIDADE (composited). Animar
+   box-shadow força repaint contínuo e roubava frames às órbitas. */
+.orbit-sun::after {
+  content: "";
+  position: absolute;
+  inset: -35%;
+  border-radius: 50%;
+  box-shadow: 0 0 120px 34px rgba(198, 202, 208, 0.1);
+  opacity: 0.5;
+  animation: sun-glow 7s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes sun-glow {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.ring-ellipse {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.14);
+  stroke-width: 1;
+}
+.ring-ellipse.ring-dashed {
+  stroke: rgba(216, 219, 224, 0.26);
+  stroke-dasharray: 2 9;
+}
+
+.orbit-node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  will-change: transform, opacity;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.orbit-ball {
+  width: clamp(34px, 5vw, 46px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(13, 15, 18, 0.92) 0%,
+    rgba(13, 15, 18, 0.72) 55%,
+    rgba(198, 202, 208, 0.35) 84%,
+    rgba(232, 236, 242, 0.9) 100%
+  );
+  box-shadow:
+    0 0 14px rgba(198, 202, 208, 0.22),
+    inset 0 0 10px rgba(0, 0, 0, 0.6);
+  transition: box-shadow 0.3s ease;
+}
+.orbit-ball svg {
+  width: 48%;
+  height: 48%;
+  overflow: visible;
+}
+.orbit-ball svg * {
+  stroke: var(--color-silver-300);
+  fill: none;
+}
+.orbit-ball svg .orbit-logo-fill {
+  fill: var(--color-silver-300);
+  stroke: none;
+}
+
+.orbit-tip {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  transform: translate(-50%, 6px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: rgba(13, 15, 18, 0.94);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 60;
+}
+.orbit-tip-name {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 16px;
+  color: #fff;
+}
+.orbit-tip-handle {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--color-silver-500);
+}
+.orbit-tip-open {
+  display: none;
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-silver-600);
+  margin-top: 4px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .orbit-node:hover .orbit-tip {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  .orbit-node:hover .orbit-ball {
+    box-shadow:
+      0 0 22px rgba(198, 202, 208, 0.4),
+      inset 0 0 10px rgba(0, 0, 0, 0.6);
+  }
+}
+.orbit-node.show .orbit-tip,
+.orbit-node:focus-visible .orbit-tip {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+.orbit-node.show .orbit-ball {
+  box-shadow:
+    0 0 22px rgba(198, 202, 208, 0.4),
+    inset 0 0 10px rgba(0, 0, 0, 0.6);
+}
+@media (hover: none) {
+  .orbit-tip-open {
+    display: block;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orbit-sun,
+  .orbit-sun::after {
+    animation: none;
+  }
+}
+
+/* ─── Secção Sobre — Eclipse (limbo prateado rotativo) ─── */
+.eclipse-rim {
+  border-radius: 50%;
+  background: conic-gradient(
+    from 210deg,
+    transparent 0deg,
+    rgba(198, 202, 208, 0.05) 40deg,
+    rgba(230, 234, 240, 0.9) 120deg,
+    rgba(198, 202, 208, 0.05) 200deg,
+    transparent 260deg
+  );
+  -webkit-mask: radial-gradient(
+    farthest-side,
+    transparent calc(100% - 3px),
+    #000 calc(100% - 2px)
+  );
+  mask: radial-gradient(
+    farthest-side,
+    transparent calc(100% - 3px),
+    #000 calc(100% - 2px)
+  );
+  filter: drop-shadow(0 0 18px rgba(198, 202, 208, 0.35));
+  animation: eclipse-spin 40s linear infinite;
+}
+
+@keyframes eclipse-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eclipse-rim {
+    animation: none;
+  }
+}
+
+/* ─── Secção Agenda — micro-órbita de cada trânsito ─── */
+.orbit-mini {
+  position: relative;
+  width: 26px;
+  height: 26px;
+  justify-self: end;
+}
+.orbit-mini::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1px dashed rgba(154, 160, 168, 0.35);
+  border-radius: 50%;
+}
+.orbit-mini::after {
+  content: "";
+  position: absolute;
+  top: -3px;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  margin-left: -3px;
+  border-radius: 50%;
+  background: var(--color-silver-300);
+  box-shadow: 0 0 10px rgba(198, 202, 208, 0.8);
+  animation: orbit-mini-spin 9s linear infinite;
+}
+
+@keyframes orbit-mini-spin {
+  from {
+    transform: rotate(0deg) translateX(13px) rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg) translateX(13px) rotate(-360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orbit-mini::after {
+    animation: none;
+  }
+}
+
+/* ─── Campo estelar — camadas de reforço local (herói e Sintonia) ───
+   O canvas global (StarField.tsx) é subtil em toda a página; estas camadas
+   CSS puras (sem JS) aumentam a densidade onde há corpos celestes.
+   Composicionais: animam opacity/transform, custo ~zero. */
+.star-layer {
+  pointer-events: none;
+  background-repeat: repeat;
+}
+
+/* Herói — mais denso e presente, atrás do globo */
+.star-layer--hero {
+  background-image:
+    radial-gradient(1px 1px at 12% 18%, rgba(232, 236, 242, 0.9), transparent 100%),
+    radial-gradient(1px 1px at 34% 62%, rgba(232, 236, 242, 0.6), transparent 100%),
+    radial-gradient(1.5px 1.5px at 55% 24%, rgba(216, 219, 224, 0.85), transparent 100%),
+    radial-gradient(1px 1px at 71% 74%, rgba(232, 236, 242, 0.55), transparent 100%),
+    radial-gradient(1px 1px at 84% 38%, rgba(232, 236, 242, 0.7), transparent 100%),
+    radial-gradient(1.5px 1.5px at 22% 82%, rgba(216, 219, 224, 0.6), transparent 100%),
+    radial-gradient(1px 1px at 63% 88%, rgba(232, 236, 242, 0.5), transparent 100%),
+    radial-gradient(1px 1px at 44% 8%, rgba(232, 236, 242, 0.65), transparent 100%),
+    radial-gradient(1px 1px at 91% 82%, rgba(216, 219, 224, 0.5), transparent 100%),
+    radial-gradient(1px 1px at 8% 52%, rgba(232, 236, 242, 0.45), transparent 100%),
+    radial-gradient(1px 1px at 28% 34%, rgba(232, 236, 242, 0.55), transparent 100%),
+    radial-gradient(1px 1px at 76% 12%, rgba(216, 219, 224, 0.6), transparent 100%);
+  background-size: 420px 420px;
+  animation: star-breathe 9s ease-in-out infinite alternate;
+}
+
+/* Sintonia — reforço médio, atrás do sistema de órbitas */
+.star-layer--orbit {
+  background-image:
+    radial-gradient(1px 1px at 18% 26%, rgba(232, 236, 242, 0.7), transparent 100%),
+    radial-gradient(1px 1px at 42% 68%, rgba(232, 236, 242, 0.5), transparent 100%),
+    radial-gradient(1.5px 1.5px at 64% 22%, rgba(216, 219, 224, 0.7), transparent 100%),
+    radial-gradient(1px 1px at 82% 58%, rgba(232, 236, 242, 0.45), transparent 100%),
+    radial-gradient(1px 1px at 30% 84%, rgba(216, 219, 224, 0.55), transparent 100%),
+    radial-gradient(1px 1px at 58% 46%, rgba(232, 236, 242, 0.4), transparent 100%),
+    radial-gradient(1px 1px at 8% 64%, rgba(232, 236, 242, 0.5), transparent 100%),
+    radial-gradient(1px 1px at 90% 14%, rgba(216, 219, 224, 0.55), transparent 100%);
+  background-size: 340px 340px;
+  animation: star-breathe 11s ease-in-out infinite alternate;
+}
+
+@keyframes star-breathe {
+  from {
+    opacity: 0.35;
+  }
+  to {
+    opacity: 0.8;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .star-layer--hero,
+  .star-layer--orbit {
+    animation: none;
+    opacity: 0.5;
+  }
+}
+
+/* ─── Discografia — planetas dos lançamentos ─── */
+/* Anel tipo Saturno — elipse tracejada achatada, atravessa o planeta */
+.planet-ring {
+  width: 150%;
+  height: 34%;
+  transform: translate(-50%, -50%) rotate(-16deg);
+  border: 1px dashed rgba(154, 160, 168, 0.45);
+  border-radius: 50%;
+}
+
+/* Manchas de superfície — nuvens/mares subtis, rotação única por planeta.
+   A rotação contínua é só transform (composited na GPU, custo ~zero) e
+   tem duração/direção próprias por planeta (definidas inline). */
+.planet-spots {
+  background-image:
+    radial-gradient(28% 20% at 30% 40%, rgba(198, 202, 208, 0.1), transparent 70%),
+    radial-gradient(22% 16% at 68% 62%, rgba(232, 236, 242, 0.07), transparent 70%),
+    radial-gradient(16% 12% at 55% 28%, rgba(198, 202, 208, 0.06), transparent 70%),
+    radial-gradient(30% 24% at 42% 74%, rgba(0, 0, 0, 0.3), transparent 70%);
+  animation: planet-spin 80s linear infinite;
+}
+.planet-spin-reverse {
+  animation-name: planet-spin-reverse;
+}
+
+@keyframes planet-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes planet-spin-reverse {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .planet-spots {
+    animation: none;
+  }
+}
+
 /* Grão subtil de filme para dar textura cósmica */
 .film-grain::after {
   content: "";

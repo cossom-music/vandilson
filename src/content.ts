@@ -7,7 +7,7 @@ export const artist = {
   name: "Vandilson Neto",
   firstName: "Vandilson",
   lastName: "Neto",
-  tagline: "Sons que atravessam o mundo.",
+  tagline: "Músicas que atravessam o mundo.",
   shortBio:
     "Vandilson Neto é um artista que transforma histórias em canções — entre o íntimo e o infinito, a sua música viaja do acústico ao eletrónico com uma honestidade rara.",
   longBio: [
@@ -92,10 +92,8 @@ export const homeSections = {
     cta: "Explorar toda a discografia",
   },
   contact: {
-    eyebrow: "Falar",
-    title: "Contacto",
-    intro:
-      "Booking, imprensa e colaborações — uma mensagem chega sempre ao destino.",
+    eyebrow: "Sintonia",
+    title: "Onde a música vive",
   },
 };
 

@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import GlassGlobe from "@/components/earth/GlassGlobe";
-import { useGsapContext, gsap } from "@/lib/gsap";
+import { useGsapContext, gsap, ScrollTrigger } from "@/lib/gsap";
 import { earthZoom } from "@/lib/earthZoom";
+import { animate, stagger, utils, prefersReducedMotion } from "@/lib/anime";
 import { artist, homeSections, homeHighlights, releases } from "@/content";
-import LiquidGlassLink from "@/components/ui/LiquidGlassLink";
+import { LiquidGlassLink } from "@/components/ui/LiquidGlass";
+import ReleasePlanet from "@/components/ReleasePlanet";
 
 /**
  * Intro da homepage ao estilo animejs.com — três atos num viewport FIXO:
@@ -39,6 +41,19 @@ export default function HomeIntro() {
     const music = scope.querySelector<HTMLElement>("[data-music]");
     if (!globe || !vignette || !indicator || !music) return;
 
+    // Assinaturas do herói (nome + tagline) — saem suavemente no primeiro
+    // scroll, precisamente quando o header entra com o mesmo nome.
+    const heroTexts = Array.from(
+      scope.querySelectorAll<HTMLElement>("[data-hero-text]"),
+    );
+
+    // Pilha de lançamentos — cartões + grid + CTA (por data-attribute)
+    const cards = Array.from(
+      scope.querySelectorAll<HTMLElement>("[data-release-card]"),
+    );
+    const cardGrid = scope.querySelector<HTMLElement>("[data-release-grid]");
+    const cta = scope.querySelector<HTMLElement>("[data-cta]");
+
     // A música começa invisível (o GSAP controla opacity + visibility)
     gsap.set(music, { autoAlpha: 0, y: 64 });
 
@@ -55,29 +70,120 @@ export default function HomeIntro() {
 
     // Ato 1 — DOLLY para dentro do globo (a câmara Three.js lê este valor)
     tl.fromTo(earthZoom.progress, { value: 0 }, { value: 1, duration: 0.55 }, 0);
-    tl.to(indicator, { autoAlpha: 0, duration: 0.08 }, 0);
+    tl.to(indicator, { autoAlpha: 0, duration: 0.14 }, 0);
+    // Nome + tagline desvanecem mais lentamente (0.35 ≈ 119svh de scroll)
+    tl.to(heroTexts, { autoAlpha: 0, duration: 0.35 }, 0);
 
     // Ato 2 — já dentro do globo: cross-fade para a Música
     tl.to(globe, { autoAlpha: 0, duration: 0.16 }, 0.58);
     tl.to(vignette, { autoAlpha: 0, duration: 0.16 }, 0.58);
     tl.to(music, { autoAlpha: 1, y: 0, duration: 0.22, ease: "power1.out" }, 0.68);
+    // Globo invisível → pausa o trabalho por frame da cena Three.js
+    // (o render WebGL contínuo escondido roubava frames à página inteira).
+    // Reversível: o scrub repõe false ao voltar a subir.
+    tl.fromTo(earthZoom.paused, { value: false }, { value: true, duration: 0.01 }, 0.74);
+
+    // Ato 3 — pilha REAL: os cartões nascem empilhados no centro do palco
+    // (delta medido em px do layout real) e o scroll abre a pilha até às
+    // posições fixas do grid. O scrub inverte tudo ao voltar a subir.
+    if (cards.length && cardGrid) {
+      const mid = (cards.length - 1) / 2;
+
+      // Mede o delta de cada cartão (no seu slot do grid) até ao centro do
+      // palco — é esse delta que o empilha de verdade. Limpa transformações
+      // antes de medir, para os rects serem as posições naturais do layout.
+      const measureStack = () => {
+        gsap.set(cards, { clearProps: "x,y,rotation,scale,xPercent" });
+        const g = cardGrid.getBoundingClientRect();
+        const cx = g.left + g.width / 2;
+        const cy = g.top + g.height / 2;
+        return cards.map((card, i) => {
+          const r = card.getBoundingClientRect();
+          return {
+            // Delta até ao centro + um leve leque (estilo mão de cartas)
+            x: cx - (r.left + r.width / 2) + (i - mid) * 6,
+            y: cy - (r.top + r.height / 2) - i * 7,
+            rotation: (i - mid) * 2.4,
+            scale: 0.92,
+          };
+        });
+      };
+
+      // Pose inicial: todos empilhados no centro (o primeiro por cima).
+      const applyStack = () => {
+        const poses = measureStack();
+        cards.forEach((card, i) => {
+          gsap.set(card, {
+            ...poses[i],
+            transformOrigin: "50% 50%",
+            zIndex: cards.length - i,
+          });
+        });
+      };
+      applyStack();
+
+      // Resize/rotação do ecrã: re-medir e re-empilhar — mas só enquanto a
+      // pilha ainda estiver fechada (a meio do voo, o scrub manda).
+      const onRefresh = () => {
+        if (!tl.scrollTrigger || tl.scrollTrigger.progress < 0.84) {
+          applyStack();
+        }
+      };
+      ScrollTrigger.addEventListener("refreshInit", onRefresh);
+
+      cards.forEach((card, i) => {
+        tl.to(
+          card,
+          {
+            x: 0,
+            y: 0,
+            rotation: 0,
+            scale: 1,
+            duration: 0.075,
+            // Saída em cascata: o primeiro sai primeiro, o último assenta
+            // por último — e só então o CTA pode aparecer.
+            ease: "power2.inOut",
+          },
+          0.86 + i * 0.022,
+        );
+      });
+
+      // Cleanup do listener — corre no revert() do contexto GSAP.
+      return () => ScrollTrigger.removeEventListener("refreshInit", onRefresh);
+    }
+
+    // Ato 4 — o CTA só existe depois de TODOS os cartões estarem sentados.
+    if (cta) {
+      gsap.set(cta, { autoAlpha: 0, y: 24 });
+      tl.to(cta, { autoAlpha: 1, y: 0, duration: 0.08, ease: "power1.out" }, 1.02);
+    }
+
+    // Respiro final — um espaçador vazio estende a timeline para 1.30:
+    // a animação completa aos ~85% do scroll e o sticky segura a Discografia
+    // assentada (~65svh) ANTES de soltar para a secção de Contactos.
+    // Sem isto, o fim da animação coincidia com o release do sticky e o
+    // utilizador via a secção seguinte antes de os cartões assentarem.
+    tl.to({}, { duration: 0.2 }, 1.1);
   }, []);
 
   // Reduced motion: sem pin, sem dolly — globo estático + música em fluxo normal
   if (reduced) {
     return (
       <div ref={scopeRef} className="relative">
-        <div className="relative h-[100svh] overflow-hidden">
-          <div data-globe className="absolute inset-0 z-0">
-            <GlassGlobe className="h-full w-full" />
-          </div>
+      <div className="relative h-[100svh] overflow-hidden">
+        {/* Reforço estelar local — atrás do globo */}
+        <div
+          aria-hidden="true"
+          className="star-layer star-layer--hero pointer-events-none absolute inset-0"
+        />
+        <div data-globe className="absolute inset-0 z-0">
+          <GlassGlobe className="h-full w-full" />
+        </div>
           <div
             data-vignette
             className="pointer-events-none absolute inset-0 z-20 bg-[radial-gradient(ellipse_62%_55%_at_50%_46%,rgba(3,5,9,0)_58%,#030509_100%)]"
           />
-          <h1 className="sr-only">
-            {artist.name} — {artist.tagline}
-          </h1>
+          <HeroSignatures />
         </div>
         <section id="home-music" className="relative bg-night-950 py-20">
           <DiscografiaContent />
@@ -87,8 +193,13 @@ export default function HomeIntro() {
   }
 
   return (
-    <div ref={scopeRef} className="relative h-[340svh]">
+    <div ref={scopeRef} className="relative h-[460svh]">
       <div className="sticky top-0 h-[100svh] overflow-hidden">
+        {/* Reforço estelar local — atrás do globo, mais denso que o canvas global */}
+        <div
+          aria-hidden="true"
+          className="star-layer star-layer--hero pointer-events-none absolute inset-0"
+        />
         {/* Globo de vidro — a câmara mergulha para dentro com o scroll */}
         <div data-globe className="absolute inset-0 z-0">
           <GlassGlobe className="h-full w-full" />
@@ -99,15 +210,12 @@ export default function HomeIntro() {
           className="pointer-events-none absolute inset-0 z-20 bg-[radial-gradient(ellipse_62%_55%_at_50%_46%,rgba(3,5,9,0)_58%,#030509_100%)]"
         />
 
-        {/* Nome do artista acessível (SEO) */}
-        <h1 className="sr-only">
-          {artist.name} — {artist.tagline}
-        </h1>
+        <HeroSignatures />
 
         {/* Indicador de scroll — some no arranque do mergulho */}
         <div
           data-indicator
-          className="absolute bottom-8 left-1/2 z-20 -translate-x-1/2"
+          className="absolute bottom-3 left-1/2 z-20 -translate-x-1/2"
           aria-hidden="true"
         >
           <div className="flex flex-col items-center gap-3">
@@ -138,6 +246,96 @@ export default function HomeIntro() {
   );
 }
 
+/**
+ * Bloco tipográfico do herói — H1 em duas linhas (Vandilson / Neto) com a
+ * tagline em H3 logo abaixo. ENTRADA: revelação palavra a palavra com
+ * anime.js — cada palavra sobe de trás de uma máscara (overflow-hidden),
+ * com stagger. SAÍDA: fade no primeiro scroll (GSAP via [data-hero-text]).
+ * É o H1 real da página (o sr-only foi removido — sem duplicação).
+ */
+function HeroSignatures() {
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  // anime.js v4 — revelação palavra a palavra na entrada
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    const words = root.querySelectorAll<HTMLElement>("[data-reveal-word]");
+    if (!words.length) return;
+
+    // Movimento reduzido: mostra tudo de imediato (os spans SSR começam
+    // ocultos — sem isto, ficariam invisíveis para sempre).
+    if (prefersReducedMotion()) {
+      utils.set(words, { opacity: 1, y: "0em" });
+      return;
+    }
+
+    // As palavras começam ocultas no SSR (anti-flash) e sobem da máscara
+    // em sequência. Unidade em (relativa à fonte) — robusta em qualquer ecrã.
+    animate(words, {
+      y: ["1.1em", "0em"],
+      opacity: [0, 1],
+      duration: 1000,
+      delay: stagger(110, { start: 300 }),
+      ease: "outExpo",
+    });
+  }, []);
+
+  return (
+    <div
+      ref={rootRef}
+      className="absolute left-6 right-6 top-[10%] z-20 text-center md:left-10 md:right-auto md:top-[40%] md:text-left"
+    >
+      {/* Nome — duas filas, cada palavra sobe da própria máscara */}
+      <h1
+        data-hero-text
+        className="font-display text-4xl leading-[0.95] text-white sm:text-5xl md:text-7xl"
+      >
+        <span className="block overflow-hidden">
+          <span
+            data-reveal-word
+            className="inline-block will-change-transform"
+            style={{ opacity: 0, transform: "translateY(1.1em)" }}
+          >
+            {artist.firstName}
+          </span>
+        </span>
+        <span className="block overflow-hidden">
+          <span
+            data-reveal-word
+            className="inline-block will-change-transform"
+            style={{ opacity: 0, transform: "translateY(1.1em)" }}
+          >
+            {artist.lastName}
+          </span>
+        </span>
+      </h1>
+
+      {/* Frase — também palavra a palavra, mais rápida e discreta */}
+      <h3
+        data-hero-text
+        className="mt-5 text-[11px] font-medium uppercase tracking-[0.35em] text-silver-300 md:mt-6 md:text-xs"
+      >
+        {artist.tagline.split(" ").map((word, i) => (
+          <span
+            key={`${word}-${i}`}
+            className="inline-block overflow-hidden align-bottom"
+          >
+            <span
+              data-reveal-word
+              className="inline-block will-change-transform"
+              style={{ opacity: 0, transform: "translateY(1.1em)" }}
+            >
+              {word}
+              {i < artist.tagline.split(" ").length - 1 ? "\u00A0" : ""}
+            </span>
+          </span>
+        ))}
+      </h3>
+    </div>
+  );
+}
+
 /** Conteúdo da secção Discografia — compacto para caber num ecrã (100svh). */
 function DiscografiaContent() {
   return (
@@ -154,29 +352,35 @@ function DiscografiaContent() {
         {homeHighlights.latest.description}
       </p>
 
-      {/* Lançamentos */}
-      <div className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-5">
-        {releases.map((r) => (
+      {/* Lançamentos — chegam empilhados; o scroll abre a pilha.
+          Cada lançamento é um PLANETA: tamanho, fase de luz e superfície
+          próprios (ver ReleasePlanet) — consistentes com o sistema visual. */}
+      <div
+        data-release-grid
+        className="relative mt-10 grid grid-cols-2 gap-6 md:grid-cols-4 md:gap-8"
+      >
+        {releases.map((r, i) => (
           <Link key={r.title} href="/discografia" className="group block">
             <div
-              className={`flex h-36 w-full flex-col rounded-2xl bg-gradient-to-br ${r.gradient} p-1 transition-transform duration-500 group-hover:-translate-y-1 md:h-44`}
+              data-release-card
+              className="flex h-40 w-full flex-col items-center justify-center transition-transform duration-500 group-hover:-translate-y-1 md:h-48"
             >
-              <div className="flex h-full w-full flex-col items-center justify-center gap-1.5 rounded-xl bg-night-900/80">
-                <span className="text-[10px] uppercase tracking-[0.3em] text-mist">
-                  {r.type} · {r.year}
-                </span>
-                <span className="px-3 text-center font-display text-base text-white md:text-lg">
-                  {r.title}
-                </span>
-              </div>
+              <ReleasePlanet
+                index={i}
+                size="md"
+                title={r.title}
+                type={r.type}
+                year={r.year}
+                className="h-full w-full"
+              />
             </div>
           </Link>
         ))}
       </div>
 
-      {/* CTA — liquid glass, centrado */}
-      <div className="mt-10 flex justify-center">
-        <LiquidGlassLink href="/discografia">
+      {/* CTA — liquid glass; só entra depois de a pilha abrir por completo */}
+      <div data-cta className="mt-14 flex justify-center md:mt-20">
+        <LiquidGlassLink filterId="glass-discografia-cta" href="/discografia">
           {homeSections.music.cta}
         </LiquidGlassLink>
       </div>

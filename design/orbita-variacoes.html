@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Órbita · logotipos em órbita · Vandilson Neto</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&family=Space+Grotesk:wght@300;400;500&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<style>
+  :root {
+    --night-950: #050607;
+    --night-900: #08090b;
+    --night-800: #0d0f12;
+    --silver-300: #d8dbe0;
+    --silver-400: #c6cad0;
+    --silver-500: #a9adb5;
+    --silver-600: #7d828b;
+    --silver-700: #585c64;
+    --cream: #f4f1ea;
+    --mist: #9aa3b2;
+    --serif: "Playfair Display", Georgia, serif;
+    --sans: "Space Grotesk", system-ui, sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--night-950);
+    color: var(--cream);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* ─── Chrome do mockup ─── */
+  .mockup-header {
+    position: sticky; top: 0; z-index: 50;
+    display: flex; gap: 24px; align-items: center; justify-content: center; flex-wrap: wrap;
+    padding: 14px 24px;
+    background: rgba(5,6,7,0.88); backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--silver-600);
+  }
+  .mockup-header a { color: var(--silver-500); text-decoration: none; padding: 4px 2px; }
+  .mockup-header a:hover { color: #fff; }
+
+  .variant-label {
+    display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;
+    padding: 12px 24px;
+    background: var(--night-800);
+    border-top: 1px solid rgba(255,255,255,0.06);
+    border-bottom: 1px dashed rgba(255,255,255,0.08);
+    font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--silver-600);
+  }
+  .variant-label b { color: var(--silver-300); font-weight: 500; }
+
+  .kicker {
+    font-size: 11px; letter-spacing: 0.35em; text-transform: uppercase;
+    color: var(--silver-500);
+  }
+  .section-title {
+    font-family: var(--serif);
+    font-size: clamp(26px, 3.2vw, 40px);
+    color: #fff; margin-top: 8px;
+  }
+  a { color: inherit; text-decoration: none; }
+
+  /* ─── Secção ─── */
+  .orbit-section {
+    position: relative; min-height: 92vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 60px 24px 100px;
+    scroll-margin-top: 90px;
+  }
+  .orbit-section .kicker { text-align: center; }
+  .orbit-section .section-title { text-align: center; }
+
+  .orbit-stage {
+    position: relative;
+    width: min(880px, 94vw);
+    aspect-ratio: 880 / 620;
+    margin-top: 4px;
+  }
+  .orbit-stage svg.rings {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    overflow: visible;
+  }
+  .ring-ellipse { fill: none; stroke: rgba(255,255,255,0.14); stroke-width: 1; }
+  .ring-ellipse.dashed { stroke: rgba(216,219,224,0.26); stroke-dasharray: 2 9; }
+
+  /* Sol prateado central */
+  .sun {
+    position: absolute; left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 50% 50%,
+        rgba(13,15,18,0.9) 0%,
+        rgba(13,15,18,0.55) 52%,
+        rgba(198,202,208,0.30) 80%,
+        rgba(232,236,242,0.85) 95%,
+        rgba(255,255,255,0.95) 100%);
+    box-shadow:
+      0 0 34px rgba(198,202,208,0.16),
+      0 0 110px rgba(198,202,208,0.09),
+      inset 0 0 26px rgba(0,0,0,0.5);
+    z-index: 20;
+    animation: sunBreathe 7s ease-in-out infinite;
+  }
+  @keyframes sunBreathe {
+    0%, 100% { box-shadow: 0 0 34px rgba(198,202,208,0.16), 0 0 110px rgba(198,202,208,0.09), inset 0 0 26px rgba(0,0,0,0.5); }
+    50% { box-shadow: 0 0 46px rgba(198,202,208,0.24), 0 0 140px rgba(198,202,208,0.13), inset 0 0 26px rgba(0,0,0,0.5); }
+  }
+
+  /* Nó = bola de vidro com o logotipo da rede */
+  .node {
+    position: absolute; left: 0; top: 0;
+    transform: translate(-50%, -50%);
+    will-change: transform, opacity;
+    z-index: 10;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .ball {
+    width: clamp(34px, 5vw, 46px);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    background:
+      radial-gradient(circle at 50% 50%,
+        rgba(13,15,18,0.92) 0%,
+        rgba(13,15,18,0.72) 55%,
+        rgba(198,202,208,0.35) 84%,
+        rgba(232,236,242,0.9) 100%);
+    box-shadow:
+      0 0 14px rgba(198,202,208,0.22),
+      inset 0 0 10px rgba(0,0,0,0.6);
+    transition: box-shadow 0.3s ease;
+  }
+  .ball svg { width: 48%; height: 48%; overflow: visible; }
+  .ball svg * { stroke: var(--silver-300); fill: none; }
+  .ball svg .fill { fill: var(--silver-300); stroke: none; }
+
+  /* Tooltip — hover (rato) ou .show (toque) */
+  .tip {
+    position: absolute; bottom: calc(100% + 12px); left: 50%;
+    transform: translate(-50%, 6px);
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    padding: 10px 16px;
+    border-radius: 12px;
+    background: rgba(13,15,18,0.94);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.12);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08);
+    white-space: nowrap;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 60;
+  }
+  .tip .tip-name { font-family: var(--serif); font-style: italic; font-size: 16px; color: #fff; }
+  .tip .tip-handle { font-size: 10px; letter-spacing: 0.12em; color: var(--silver-500); }
+  .tip .tip-open { display: none; font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--silver-600); margin-top: 4px; }
+
+  @media (hover: hover) and (pointer: fine) {
+    .node:hover .tip { opacity: 1; transform: translate(-50%, 0); }
+    .node:hover .ball { box-shadow: 0 0 22px rgba(198,202,208,0.4), inset 0 0 10px rgba(0,0,0,0.6); }
+  }
+  .node.show .tip { opacity: 1; transform: translate(-50%, 0); }
+  .node.show .ball { box-shadow: 0 0 22px rgba(198,202,208,0.4), inset 0 0 10px rgba(0,0,0,0.6); }
+  .node:focus-visible .tip { opacity: 1; transform: translate(-50%, 0); }
+  @media (hover: none) {
+    .tip .tip-open { display: block; }
+  }
+
+  /* Booking — tratamento Ondas */
+  .booking { margin-top: 10px; text-align: center; position: relative; z-index: 5; }
+  .booking .tag {
+    font-size: 10px; letter-spacing: 0.35em; text-transform: uppercase;
+    color: var(--silver-700);
+  }
+  .booking a {
+    display: inline-block; margin-top: 12px;
+    font-family: var(--serif); font-style: italic;
+    font-size: clamp(22px, 3.4vw, 40px); color: #fff;
+    background-image: linear-gradient(90deg, rgba(198,202,208,0.55), rgba(198,202,208,0.55));
+    background-repeat: no-repeat; background-size: 100% 1px; background-position: 0 100%;
+    padding-bottom: 6px; transition: color 0.3s;
+  }
+  .booking a:hover { color: var(--silver-300); }
+
+  /* Estados iniciais da coreografia */
+  .pre .ring-ellipse { opacity: 0; }
+  .pre .sun { opacity: 0; }
+  .pre .node { opacity: 0; }
+  .pre .booking { opacity: 0; transform: translateY(18px); }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .sun { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="mockup-header">
+  <span>Vandilson Neto · Órbita — 3 variações</span>
+  <nav>
+    <a href="#va">A · Minimal</a>
+    <a href="#vb">B · Equilibrada</a>
+    <a href="#vc">C · Dramática</a>
+  </nav>
+</header>
+
+<!-- ══════════ VARIANTE A · MINIMAL ══════════ -->
+<div id="va" class="variant-label"><b>Variante A · Minimal</b><span>4 anéis finos · sol pequeno · espaçamento compacto</span></div>
+<section class="orbit-section" data-variant="a">
+  <p class="kicker">Sintonia</p>
+  <h2 class="section-title">Onde a música vive</h2>
+  <div class="orbit-stage pre">
+    <svg class="rings" viewBox="0 0 880 620" aria-hidden="true"></svg>
+    <div class="sun"></div>
+  </div>
+  <div class="booking pre">
+    <span class="tag">Booking · Imprensa · Colaborações</span><br />
+    <a href="mailto:booking@vandilsonneto.com">booking@vandilsonneto.com</a>
+  </div>
+</section>
+
+<!-- ══════════ VARIANTE B · EQUILIBRADA ══════════ -->
+<div id="vb" class="variant-label"><b>Variante B · Equilibrada</b><span>4 anéis alternados (tracejado/sólido) · sol médio — recomendada</span></div>
+<section class="orbit-section" data-variant="b">
+  <p class="kicker">Sintonia</p>
+  <h2 class="section-title">Onde a música vive</h2>
+  <div class="orbit-stage pre">
+    <svg class="rings" viewBox="0 0 880 620" aria-hidden="true"></svg>
+    <div class="sun"></div>
+  </div>
+  <div class="booking pre">
+    <span class="tag">Booking · Imprensa · Colaborações</span><br />
+    <a href="mailto:booking@vandilsonneto.com">booking@vandilsonneto.com</a>
+  </div>
+</section>
+
+<!-- ══════════ VARIANTE C · DRAMÁTICA ══════════ -->
+<div id="vc" class="variant-label"><b>Variante C · Dramática</b><span>4 anéis fortemente inclinados · sol grande · profundidade acentuada</span></div>
+<section class="orbit-section" data-variant="c">
+  <p class="kicker">Sintonia</p>
+  <h2 class="section-title">Onde a música vive</h2>
+  <div class="orbit-stage pre">
+    <svg class="rings" viewBox="0 0 880 620" aria-hidden="true"></svg>
+    <div class="sun"></div>
+  </div>
+  <div class="booking pre">
+    <span class="tag">Booking · Imprensa · Colaborações</span><br />
+    <a href="mailto:booking@vandilsonneto.com">booking@vandilsonneto.com</a>
+  </div>
+</section>
+
+<script>
+(function () {
+  "use strict";
+
+  /*
+   * Logotipos monocromáticos desenhados à mão (traço prateado) —
+   * o Instagram/YouTube/Spotify são glifos simples; o Apple Music
+   * é representado pela nota musical (o glifo da maçã é complexo
+   * demais para traço fino e a nota comunica "música").
+   */
+  var SOCIALS = [
+    {
+      label: "Spotify", handle: "Vandilson Neto", url: "https://open.spotify.com/artist/vandilsonneto",
+      svg: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.2" stroke-width="1.6"/><path d="M7.4 9.8 C10.6 8.9 14.3 9.4 17 11.1" stroke-width="1.5" stroke-linecap="round"/><path d="M7.9 12.6 C10.5 12 13.3 12.4 15.5 13.8" stroke-width="1.3" stroke-linecap="round"/><path d="M8.4 15.2 C10.3 14.8 12.5 15.1 14.1 16.1" stroke-width="1.1" stroke-linecap="round"/></svg>',
+    },
+    {
+      label: "Apple Music", handle: "Vandilson Neto", url: "https://music.apple.com/artist/vandilsonneto",
+      svg: '<svg viewBox="0 0 24 24"><path d="M9.6 17.4 V7.2 L18.2 5.4 V15.8" stroke-width="1.6" stroke-linejoin="round"/><circle class="fill" cx="7.6" cy="17.4" r="2.1"/><circle class="fill" cx="16.2" cy="15.8" r="2.1"/></svg>',
+    },
+    {
+      label: "Instagram", handle: "@vandilsonneto", url: "https://instagram.com/vandilsonneto",
+      svg: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5" stroke-width="1.6"/><circle cx="12" cy="12" r="4" stroke-width="1.6"/><circle class="fill" cx="17" cy="7" r="1.4"/></svg>',
+    },
+    {
+      label: "YouTube", handle: "@vandilsonneto", url: "https://youtube.com/@vandilsonneto",
+      svg: '<svg viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="13" rx="3.5" stroke-width="1.6"/><path class="fill" d="M10.2 9.6 L15.4 12.5 L10.2 15.4 Z"/></svg>',
+    },
+  ];
+
+  /*
+   * 3 variações · espaço de coords 880×620 (= viewBox).
+   * CADA REDE TEM A SUA PRÓPRIA LINHA DE ÓRBITA (uma por anel).
+   * De dentro para fora: ouvir (Spotify, Apple Music) → seguir (Instagram, YouTube).
+   */
+  var VARIANTS = {
+    a: {
+      sunR: 56, sunTop: 44,
+      rings: [
+        { rx: 190, ry: 62,  speed: 0.12,   dash: false, si: 0, angle0: 0.7 },
+        { rx: 268, ry: 86,  speed: -0.095, dash: false, si: 1, angle0: 2.6 },
+        { rx: 342, ry: 108, speed: 0.08,   dash: false, si: 2, angle0: 4.1 },
+        { rx: 410, ry: 128, speed: -0.068, dash: false, si: 3, angle0: 5.5 },
+      ],
+    },
+    b: {
+      sunR: 74, sunTop: 42,
+      rings: [
+        { rx: 205, ry: 68,  speed: 0.11,   dash: true,  si: 0, angle0: 0.7 },
+        { rx: 290, ry: 94,  speed: -0.085, dash: false, si: 1, angle0: 2.6 },
+        { rx: 368, ry: 118, speed: 0.07,   dash: true,  si: 2, angle0: 4.1 },
+        { rx: 430, ry: 140, speed: -0.06,  dash: false, si: 3, angle0: 5.5 },
+      ],
+    },
+    c: {
+      sunR: 92, sunTop: 40,
+      rings: [
+        { rx: 210, ry: 90,  speed: 0.13,   dash: true,  si: 0, angle0: 0.7 },
+        { rx: 295, ry: 124, speed: -0.1,   dash: true,  si: 1, angle0: 2.6 },
+        { rx: 375, ry: 156, speed: 0.08,   dash: true,  si: 2, angle0: 4.1 },
+        { rx: 428, ry: 186, speed: -0.065, dash: true,  si: 3, angle0: 5.5 },
+      ],
+    },
+  };
+
+  var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var canHover = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  var CX = 440;
+
+  function buildVariant(section, key) {
+    var cfg = VARIANTS[key];
+    var stage = section.querySelector(".orbit-stage");
+    var svg = stage.querySelector("svg.rings");
+    var sun = section.querySelector(".sun");
+
+    sun.style.width = cfg.sunR * 2 + "px";
+    sun.style.height = cfg.sunR * 2 + "px";
+    sun.style.top = cfg.sunTop + "%";
+    var sunCY = 620 * cfg.sunTop / 100;
+
+    var ringEls = [];
+    var nodes = [];
+
+    cfg.rings.forEach(function (ring, ri) {
+      // anel SVG
+      var el = document.createElementNS("http://www.w3.org/2000/svg", "ellipse");
+      el.setAttribute("cx", CX); el.setAttribute("cy", sunCY);
+      el.setAttribute("rx", ring.rx); el.setAttribute("ry", ring.ry);
+      el.setAttribute("class", "ring-ellipse" + (ring.dash ? " dashed" : ""));
+      svg.appendChild(el);
+      ringEls.push(el);
+
+      // nó = bola de vidro com logotipo + tooltip
+      var s = SOCIALS[ring.si];
+      var a = document.createElement("a");
+      a.className = "node";
+      a.href = s.url; a.target = "_blank"; a.rel = "noopener";
+      a.setAttribute("aria-label", s.label + " — " + s.handle);
+      a.innerHTML =
+        '<span class="tip">' +
+          '<span class="tip-name">' + s.label + "</span>" +
+          '<span class="tip-handle">' + s.handle + "</span>" +
+          '<span class="tip-open">Toque novamente para abrir ↗</span>' +
+        "</span>" +
+        '<span class="ball">' + s.svg + "</span>";
+      stage.appendChild(a);
+      nodes.push({
+        el: a, ring: ri,
+        angle: ring.angle0,
+        rx: ring.rx, ry: ring.ry, speed: ring.speed,
+        cy: sunCY,
+      });
+    });
+
+    return { cfg: cfg, stage: stage, ringEls: ringEls, nodes: nodes, sun: sun };
+  }
+
+  var instances = [];
+  document.querySelectorAll(".orbit-section").forEach(function (section) {
+    instances.push(buildVariant(section, section.dataset.variant));
+  });
+
+  /* ── Interação: hover abranda · toque mostra tooltip ── */
+  instances.forEach(function (inst) {
+    var scale = 1;
+    var speedFactor = 1, targetFactor = 1;
+
+    function measure() {
+      scale = inst.stage.getBoundingClientRect().width / 880;
+    }
+    measure();
+    window.addEventListener("resize", measure);
+
+    inst.stage.addEventListener("mouseenter", function () { targetFactor = 0.16; });
+    inst.stage.addEventListener("mouseleave", function () { targetFactor = 1; });
+
+    // Mobile: 1.º toque mostra o tooltip; 2.º toque abre o link
+    if (!canHover) {
+      inst.nodes.forEach(function (n) {
+        n.el.addEventListener("click", function (e) {
+          if (!n.el.classList.contains("show")) {
+            e.preventDefault();
+            instances.forEach(function (other) {
+              other.nodes.forEach(function (m) { m.el.classList.remove("show"); });
+            });
+            n.el.classList.add("show");
+          }
+        });
+      });
+      document.addEventListener("click", function (e) {
+        if (!e.target.closest(".node")) {
+          inst.nodes.forEach(function (n) { n.el.classList.remove("show"); });
+        }
+      });
+    }
+
+    if (reduced) {
+      inst.nodes.forEach(function (n) {
+        var x = CX + n.rx * Math.cos(n.angle);
+        var y = n.cy + n.ry * Math.sin(n.angle);
+        var depth = (Math.sin(n.angle) + 1) / 2;
+        n.el.style.left = x * scale + "px";
+        n.el.style.top = y * scale + "px";
+        n.el.style.transform = "translate(-50%,-50%) scale(" + (0.72 + depth * 0.5) + ")";
+        n.el.style.opacity = String(Math.max(0.6, 0.4 + depth * 0.6));
+        n.el.style.zIndex = depth > 0.5 ? "25" : "10";
+      });
+      return;
+    }
+
+    var last = performance.now();
+    gsap.ticker.add(function () {
+      var now = performance.now();
+      var dt = Math.min((now - last) / 1000, 0.05);
+      last = now;
+      speedFactor += (targetFactor - speedFactor) * Math.min(1, dt * 6);
+
+      inst.nodes.forEach(function (n) {
+        n.angle += n.speed * dt * speedFactor;
+
+        var x = CX + n.rx * Math.cos(n.angle);
+        var y = n.cy + n.ry * Math.sin(n.angle);
+        var depth = (Math.sin(n.angle) + 1) / 2; // 0 = atrás · 1 = frente
+
+        n.el.style.left = x * scale + "px";
+        n.el.style.top = y * scale + "px";
+        n.el.style.transform =
+          "translate(-50%,-50%) scale(" + (0.72 + depth * 0.5).toFixed(3) + ")";
+        n.el.style.opacity = String((0.4 + depth * 0.6).toFixed(3));
+        n.el.style.zIndex = depth > 0.5 ? "25" : "10";
+      });
+    });
+  });
+
+  /* ── Coreografia de entrada ── */
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (!entry.isIntersecting) return;
+      io.unobserve(entry.target);
+
+      var section = entry.target;
+      var inst = instances.find(function (i) {
+        return i.stage === section.querySelector(".orbit-stage");
+      });
+      if (!inst) return;
+
+      if (reduced) {
+        section.querySelectorAll(".pre .ring-ellipse, .pre .sun, .pre .node, .pre .booking")
+          .forEach(function (el) { el.style.opacity = "1"; });
+        return;
+      }
+
+      var tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+
+      // 1 · anéis: sólidos desenham-se, tracejados esmaecem para dentro
+      inst.ringEls.forEach(function (el, i) {
+        if (!inst.cfg.rings[i].dash) {
+          var len = 1600;
+          try { len = el.getTotalLength(); } catch (e) { /* fallback */ }
+          el.style.strokeDasharray = len;
+          el.style.strokeDashoffset = len;
+          tl.to(el, { opacity: 1, strokeDashoffset: 0, duration: 1.4, ease: "power2.inOut" }, i * 0.16);
+        } else {
+          tl.to(el, { opacity: 1, duration: 0.9 }, 0.3 + i * 0.16);
+        }
+      });
+
+      // 2 · sol acende
+      gsap.set(inst.sun, { xPercent: -50, yPercent: -50 });
+      tl.to(inst.sun, { opacity: 1, duration: 1.1, ease: "power2.out" }, 0.05)
+        .fromTo(inst.sun, { scale: 0.86 }, { scale: 1, duration: 1.4, ease: "power2.out" }, 0.05);
+
+      // 3 · bolas surgem em cascata
+      inst.nodes.forEach(function (n, i) {
+        tl.to(n.el, { opacity: 1, duration: 0.7 }, 0.6 + i * 0.13);
+      });
+
+      // 4 · booking fecha a composição
+      tl.to(section.querySelector(".booking"), { opacity: 1, y: 0, duration: 0.9 }, 1.2);
+    });
+  }, { threshold: 0.3 });
+
+  document.querySelectorAll(".orbit-section").forEach(function (s) { io.observe(s); });
+})();
+</script>
+
+</body>
+</html>

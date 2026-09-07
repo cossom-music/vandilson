@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Secção final com redes — 4 variantes · Vandilson Neto</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&family=Space+Grotesk:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --night-950: #050607;
+    --night-900: #08090b;
+    --night-800: #0d0f12;
+    --night-700: #14161a;
+    --night-600: #1e2024;
+    --silver-300: #d8dbe0;
+    --silver-400: #c6cad0;
+    --silver-500: #a9adb5;
+    --silver-600: #7d828b;
+    --silver-700: #585c64;
+    --cream: #f4f1ea;
+    --mist: #9aa3b2;
+    --serif: "Playfair Display", Georgia, serif;
+    --sans: "Space Grotesk", system-ui, sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--night-950);
+    color: var(--cream);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* ─── Chrome do mockup (não faz parte do design) ─── */
+  .mockup-header {
+    position: sticky; top: 0; z-index: 50;
+    display: flex; gap: 24px; align-items: center; justify-content: center;
+    padding: 14px 24px;
+    background: rgba(5,6,7,0.85); backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--silver-600);
+  }
+  .mockup-header a { color: var(--silver-500); text-decoration: none; padding: 4px 2px; }
+  .mockup-header a:hover { color: #fff; }
+
+  .variant-label {
+    position: sticky; top: 41px; z-index: 40;
+    display: flex; align-items: baseline; gap: 14px;
+    padding: 10px 24px;
+    background: rgba(13,15,18,0.9); backdrop-filter: blur(8px);
+    border-bottom: 1px dashed rgba(255,255,255,0.08);
+    font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--silver-600);
+  }
+  .variant-label b { color: var(--silver-300); font-weight: 500; letter-spacing: 0.28em; }
+  .variant-label span:last-child { margin-left: auto; font-style: normal; }
+
+  .kicker {
+    font-size: 11px; letter-spacing: 0.35em; text-transform: uppercase;
+    color: var(--silver-500);
+  }
+  h2.display {
+    font-family: var(--serif); font-weight: 400;
+    line-height: 0.95; color: #fff;
+  }
+  .mono { font-family: var(--sans); font-size: 12px; letter-spacing: 0.12em; color: var(--silver-600); }
+  a { color: inherit; text-decoration: none; }
+
+  /* ────────────────────────────────────────────────
+     VARIANTE 01 · ÓRBITA — constelação de redes
+     O email continua a ser o herói; as redes são
+     nós numa linha de órbita, como o globo.
+  ──────────────────────────────────────────────── */
+  .v-orbit {
+    position: relative; min-height: 88vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 96px 24px 140px; text-align: center; overflow: hidden;
+  }
+  .v-orbit .kicker { margin-bottom: 18px; }
+  .v-orbit h2 { font-size: clamp(56px, 9vw, 128px); }
+  .v-orbit .lede { margin-top: 22px; max-width: 460px; line-height: 1.7; color: var(--mist); font-size: 15px; font-weight: 300; }
+
+  .orbit-stage { position: relative; width: min(860px, 92vw); height: 300px; margin-top: 24px; }
+  .orbit-stage svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .orbit-node {
+    position: absolute; transform: translate(-50%, -50%);
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    transition: transform 0.35s cubic-bezier(0.16,1,0.3,1);
+  }
+  .orbit-node:hover { transform: translate(-50%, -50%) translateY(-4px); }
+  .orbit-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--silver-300);
+    box-shadow: 0 0 0 0 rgba(216,219,224,0.35);
+    animation: pulse 3.2s ease-in-out infinite;
+  }
+  .orbit-node:nth-child(2) .orbit-dot { animation-delay: 0.8s; }
+  .orbit-node:nth-child(3) .orbit-dot { animation-delay: 1.6s; }
+  .orbit-node:nth-child(4) .orbit-dot { animation-delay: 2.4s; }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(216,219,224,0.35); }
+    50% { box-shadow: 0 0 0 9px rgba(216,219,224,0); }
+  }
+  .orbit-node .name { font-family: var(--serif); font-style: italic; font-size: 19px; color: #fff; white-space: nowrap; }
+  .orbit-node .handle { font-size: 11px; letter-spacing: 0.14em; color: var(--silver-600); white-space: nowrap; }
+  .orbit-node:hover .name { color: var(--silver-300); }
+  .orbit-node.flip { flex-direction: column-reverse; }
+
+  /* ────────────────────────────────────────────────
+     VARIANTE 02 · SIGA — linhas editoriais
+     Tabela de horizontes: hairlines, serif + mono.
+  ──────────────────────────────────────────────── */
+  .v-rows { min-height: 88vh; padding: 110px 24px; display: flex; align-items: center; }
+  .v-rows .inner { width: min(1100px, 100%); margin: 0 auto; }
+  .v-rows h2 { font-size: clamp(48px, 7vw, 104px); margin-top: 14px; }
+  .v-rows .lede { margin-top: 18px; max-width: 520px; line-height: 1.7; color: var(--mist); font-size: 15px; font-weight: 300; }
+  .rows { margin-top: 56px; border-top: 1px solid rgba(255,255,255,0.09); }
+  .row {
+    display: grid; grid-template-columns: 1fr auto auto; align-items: baseline; gap: 18px;
+    padding: 22px 6px; border-bottom: 1px solid rgba(255,255,255,0.09);
+    transition: padding-left 0.35s cubic-bezier(0.16,1,0.3,1), background 0.35s;
+  }
+  .row:hover { padding-left: 20px; background: rgba(255,255,255,0.02); }
+  .row .platform { font-family: var(--serif); font-size: clamp(22px, 3vw, 34px); color: var(--cream); transition: color 0.3s; }
+  .row:hover .platform { color: #fff; }
+  .row .handle { font-size: 12px; letter-spacing: 0.14em; color: var(--silver-600); }
+  .row .arrow {
+    font-size: 15px; color: var(--silver-700);
+    transition: transform 0.35s cubic-bezier(0.16,1,0.3,1), color 0.3s;
+  }
+  .row:hover .arrow { transform: translate(3px, -3px); color: var(--silver-300); }
+  .v-rows .email-line { margin-top: 64px; display: flex; align-items: baseline; gap: 20px; flex-wrap: wrap; }
+  .v-rows .email-line a {
+    font-family: var(--serif); font-style: italic; font-size: clamp(22px, 3vw, 34px); color: var(--silver-300);
+    border-bottom: 1px solid rgba(198,202,208,0.55); padding-bottom: 4px; transition: color 0.3s;
+  }
+  .v-rows .email-line a:hover { color: #fff; }
+  .v-rows .email-line .tag { font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--silver-700); }
+
+  /* ────────────────────────────────────────────────
+     VARIANTE 03 · ONDAS — vidro líquido
+     Ecos do CTA liquid glass: pílulas de vidro.
+  ──────────────────────────────────────────────── */
+  .v-glass {
+    position: relative; min-height: 88vh; overflow: hidden;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 96px 24px; text-align: center;
+  }
+  .v-glass::before {
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(ellipse 60% 45% at 50% 105%, rgba(198,202,208,0.10) 0%, rgba(74,78,86,0.05) 45%, transparent 70%);
+    pointer-events: none;
+  }
+  .v-glass > * { position: relative; }
+  .v-glass h2 { font-size: clamp(48px, 7vw, 96px); margin-top: 14px; }
+  .v-glass .lede { margin-top: 18px; max-width: 440px; line-height: 1.7; color: var(--mist); font-size: 15px; font-weight: 300; }
+  .glass-row { margin-top: 48px; display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; }
+  .glass-pill {
+    position: relative; display: inline-flex; align-items: center; gap: 10px;
+    padding: 15px 26px; border-radius: 999px;
+    background: rgba(255,255,255,0.04); backdrop-filter: blur(10px) saturate(1.3);
+    box-shadow:
+      inset 1px 1px 1px -0.5px rgba(255,255,255,0.35),
+      inset -1px -1px 1px -0.5px rgba(255,255,255,0.28),
+      inset 0 0 6px 6px rgba(255,255,255,0.03),
+      0 8px 24px rgba(0,0,0,0.35);
+    transition: transform 0.35s cubic-bezier(0.16,1,0.3,1), background 0.35s;
+  }
+  .glass-pill:hover { transform: translateY(-3px); background: rgba(255,255,255,0.07); }
+  .glass-pill .name { font-family: var(--serif); font-size: 17px; color: var(--cream); }
+  .glass-pill .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--silver-500); }
+  .glass-pill .arrow { font-size: 12px; color: var(--silver-600); transition: transform 0.35s, color 0.35s; }
+  .glass-pill:hover .arrow { transform: translate(2px, -2px); color: var(--silver-300); }
+  .v-glass .email { margin-top: 72px; }
+  .v-glass .email .tag { font-size: 10px; letter-spacing: 0.35em; text-transform: uppercase; color: var(--silver-700); }
+  .v-glass .email a {
+    display: inline-block; margin-top: 12px;
+    font-family: var(--serif); font-size: clamp(26px, 4vw, 46px); color: #fff;
+    background-image: linear-gradient(90deg, rgba(198,202,208,0.55), rgba(198,202,208,0.55));
+    background-repeat: no-repeat; background-size: 100% 1px; background-position: 0 100%;
+    padding-bottom: 6px; transition: color 0.3s;
+  }
+  .v-glass .email a:hover { color: var(--silver-300); }
+
+  /* ────────────────────────────────────────────────
+     VARIANTE 04 · SINTONIA — bifacial (irmã da Sobre)
+     Painel com moldura: luz + grão à esquerda,
+     lista vertical de redes à direita.
+  ──────────────────────────────────────────────── */
+  .v-panel { min-height: 88vh; padding: 110px 24px; display: flex; align-items: center; }
+  .panel {
+    width: min(1100px, 100%); margin: 0 auto;
+    display: grid; grid-template-columns: 1.15fr 1fr;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .panel .left {
+    position: relative; overflow: hidden;
+    padding: clamp(40px, 6vw, 80px);
+    background: radial-gradient(ellipse 80% 70% at 20% 15%, rgba(198,202,208,0.10) 0%, rgba(13,15,18,0) 60%), var(--night-900);
+    display: flex; flex-direction: column; justify-content: space-between; min-height: 480px;
+  }
+  .panel .left h2 { font-size: clamp(40px, 5vw, 72px); margin-top: 14px; }
+  .panel .left .lede { margin-top: 18px; max-width: 380px; line-height: 1.7; color: var(--mist); font-size: 14px; font-weight: 300; }
+  .panel .left a.mail {
+    margin-top: 48px; align-self: flex-start;
+    font-family: var(--serif); font-style: italic; font-size: clamp(20px, 2.4vw, 30px); color: var(--silver-300);
+    border-bottom: 1px solid rgba(198,202,208,0.55); padding-bottom: 4px; transition: color 0.3s;
+  }
+  .panel .left a.mail:hover { color: #fff; }
+  .panel .right {
+    padding: clamp(40px, 6vw, 80px);
+    background-color: var(--night-800);
+    background-image: radial-gradient(rgba(216,219,224,0.07) 1px, transparent 1px);
+    background-size: 14px 14px;
+    border-left: 1px solid rgba(255,255,255,0.08);
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .panel .right .mono { margin-bottom: 8px; }
+  .s-list { border-top: 1px solid rgba(255,255,255,0.10); }
+  .s-item {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 16px;
+    padding: 18px 2px; border-bottom: 1px solid rgba(255,255,255,0.10);
+    transition: padding-left 0.35s cubic-bezier(0.16,1,0.3,1);
+  }
+  .s-item:hover { padding-left: 14px; }
+  .s-item .platform { font-family: var(--serif); font-size: 21px; color: var(--cream); transition: color 0.3s; }
+  .s-item:hover .platform { color: #fff; }
+  .s-item .handle { font-size: 11px; letter-spacing: 0.12em; color: var(--silver-600); }
+
+  @media (max-width: 760px) {
+    .panel { grid-template-columns: 1fr; }
+    .panel .right { border-left: none; border-top: 1px solid rgba(255,255,255,0.08); }
+    .row { grid-template-columns: 1fr auto; }
+    .row .handle { grid-column: 1; }
+  }
+</style>
+</head>
+<body>
+
+<header class="mockup-header">
+  <span>Vandilson Neto · secção final com redes — 4 direções</span>
+  <nav>
+    <a href="#v1">01 Órbita</a>
+    <a href="#v2">02 Siga</a>
+    <a href="#v3">03 Ondas</a>
+    <a href="#v4">04 Sintonia</a>
+  </nav>
+</header>
+
+<!-- ══════════ VARIANTE 01 · ÓRBITA ══════════ -->
+<div id="v1" class="variant-label"><b>Variante 01 · Órbita</b><span>constelação de nós numa linha de órbita — irmã do globo</span></div>
+<section class="v-orbit">
+  <p class="kicker">Siga</p>
+  <h2 class="display">Órbita</h2>
+  <p class="lede">Onde a música vive todos os dias — entre lançamentos, estúdio e palco.</p>
+
+  <div class="orbit-stage">
+    <svg viewBox="0 0 860 300" fill="none" preserveAspectRatio="none" aria-hidden="true">
+      <ellipse cx="430" cy="150" rx="415" ry="120" stroke="rgba(255,255,255,0.10)" stroke-width="1"/>
+      <ellipse cx="430" cy="150" rx="415" ry="120" stroke="rgba(216,219,224,0.25)" stroke-width="1" stroke-dasharray="2 10" opacity="0.6"/>
+    </svg>
+    <a class="orbit-node" style="left: 8%;  top: 50%;" href="https://instagram.com/vandilsonneto">
+      <span class="name">Instagram</span><span class="orbit-dot"></span><span class="handle">@vandilsonneto</span>
+    </a>
+    <a class="orbit-node flip" style="left: 36%; top: 9%;" href="https://youtube.com/@vandilsonneto">
+      <span class="name">YouTube</span><span class="orbit-dot"></span><span class="handle">@vandilsonneto</span>
+    </a>
+    <a class="orbit-node flip" style="left: 64%; top: 9%;" href="https://open.spotify.com/artist/vandilsonneto">
+      <span class="name">Spotify</span><span class="orbit-dot"></span><span class="handle">Vandilson Neto</span>
+    </a>
+    <a class="orbit-node" style="left: 92%; top: 50%;" href="https://music.apple.com/artist/vandilsonneto">
+      <span class="name">Apple Music</span><span class="orbit-dot"></span><span class="handle">Vandilson Neto</span>
+    </a>
+  </div>
+
+  <div style="margin-top: 40px;">
+    <span class="mono">BOOKING · IMPRENSA · COLABORAÇÕES</span>
+    <div style="margin-top: 10px;">
+      <a class="display" style="font-size: clamp(20px, 3vw, 34px); font-style: italic; color: var(--silver-300); border-bottom: 1px solid rgba(198,202,208,0.55); padding-bottom: 4px;" href="mailto:booking@vandilsonneto.com">booking@vandilsonneto.com</a>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ VARIANTE 02 · SIGA ══════════ -->
+<div id="v2" class="variant-label"><b>Variante 02 · Siga</b><span>linhas editoriais — irmã da Agenda de shows</span></div>
+<section class="v-rows">
+  <div class="inner">
+    <p class="kicker">Redes & Contacto</p>
+    <h2 class="display">Siga</h2>
+    <p class="lede">Diário de canções, bastidores de estúdio e datas de palco — contados ao vivo.</p>
+
+    <div class="rows">
+      <a class="row" href="https://instagram.com/vandilsonneto">
+        <span class="platform">Instagram</span>
+        <span class="handle">@vandilsonneto</span>
+        <span class="arrow">↗</span>
+      </a>
+      <a class="row" href="https://youtube.com/@vandilsonneto">
+        <span class="platform">YouTube</span>
+        <span class="handle">@vandilsonneto</span>
+        <span class="arrow">↗</span>
+      </a>
+      <a class="row" href="https://open.spotify.com/artist/vandilsonneto">
+        <span class="platform">Spotify</span>
+        <span class="handle">Vandilson Neto</span>
+        <span class="arrow">↗</span>
+      </a>
+      <a class="row" href="https://music.apple.com/artist/vandilsonneto">
+        <span class="platform">Apple Music</span>
+        <span class="handle">Vandilson Neto</span>
+        <span class="arrow">↗</span>
+      </a>
+    </div>
+
+    <div class="email-line">
+      <span class="tag">Booking</span>
+      <a href="mailto:booking@vandilsonneto.com">booking@vandilsonneto.com</a>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ VARIANTE 03 · ONDAS ══════════ -->
+<div id="v3" class="variant-label"><b>Variante 03 · Ondas</b><span>pílulas de vidro líquido — irmã do CTA da Discografia</span></div>
+<section class="v-glass">
+  <p class="kicker">Sintonia</p>
+  <h2 class="display">Ondas</h2>
+  <p class="lede">Cada plataforma, uma forma de ouvir — escolha a sua frequência.</p>
+
+  <div class="glass-row">
+    <a class="glass-pill" href="https://instagram.com/vandilsonneto">
+      <span class="dot"></span><span class="name">Instagram</span><span class="arrow">↗</span>
+    </a>
+    <a class="glass-pill" href="https://youtube.com/@vandilsonneto">
+      <span class="dot"></span><span class="name">YouTube</span><span class="arrow">↗</span>
+    </a>
+    <a class="glass-pill" href="https://open.spotify.com/artist/vandilsonneto">
+      <span class="dot"></span><span class="name">Spotify</span><span class="arrow">↗</span>
+    </a>
+    <a class="glass-pill" href="https://music.apple.com/artist/vandilsonneto">
+      <span class="dot"></span><span class="name">Apple Music</span><span class="arrow">↗</span>
+    </a>
+  </div>
+
+  <div class="email">
+    <span class="tag">Booking · Imprensa · Colaborações</span>
+    <br />
+    <a href="mailto:booking@vandilsonneto.com">booking@vandilsonneto.com</a>
+  </div>
+</section>
+
+<!-- ══════════ VARIANTE 04 · SINTONIA ══════════ -->
+<div id="v4" class="variant-label"><b>Variante 04 · Sintonia</b><span>painel bifacial com grão de pontos — irmã da Sobre</span></div>
+<section class="v-panel">
+  <div class="panel">
+    <div class="left">
+      <div>
+        <p class="kicker">Contacto & Redes</p>
+        <h2 class="display">Sintonia</h2>
+        <p class="lede">Uma mensagem chega sempre ao destino — e cada rede é uma janela para o dia a dia do artista.</p>
+      </div>
+      <a class="mail" href="mailto:booking@vandilsonneto.com">booking@vandilsonneto.com</a>
+    </div>
+    <div class="right">
+      <p class="mono">SIGA EM TODAS AS FREQUÊNCIAS</p>
+      <div class="s-list">
+        <a class="s-item" href="https://instagram.com/vandilsonneto">
+          <span class="platform">Instagram</span><span class="handle">@vandilsonneto</span>
+        </a>
+        <a class="s-item" href="https://youtube.com/@vandilsonneto">
+          <span class="platform">YouTube</span><span class="handle">@vandilsonneto</span>
+        </a>
+        <a class="s-item" href="https://open.spotify.com/artist/vandilsonneto">
+          <span class="platform">Spotify</span><span class="handle">Vandilson Neto</span>
+        </a>
+        <a class="s-item" href="https://music.apple.com/artist/vandilsonneto">
+          <span class="platform">Apple Music</span><span class="handle">Vandilson Neto</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>

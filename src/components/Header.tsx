@@ -9,7 +9,6 @@ import { artist } from "@/content";
 const links = [
   { href: "/", label: "Início" },
   { href: "/discografia", label: "Discografia" },
-  { href: "/sobre", label: "Sobre" },
 ];
 
 /**
