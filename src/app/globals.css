@@ -90,19 +90,35 @@ body {
     rgba(232, 236, 242, 0.85) 95%,
     rgba(255, 255, 255, 0.95) 100%
   );
-  box-shadow: 0 0 34px rgba(198, 202, 208, 0.16);
+  /* Contacto ESCURO e suave — afunda o limbo contra o fundo. */
+  box-shadow: 0 0 22px rgba(0, 0, 0, 0.5);
   z-index: 20;
 }
 
-/* Halo que respira — animado por OPACIDADE (composited). Animar
-   box-shadow força repaint contínuo e roubava frames às órbitas. */
+/* Prata COLADO ao sol — nasce no limbo (o sol ocupa ~59% do raio deste
+   pseudo) e desvanece com decaimento geométrico + blur, sem limite
+   visível. A sombra escura do sol fica por baixo, a envolver a prata. */
 .orbit-sun::after {
   content: "";
   position: absolute;
   inset: -35%;
   border-radius: 50%;
-  box-shadow: 0 0 120px 34px rgba(198, 202, 208, 0.1);
-  opacity: 0.5;
+  background: radial-gradient(
+    circle at 50% 50%,
+    transparent 0%,
+    transparent 58%,
+    rgba(232, 236, 242, 0.1) 64%,
+    rgba(232, 236, 242, 0.065) 72%,
+    rgba(232, 236, 242, 0.042) 80%,
+    rgba(232, 236, 242, 0.027) 87%,
+    rgba(232, 236, 242, 0.016) 92%,
+    rgba(232, 236, 242, 0.008) 96%,
+    rgba(232, 236, 242, 0.003) 98.5%,
+    rgba(232, 236, 242, 0.0008) 99.5%,
+    transparent 100%
+  );
+  filter: blur(4px);
+  opacity: 0.6;
   animation: sun-glow 7s ease-in-out infinite;
   pointer-events: none;
 }
@@ -110,10 +126,10 @@ body {
 @keyframes sun-glow {
   0%,
   100% {
-    opacity: 0.45;
+    opacity: 0.5;
   }
   50% {
-    opacity: 1;
+    opacity: 0.9;
   }
 }
 
@@ -283,6 +299,35 @@ body {
   }
 }
 
+/* Sombra de subida — a Sobre sobe POR CIMA da Sintonia pinada, mas ambas
+   partilham bg-night-950 e a fronteira fica invisível. O ::before projeta
+   uma sombra PARA CIMA a partir do topo da Sobre, escurecendo o último
+   troço da Sintonia por baixo — o solapamento passa a ler-se como
+   folha sobre folha. Estático, sem animação → sem reduced-motion. */
+.rise-shadow::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  height: 160px;
+  pointer-events: none;
+  /* Decaimento exponencial (cada stop ~metade do anterior): o olho lê
+     curvas exponenciais como contínuas — sem "joelho" nem fim visível;
+     o alfa chega a ~1.5% antes do corte, invisível na prática. */
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.6) 0%,
+    rgba(0, 0, 0, 0.47) 18%,
+    rgba(0, 0, 0, 0.34) 36%,
+    rgba(0, 0, 0, 0.22) 54%,
+    rgba(0, 0, 0, 0.12) 72%,
+    rgba(0, 0, 0, 0.05) 88%,
+    rgba(0, 0, 0, 0.015) 96%,
+    transparent 100%
+  );
+}
+
 /* ─── Secção Agenda — micro-órbita de cada trânsito ─── */
 .orbit-mini {
   position: relative;
@@ -438,6 +483,101 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .planet-spots {
+    animation: none;
+  }
+}
+
+/* ─── Menu drawer (mobile) — takeover "Órbita" ───
+   O menu É a secção Sintonia: sol prateado ao centro, rotas como corpos
+   em órbitas tracejadas. Entrada em stagger com a easing de assinatura;
+   todos os passos animam opacity/transform (composited, custo ~zero).
+   reduced-motion: tudo visível de imediato, sem animação. */
+.menu-orbit {
+  /* Campo estelar denso — a camada do herói reutilizada como fundo */
+  background-color: var(--color-night-950);
+  background-image:
+    radial-gradient(1px 1px at 12% 18%, rgba(232, 236, 242, 0.9), transparent 100%),
+    radial-gradient(1px 1px at 34% 62%, rgba(232, 236, 242, 0.6), transparent 100%),
+    radial-gradient(1.5px 1.5px at 55% 24%, rgba(216, 219, 224, 0.85), transparent 100%),
+    radial-gradient(1px 1px at 71% 74%, rgba(232, 236, 242, 0.55), transparent 100%),
+    radial-gradient(1px 1px at 84% 38%, rgba(232, 236, 242, 0.7), transparent 100%),
+    radial-gradient(1.5px 1.5px at 22% 82%, rgba(216, 219, 224, 0.6), transparent 100%),
+    radial-gradient(1px 1px at 63% 88%, rgba(232, 236, 242, 0.5), transparent 100%),
+    radial-gradient(1px 1px at 44% 8%, rgba(232, 236, 242, 0.65), transparent 100%),
+    radial-gradient(1px 1px at 91% 82%, rgba(216, 219, 224, 0.5), transparent 100%),
+    radial-gradient(1px 1px at 8% 52%, rgba(232, 236, 242, 0.45), transparent 100%),
+    radial-gradient(1px 1px at 28% 34%, rgba(232, 236, 242, 0.55), transparent 100%),
+    radial-gradient(1px 1px at 76% 12%, rgba(216, 219, 224, 0.6), transparent 100%);
+  background-size: 420px 420px;
+}
+
+/* Sol central — o artista. Mesma receita do .orbit-sun da Sintonia. */
+.menu-orbit-sun {
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(13, 15, 18, 0.9) 0%,
+    rgba(13, 15, 18, 0.55) 52%,
+    rgba(198, 202, 208, 0.3) 80%,
+    rgba(232, 236, 242, 0.85) 95%,
+    rgba(255, 255, 255, 0.95) 100%
+  );
+  box-shadow: 0 0 34px rgba(198, 202, 208, 0.16);
+}
+
+/* Corpos de navegação — a mesma "bola" dos nós da Sintonia */
+.menu-orbit-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.menu-orbit-ball {
+  width: 46px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(13, 15, 18, 0.92) 0%,
+    rgba(13, 15, 18, 0.72) 55%,
+    rgba(198, 202, 208, 0.35) 84%,
+    rgba(232, 236, 242, 0.9) 100%
+  );
+  box-shadow:
+    0 0 14px rgba(198, 202, 208, 0.22),
+    inset 0 0 10px rgba(0, 0, 0, 0.6);
+  transition: box-shadow 0.3s ease;
+}
+.menu-orbit-node:active .menu-orbit-ball,
+.menu-orbit-node:focus-visible .menu-orbit-ball {
+  box-shadow:
+    0 0 22px rgba(198, 202, 208, 0.4),
+    inset 0 0 10px rgba(0, 0, 0, 0.6);
+}
+
+/* Rota ativa — anel tracejado próprio (eco do .orbit-mini da Agenda) */
+.menu-orbit-ball--active {
+  outline: 1px dashed rgba(154, 160, 168, 0.5);
+  outline-offset: 4px;
+}
+
+/* Órbitas tracejadas — desenhadas como elipses SVG rotacionadas */
+.menu-orbit-ring {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.14);
+  stroke-width: 1;
+}
+.menu-orbit-ring--dashed {
+  stroke: rgba(216, 219, 224, 0.26);
+  stroke-dasharray: 2 9;
+}
+
+/* Entrada em stagger — as classes chegam via framer-motion (AnimatePresence)
+   com delays; aqui só garantimos o estado final e o reduced-motion. */
+@media (prefers-reduced-motion: reduce) {
+  .menu-orbit-sun::after {
     animation: none;
   }
 }

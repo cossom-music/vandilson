@@ -1,6 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useLayoutEffect, useRef, useState } from "react";
+import {
+  AnimatePresence,
+  motion,
+  useReducedMotion,
+  type Variants,
+} from "framer-motion";
 import ReleasePlanet, { ReleasePlanetLinks } from "@/components/ReleasePlanet";
 import type { Release } from "@/content";
 
@@ -16,6 +22,16 @@ type PaneKey = "tracklist" | "curiosities" | "facts";
  *
  * A tab ativa é sempre a primeira *disponível* (nunca um índice fixo), e
  * trocar de tab nunca pode apontar para uma pane inexistente.
+ *
+ * Animação (padrão "Smooth Tab", adaptado de kokonutui para framer-motion
+ * e a paleta noturna do site):
+ *   · pill deslizante atrás das tabs — medida por getBoundingClientRect dos
+ *     botões relativos ao tablist, animada com spring (stiffness 400 / damping 30);
+ *   · troca de pane direcional — entra da direita se avançamos, da esquerda
+ *     se recuamos, com blur + scale, via AnimatePresence mode="popLayout".
+ *     Ao contrário do original (cartão de altura fixa), a pane ativa fica
+ *     em fluxo para o contentor ter a altura natural do conteúdo — só a
+ *     pane que sai é "popada" para absolute.
  */
 
 const PANE_LABELS: Record<PaneKey, string> = {
@@ -34,6 +50,32 @@ function availablePanes(release: Release): PaneKey[] {
   });
 }
 
+/* ── Smooth Tab: transição direcional das panes ── */
+const PANE_EASE = [0.32, 0.72, 0, 1] as const;
+
+const slideVariants: Variants = {
+  enter: (dir: number) => ({
+    x: dir > 0 ? "100%" : "-100%",
+    opacity: 0,
+    filter: "blur(8px)",
+    scale: 0.96,
+  }),
+  center: { x: 0, opacity: 1, filter: "blur(0px)", scale: 1 },
+  exit: (dir: number) => ({
+    x: dir < 0 ? "100%" : "-100%",
+    opacity: 0,
+    filter: "blur(8px)",
+    scale: 0.96,
+  }),
+};
+
+/* prefers-reduced-motion: só fade, sem slide/blur/scale */
+const fadeVariants: Variants = {
+  enter: { opacity: 0 },
+  center: { opacity: 1 },
+  exit: { opacity: 0 },
+};
+
 export default function ReleaseRow({
   release,
   index = 0,
@@ -44,6 +86,43 @@ export default function ReleaseRow({
   const panes = availablePanes(release);
   const [active, setActive] = useState<PaneKey | null>(panes[0] ?? null);
   const activePane = active && panes.includes(active) ? active : null;
+  const [direction, setDirection] = useState(0);
+  const reduceMotion = useReducedMotion();
+  const uid = useId();
+
+  /* Pill deslizante — geometria do botão ativo relativa ao tablist */
+  const tablistRef = useRef<HTMLDivElement>(null);
+  const buttonRefs = useRef<Map<PaneKey, HTMLButtonElement>>(new Map());
+  const [pill, setPill] = useState({ left: 0, top: 0, width: 0, height: 0 });
+
+  useLayoutEffect(() => {
+    if (!activePane) return;
+    const update = () => {
+      const btn = buttonRefs.current.get(activePane);
+      const list = tablistRef.current;
+      if (!btn || !list) return;
+      const r = btn.getBoundingClientRect();
+      const lr = list.getBoundingClientRect();
+      setPill({
+        left: r.left - lr.left,
+        top: r.top - lr.top,
+        width: r.width,
+        height: r.height,
+      });
+    };
+    update();
+    window.addEventListener("resize", update);
+    // trocas de fonte mudam as larguras dos botões
+    document.fonts?.ready.then(update).catch(() => {});
+    return () => window.removeEventListener("resize", update);
+  }, [activePane]);
+
+  const selectPane = (key: PaneKey) => {
+    const current = activePane;
+    if (key === current || !current) return;
+    setDirection(PANE_ORDER.indexOf(key) > PANE_ORDER.indexOf(current) ? 1 : -1);
+    setActive(key);
+  };
 
   return (
     <article className="grid items-center gap-10 rounded-3xl border border-white/10 bg-night-900/60 p-6 md:grid-cols-[340px_1fr] md:gap-14 md:p-10 lg:grid-cols-[380px_1fr]">
@@ -70,21 +149,40 @@ export default function ReleaseRow({
         {panes.length > 0 && activePane ? (
           <>
             <div
+              ref={tablistRef}
               role="tablist"
               aria-label={`Detalhes de ${release.title}`}
-              className="mt-6 flex flex-wrap gap-2"
+              className="relative mt-6 flex w-fit max-w-full flex-wrap gap-1 rounded-full border border-white/10 bg-night-900/50 p-1"
             >
+              {/* Pill deslizante — o indicador da tab ativa */}
+              <motion.span
+                aria-hidden="true"
+                initial={false}
+                animate={{
+                  x: pill.left,
+                  y: pill.top,
+                  width: pill.width,
+                  height: pill.height,
+                }}
+                transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                className="pointer-events-none absolute left-0 top-0 rounded-full bg-white/[0.07] ring-1 ring-silver-500/50"
+              />
+
               {panes.map((key) => (
                 <button
                   key={key}
+                  ref={(el) => {
+                    if (el) buttonRefs.current.set(key, el);
+                    else buttonRefs.current.delete(key);
+                  }}
+                  id={`tab-${uid}-${key}`}
                   type="button"
                   role="tab"
                   aria-selected={activePane === key}
-                  onClick={() => setActive(key)}
-                  className={`rounded-full border px-4 py-2 text-[10px] uppercase tracking-[0.16em] transition-colors ${
-                    activePane === key
-                      ? "border-silver-500/60 bg-white/5 text-cream"
-                      : "border-white/10 text-mist hover:border-white/25 hover:text-cream"
+                  aria-controls={`panel-${uid}-${key}`}
+                  onClick={() => selectPane(key)}
+                  className={`relative z-[1] rounded-full px-3.5 py-2 text-[10px] uppercase tracking-[0.16em] transition-colors duration-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-silver-300/70 ${
+                    activePane === key ? "text-cream" : "text-mist hover:text-cream"
                   }`}
                 >
                   {PANE_LABELS[key]}
@@ -92,56 +190,79 @@ export default function ReleaseRow({
               ))}
             </div>
 
-            <div className="mt-4">
-              {activePane === "tracklist" && release.tracklist ? (
-                <ol>
-                  {release.tracklist.map((track, i) => (
-                    <li
-                      key={`${track.title}-${i}`}
-                      className="flex items-baseline gap-4 border-b border-dashed border-white/10 py-2.5 text-sm text-cream/90"
-                    >
-                      <span className="text-[10px] tracking-[0.1em] text-mist/60">
-                        {String(i + 1).padStart(2, "0")}
-                      </span>
-                      <span className="min-w-0">{track.title}</span>
-                      {track.duration ? (
-                        <span className="ml-auto shrink-0 text-[11px] text-mist/60">
-                          {track.duration}
-                        </span>
-                      ) : null}
-                    </li>
-                  ))}
-                </ol>
-              ) : null}
+            {/* Panes — slide direcional + blur (Smooth Tab) */}
+            <div
+              id={`panel-${uid}-${activePane}`}
+              role="tabpanel"
+              aria-labelledby={`tab-${uid}-${activePane}`}
+              className="relative mt-4 overflow-hidden"
+            >
+              <AnimatePresence
+                custom={direction}
+                initial={false}
+                mode="popLayout"
+              >
+                <motion.div
+                  key={activePane}
+                  custom={direction}
+                  variants={reduceMotion ? fadeVariants : slideVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{ duration: 0.4, ease: PANE_EASE }}
+                  className="will-change-transform"
+                >
+                  {activePane === "tracklist" && release.tracklist ? (
+                    <ol>
+                      {release.tracklist.map((track, i) => (
+                        <li
+                          key={`${track.title}-${i}`}
+                          className="flex items-baseline gap-4 border-b border-dashed border-white/10 py-2.5 text-sm text-cream/90"
+                        >
+                          <span className="text-[10px] tracking-[0.1em] text-mist/60">
+                            {String(i + 1).padStart(2, "0")}
+                          </span>
+                          <span className="min-w-0">{track.title}</span>
+                          {track.duration ? (
+                            <span className="ml-auto shrink-0 text-[11px] text-mist/60">
+                              {track.duration}
+                            </span>
+                          ) : null}
+                        </li>
+                      ))}
+                    </ol>
+                  ) : null}
 
-              {activePane === "curiosities" && release.curiosities ? (
-                <ul>
-                  {release.curiosities.map((curio, i) => (
-                    <li
-                      key={i}
-                      className="border-b border-dashed border-white/10 py-2.5 text-sm leading-relaxed text-mist"
-                    >
-                      {curio}
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
+                  {activePane === "curiosities" && release.curiosities ? (
+                    <ul>
+                      {release.curiosities.map((curio, i) => (
+                        <li
+                          key={i}
+                          className="border-b border-dashed border-white/10 py-2.5 text-sm leading-relaxed text-mist"
+                        >
+                          {curio}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
 
-              {activePane === "facts" && release.facts ? (
-                <dl>
-                  {release.facts.map((fact, i) => (
-                    <div
-                      key={i}
-                      className="grid grid-cols-[120px_1fr] gap-3 border-b border-dashed border-white/10 py-2.5"
-                    >
-                      <dt className="pt-0.5 text-[10px] uppercase tracking-[0.14em] text-mist/60">
-                        {fact.label}
-                      </dt>
-                      <dd className="text-sm text-cream/90">{fact.value}</dd>
-                    </div>
-                  ))}
-                </dl>
-              ) : null}
+                  {activePane === "facts" && release.facts ? (
+                    <dl>
+                      {release.facts.map((fact, i) => (
+                        <div
+                          key={i}
+                          className="grid grid-cols-[120px_1fr] gap-3 border-b border-dashed border-white/10 py-2.5"
+                        >
+                          <dt className="pt-0.5 text-[10px] uppercase tracking-[0.14em] text-mist/60">
+                            {fact.label}
+                          </dt>
+                          <dd className="text-sm text-cream/90">{fact.value}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  ) : null}
+                </motion.div>
+              </AnimatePresence>
             </div>
           </>
         ) : null}

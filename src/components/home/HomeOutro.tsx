@@ -93,10 +93,12 @@ export default function HomeOutro() {
       {/*
         Ato 4 — Sobre + Agenda. Fundo sólido + z-index acima: sobe POR CIMA
         da Sintonia fixada — o scroll traz a próxima secção para cima.
+        .rise-shadow projeta uma sombra para cima a partir do topo, para a
+        fronteira com a Sintonia (mesma cor de fundo) ficar legível.
       */}
       <section
         data-sobre
-        className="relative z-10 bg-night-950 pt-24 md:pt-32"
+        className="rise-shadow relative z-10 bg-night-950 pt-24 md:pt-32"
       >
         <div className="mx-auto max-w-6xl px-6 pb-28">
           <SobrePanels />

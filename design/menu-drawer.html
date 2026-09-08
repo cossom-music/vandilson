@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Menu drawer · 3 variações · Vandilson Neto</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Space+Grotesk:wght@300;400;500&display=swap" rel="stylesheet" />
+<!--
+  ASSUMPTIONS (Junior pass — confirmar com o manager):
+  · O site tem 2 rotas reais (Início, Discografia) → o drawer leva também
+    e-mail de booking + redes (conteúdo real de src/content.ts).
+  · Linguagem reutilizada do site: star-layer, eclipse-rim, orbit-sun,
+    órbitas tracejadas, planetas dot-matrix + anel, grão de filme,
+    easing cubic-bezier(0.16,1,0.3,1).
+  · 3 variações, uma por filosofia:
+    A) Eclipse — folha de topo em vidro (segura, mais próxima do header atual)
+    B) Órbita — navegação como sistema solar (assinatura do site, a mais ousada)
+    C) Planeta — takeover editorial com um planeta por rota (ecoa Discografia)
+  · Interação: clicar no hamburger em cada telefone abre o drawer; ESC,
+    scrim ou X fecham. Botão "replay" repete a entrada.
+-->
+<style>
+  :root {
+    --bg: #030509;
+    --panel: #0a0c11;
+    --night-950: #050607;
+    --night-900: #08090b;
+    --ink: #f4f1ea;
+    --cream: #f4f1ea;
+    --mist: #9aa3b2;
+    --faint: #5c6067;
+    --silver-300: #d8dbe0;
+    --silver-400: #c6cad0;
+    --silver-500: #a9adb5;
+    --silver-600: #7d828b;
+    --silver-700: #585c64;
+    --hairline: rgba(232, 233, 235, 0.1);
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+    --serif: "Playfair Display", Georgia, serif;
+    --sans: "Space Grotesk", ui-monospace, monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  /* grão de filme — igual ao site */
+  body::after {
+    content: ""; position: fixed; inset: 0; z-index: 90; pointer-events: none; opacity: 0.05;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  .page { max-width: 1440px; margin: 0 auto; padding: 56px 48px 120px; }
+
+  .intro h1 { font-family: var(--serif); font-size: 30px; font-weight: 500; }
+  .intro p { color: var(--faint); font-size: 13px; margin-top: 8px; line-height: 1.7; max-width: 760px; }
+  .label {
+    font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--faint); margin-bottom: 14px; display: flex; align-items: center; gap: 12px;
+  }
+  .label::after { content: ""; height: 1px; flex: 1; background: var(--hairline); }
+  .howto {
+    display: inline-block; margin-top: 16px; font-size: 10px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--mist);
+    border: 1px dashed rgba(154,160,168,0.35); border-radius: 4px; padding: 6px 10px;
+  }
+
+  /* ─── grelha de conceitos ─── */
+  .row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; margin-top: 48px; }
+  @media (max-width: 1180px) { .row { grid-template-columns: 1fr; place-items: center; } }
+
+  .concept { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+  .cmeta { max-width: 380px; }
+  .cmeta .vname { font-family: var(--serif); font-size: 19px; color: var(--ink); }
+  .cmeta .vtag {
+    font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--silver-600);
+    margin-bottom: 6px;
+  }
+  .cmeta p { font-size: 12px; color: var(--mist); line-height: 1.7; margin-top: 8px; }
+  .cmeta .keep { font-size: 10.5px; color: var(--faint); line-height: 1.7; margin-top: 8px; }
+  .cmeta .keep b { color: var(--silver-500); font-weight: 500; }
+
+  /* ─── telefone ─── */
+  .phone {
+    position: relative; width: 390px; height: 780px; border-radius: 44px;
+    background: #04060a; border: 1px solid rgba(232,233,235,0.14);
+    box-shadow: 0 30px 80px rgba(0,0,0,0.55), inset 0 0 0 6px #0b0d11;
+    overflow: hidden;
+  }
+  .p-status {
+    position: absolute; top: 0; left: 0; right: 0; height: 44px; z-index: 5;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 26px; font-size: 11px; letter-spacing: 0.08em; color: var(--silver-500);
+    pointer-events: none;
+  }
+  .p-status .batt { display: flex; align-items: center; gap: 6px; }
+  .p-status .batt i {
+    width: 18px; height: 9px; border: 1px solid rgba(154,160,168,0.6); border-radius: 3px;
+    position: relative; display: inline-block;
+  }
+  .p-status .batt i::after {
+    content: ""; position: absolute; inset: 1.5px; right: 5px;
+    background: rgba(216,219,224,0.75); border-radius: 1px;
+  }
+
+  /* header dentro do telefone — igual ao site (h-16, blur, hairline) */
+  .p-header {
+    position: absolute; top: 44px; left: 0; right: 0; height: 64px; z-index: 40;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px;
+    background: rgba(5,6,7,0.7); backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .p-brand { font-family: var(--serif); font-size: 17px; letter-spacing: 0.02em; color: var(--cream); }
+  .burger {
+    width: 40px; height: 40px; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 6px; cursor: pointer; background: none; border: 0;
+  }
+  .burger span { width: 24px; height: 1px; background: var(--cream); transition: transform 0.35s var(--ease); }
+  .phone.open .burger span:nth-child(1) { transform: translateY(3.5px) rotate(45deg); }
+  .phone.open .burger span:nth-child(2) { transform: translateY(-3.5px) rotate(-45deg); }
+
+  /* fundo da página atrás do drawer (contexto) */
+  .p-page {
+    position: absolute; inset: 0; padding: 130px 24px 0;
+    filter: brightness(0.55); transition: filter 0.5s var(--ease);
+  }
+  .phone.open .p-page { filter: brightness(0.28); }
+  .p-page .ph-row {
+    display: flex; align-items: center; gap: 16px; padding: 18px 0;
+    border-bottom: 1px dashed rgba(232,233,235,0.08);
+  }
+  .p-page .ph-planet { width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
+    background:
+      radial-gradient(rgba(198,202,208,0.4) 1px, transparent 1.4px) 0 0/9px 8px,
+      radial-gradient(circle at 32% 30%, #2e333c 0%, #23272e 55%, #14171c 100%);
+  }
+  .p-page .ph-t { font-family: var(--serif); font-size: 16px; color: var(--cream); }
+  .p-page .ph-s { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--faint); margin-top: 4px; }
+
+  .scrim {
+    position: absolute; inset: 0; z-index: 45; background: rgba(3,5,9,0.6);
+    opacity: 0; pointer-events: none; transition: opacity 0.45s var(--ease); cursor: pointer;
+  }
+  .phone.open .scrim { opacity: 1; pointer-events: auto; }
+
+  .replay {
+    margin-top: 4px; font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--faint); background: none; border: 1px solid var(--hairline);
+    border-radius: 999px; padding: 7px 14px; cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .replay:hover { color: var(--cream); border-color: rgba(232,233,235,0.35); }
+
+  /* ─────────────────────────────────────────────────────────────
+     A · ECLIPSE — folha de topo em vidro, limbo prateado
+     ───────────────────────────────────────────────────────────── */
+  .drawerA {
+    position: absolute; top: 108px; left: 0; right: 0; bottom: 0; z-index: 50;
+    background: rgba(8,9,11,0.92); backdrop-filter: blur(16px);
+    border-top: 1px solid rgba(255,255,255,0.08);
+    clip-path: inset(0 0 100% 0);
+    transition: clip-path 0.65s var(--ease);
+  }
+  .phone.open .drawerA { clip-path: inset(0 0 0 0); }
+  .drawerA .eclipse {
+    position: absolute; top: -110px; right: -90px; width: 240px; height: 240px;
+    border-radius: 50%;
+    background: conic-gradient(from 210deg, transparent 0deg, rgba(198,202,208,0.05) 40deg,
+      rgba(230,234,240,0.9) 120deg, rgba(198,202,208,0.05) 200deg, transparent 260deg);
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2px));
+    mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2px));
+    filter: drop-shadow(0 0 18px rgba(198,202,208,0.35));
+    animation: spinSlow 40s linear infinite;
+  }
+  .drawerA .inner { position: relative; height: 100%; padding: 56px 28px 32px; display: flex; flex-direction: column; }
+  .drawerA .eyebrow { font-size: 9px; letter-spacing: 0.35em; text-transform: uppercase; color: var(--silver-600); }
+  .drawerA nav { margin-top: 26px; display: flex; flex-direction: column; }
+  .drawerA a.item {
+    display: flex; align-items: baseline; gap: 14px; padding: 20px 0;
+    border-bottom: 1px dashed rgba(232,233,235,0.09); text-decoration: none;
+    opacity: 0; transform: translateY(18px);
+    transition: opacity 0.6s var(--ease), transform 0.6s var(--ease);
+  }
+  .phone.open .drawerA a.item { opacity: 1; transform: translateY(0); transition-delay: 0.28s, 0.28s; }
+  .phone.open .drawerA a.item:nth-child(2) { transition-delay: 0.36s, 0.36s; }
+  .drawerA a.item .n { font-size: 10px; letter-spacing: 0.14em; color: var(--silver-600); }
+  .drawerA a.item .t {
+    font-family: var(--serif); font-size: 34px; color: var(--mist);
+    transition: color 0.3s;
+  }
+  .drawerA a.item:hover .t, .drawerA a.item.active .t { color: #fff; }
+  .drawerA a.item.active .t { font-style: italic; }
+  .drawerA a.item.active .t::after {
+    content: ""; display: block; height: 1px; margin-top: 6px; background: var(--silver-300);
+  }
+  .drawerA .foot { margin-top: auto; }
+  .drawerA .mail {
+    font-family: var(--serif); font-size: 20px; color: var(--cream); text-decoration: none;
+    background-image: linear-gradient(90deg, rgba(198,202,208,0.55), rgba(198,202,208,0.55));
+    background-repeat: no-repeat; background-size: 100% 1px; background-position: 0 100%;
+    padding-bottom: 4px;
+  }
+  .drawerA .soc { margin-top: 18px; display: flex; gap: 18px; font-size: 10px; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--faint); }
+
+  /* ─────────────────────────────────────────────────────────────
+     B · ÓRBITA — navegação como sistema solar
+     ───────────────────────────────────────────────────────────── */
+  .drawerB {
+    position: absolute; inset: 0; z-index: 50;
+    background:
+      radial-gradient(1px 1px at 18% 26%, rgba(232,236,242,0.7), transparent 100%),
+      radial-gradient(1px 1px at 42% 68%, rgba(232,236,242,0.5), transparent 100%),
+      radial-gradient(1.5px 1.5px at 64% 22%, rgba(216,219,224,0.7), transparent 100%),
+      radial-gradient(1px 1px at 82% 58%, rgba(232,236,242,0.45), transparent 100%),
+      radial-gradient(1px 1px at 30% 84%, rgba(216,219,224,0.55), transparent 100%),
+      radial-gradient(1px 1px at 58% 46%, rgba(232,236,242,0.4), transparent 100%),
+      radial-gradient(1px 1px at 8% 64%, rgba(232,236,242,0.5), transparent 100%),
+      radial-gradient(1px 1px at 90% 14%, rgba(216,219,224,0.55), transparent 100%);
+    background-size: 340px 340px;
+    background-color: var(--night-950);
+    opacity: 0; pointer-events: none; transition: opacity 0.5s var(--ease);
+  }
+  .phone.open .drawerB { opacity: 1; pointer-events: auto; }
+  .drawerB svg.orbits { position: absolute; left: 50%; top: 46%; transform: translate(-50%,-50%); }
+  .drawerB .sys { position: absolute; left: 50%; top: 46%; transform: translate(-50%,-50%); width: 300px; height: 420px; }
+  .drawerB .sun {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%) scale(0.4);
+    width: 74px; height: 74px; border-radius: 50%;
+    background: radial-gradient(circle at 50% 50%, rgba(13,15,18,0.9) 0%, rgba(13,15,18,0.55) 52%,
+      rgba(198,202,208,0.3) 80%, rgba(232,236,242,0.85) 95%, rgba(255,255,255,0.95) 100%);
+    box-shadow: 0 0 34px rgba(198,202,208,0.16);
+    display: grid; place-items: center;
+    font-family: var(--serif); font-size: 15px; color: #fff;
+    opacity: 0; transition: opacity 0.6s var(--ease) 0.15s, transform 0.8s var(--ease) 0.15s;
+  }
+  .phone.open .drawerB .sun { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+  .drawerB .node {
+    position: absolute; transform: translate(-50%,-50%) scale(0.4);
+    display: flex; flex-direction: column; align-items: center; gap: 10px; cursor: pointer;
+    opacity: 0; transition: opacity 0.5s var(--ease), transform 0.7s var(--ease);
+  }
+  .phone.open .drawerB .node { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+  .phone.open .drawerB .node.n1 { transition-delay: 0.4s, 0.4s; }
+  .phone.open .drawerB .node.n2 { transition-delay: 0.52s, 0.52s; }
+  .drawerB .ball {
+    width: 46px; height: 46px; border-radius: 50%;
+    background: radial-gradient(circle at 50% 50%, rgba(13,15,18,0.92) 0%, rgba(13,15,18,0.72) 55%,
+      rgba(198,202,208,0.35) 84%, rgba(232,236,242,0.9) 100%);
+    box-shadow: 0 0 14px rgba(198,202,208,0.22), inset 0 0 10px rgba(0,0,0,0.6);
+    display: grid; place-items: center; font-size: 9px; letter-spacing: 0.1em; color: var(--silver-300);
+    transition: box-shadow 0.3s;
+  }
+  .drawerB .node:hover .ball, .drawerB .node.active .ball {
+    box-shadow: 0 0 22px rgba(198,202,208,0.4), inset 0 0 10px rgba(0,0,0,0.6);
+  }
+  .drawerB .node.active .ball::after {
+    content: ""; position: absolute; width: 26px; height: 26px; margin-top: -10px;
+    border: 1px dashed rgba(154,160,168,0.5); border-radius: 50%;
+  }
+  .drawerB .nlabel { font-family: var(--serif); font-size: 16px; color: var(--cream); white-space: nowrap; }
+  .drawerB .nsub { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--silver-600); margin-top: -6px; }
+  .drawerB .foot {
+    position: absolute; left: 0; right: 0; bottom: 34px; text-align: center;
+    opacity: 0; transform: translateY(12px); transition: all 0.6s var(--ease) 0.6s;
+  }
+  .phone.open .drawerB .foot { opacity: 1; transform: translateY(0); }
+  .drawerB .foot .k { font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--silver-700); }
+  .drawerB .foot .m { font-family: var(--serif); font-size: 19px; color: var(--cream); margin-top: 6px; display: inline-block;
+    background-image: linear-gradient(90deg, rgba(198,202,208,0.55), rgba(198,202,208,0.55));
+    background-repeat: no-repeat; background-size: 100% 1px; background-position: 0 100%; padding-bottom: 3px; }
+
+  /* ─────────────────────────────────────────────────────────────
+     C · PLANETA — takeover editorial, um planeta por rota
+     ───────────────────────────────────────────────────────────── */
+  .drawerC {
+    position: absolute; inset: 0; z-index: 50;
+    background-color: var(--night-950);
+    background-image:
+      radial-gradient(1px 1px at 12% 18%, rgba(232,236,242,0.9), transparent 100%),
+      radial-gradient(1px 1px at 34% 62%, rgba(232,236,242,0.6), transparent 100%),
+      radial-gradient(1.5px 1.5px at 55% 24%, rgba(216,219,224,0.85), transparent 100%),
+      radial-gradient(1px 1px at 71% 74%, rgba(232,236,242,0.55), transparent 100%),
+      radial-gradient(1px 1px at 84% 38%, rgba(232,236,242,0.7), transparent 100%),
+      radial-gradient(1.5px 1.5px at 22% 82%, rgba(216,219,224,0.6), transparent 100%),
+      radial-gradient(1px 1px at 63% 88%, rgba(232,236,242,0.5), transparent 100%),
+      radial-gradient(1px 1px at 44% 8%, rgba(232,236,242,0.65), transparent 100%),
+      radial-gradient(1px 1px at 91% 82%, rgba(216,219,224,0.5), transparent 100%),
+      radial-gradient(1px 1px at 8% 52%, rgba(232,236,242,0.45), transparent 100%);
+    background-size: 420px 420px;
+    clip-path: inset(0 0 100% 0);
+    transition: clip-path 0.7s var(--ease);
+    overflow: hidden;
+  }
+  .phone.open .drawerC { clip-path: inset(0 0 0 0); }
+  .drawerC .meteor {
+    position: absolute; top: 16%; left: -60px; width: 90px; height: 1.2px; transform: rotate(18deg);
+    background: linear-gradient(90deg, rgba(232,236,242,0.75), transparent);
+    opacity: 0; animation: shoot 14s ease-in 3s infinite;
+  }
+  .drawerC .inner { position: relative; height: 100%; padding: 120px 28px 30px; display: flex; flex-direction: column; }
+  .drawerC .eyebrow { font-size: 9px; letter-spacing: 0.35em; text-transform: uppercase; color: var(--silver-600); }
+  .drawerC .rows { margin-top: 22px; }
+  .drawerC .r {
+    display: flex; align-items: center; gap: 20px; padding: 24px 0;
+    border-bottom: 1px dashed rgba(232,233,235,0.09); text-decoration: none;
+    opacity: 0; transform: translateX(-26px);
+    transition: opacity 0.6s var(--ease), transform 0.6s var(--ease);
+  }
+  .phone.open .drawerC .r1 { opacity: 1; transform: none; transition-delay: 0.3s, 0.3s; }
+  .phone.open .drawerC .r2 { opacity: 1; transform: none; transition-delay: 0.42s, 0.42s; }
+  .drawerC .r:hover .rt, .drawerC .r.active .rt { color: #fff; transform: translateX(4px); }
+  .drawerC .rt { font-family: var(--serif); font-size: 30px; color: var(--mist); transition: all 0.35s var(--ease); }
+  .drawerC .r.active .rt { font-style: italic; }
+  .drawerC .rs { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--silver-600); margin-top: 5px; }
+  .drawerC .meta { margin-left: auto; text-align: right; font-size: 9px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--faint); }
+
+  /* planeta dot-matrix (igual ao ReleasePlanet) */
+  .dplanet { position: relative; width: 64px; height: 64px; flex-shrink: 0; }
+  .dplanet .body {
+    position: absolute; inset: 5px; border-radius: 50%;
+    background:
+      radial-gradient(rgba(216,219,224,0.22) 1px, transparent 1.4px) 0 0/11px 10px,
+      radial-gradient(circle at 32% 30%, #2e333c 0%, #23272e 55%, #14171c 100%);
+    box-shadow: inset 0 0 12px rgba(0,0,0,0.45), 0 0 16px rgba(198,202,208,0.18);
+    animation: spinSlow 80s linear infinite;
+  }
+  .dplanet .body::after {
+    content: ""; position: absolute; inset: 0; border-radius: 50%;
+    background: radial-gradient(circle at 200deg, rgba(255,255,255,0.10) 0%, transparent 48%, rgba(0,0,0,0.5) 100%);
+  }
+  .dplanet .ring, .dplanet .ring.front {
+    position: absolute; left: 50%; top: 50%; width: 150%; height: 34%;
+    transform: translate(-50%,-50%) rotate(-16deg);
+    border: 1px dashed rgba(154,160,168,0.45); border-radius: 50%;
+  }
+  .dplanet .ring { clip-path: inset(0 50% 0 0); }
+  .dplanet .ring.front { clip-path: inset(0 0 0 50%); z-index: 2; }
+
+  .drawerC .foot { margin-top: auto; }
+  .drawerC .mail { font-family: var(--serif); font-size: 20px; color: var(--cream); text-decoration: none;
+    background-image: linear-gradient(90deg, rgba(198,202,208,0.55), rgba(198,202,208,0.55));
+    background-repeat: no-repeat; background-size: 100% 1px; background-position: 0 100%; padding-bottom: 4px; }
+  .drawerC .soc { margin-top: 16px; display: flex; gap: 18px; font-size: 10px; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--faint); }
+
+  @keyframes spinSlow { to { transform: rotate(360deg); } }
+  @keyframes shoot {
+    0% { opacity: 0; transform: rotate(18deg) translateX(0); }
+    4% { opacity: 1; }
+    12% { opacity: 0; transform: rotate(18deg) translateX(460px); }
+    100% { opacity: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .drawerA .eclipse, .dplanet .body, .drawerC .meteor { animation: none; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="intro">
+    <div class="label">Menu drawer · 3 variações · Vandilson Neto</div>
+    <h1>O menu como céu noturno</h1>
+    <p>
+      Três formas de levar a linguagem espacial do site (estrelas, órbitas, planetas,
+      eclipse) para o menu mobile — mantendo a paleta prata/noite, o serifa Playfair
+      para títulos e a easing de assinatura. O conteúdo real: Início, Discografia,
+      booking por e-mail e redes sociais.
+    </p>
+    <span class="howto">Clica no hamburger de cada telefone · ESC fecha · replay repete a entrada</span>
+  </header>
+
+  <div class="row">
+
+    <!-- ═══════ A · ECLIPSE ═══════ -->
+    <div class="concept">
+      <div class="phone" id="phA">
+        <div class="p-status"><span>9:41</span><span class="batt"><i></i></span></div>
+        <div class="p-header">
+          <span class="p-brand">Vandilson Neto</span>
+          <button class="burger" aria-label="Abrir menu"><span></span><span></span></button>
+        </div>
+        <div class="p-page">
+          <div class="ph-row"><div class="ph-planet"></div><div><div class="ph-t">Horizonte Infinito</div><div class="ph-s">Single · 2026</div></div></div>
+          <div class="ph-row"><div class="ph-planet" style="filter:hue-rotate(20deg)"></div><div><div class="ph-t">Cartas ao Mundo</div><div class="ph-s">EP · 2025</div></div></div>
+          <div class="ph-row"><div class="ph-planet" style="filter:brightness(1.2)"></div><div><div class="ph-t">Gravidade</div><div class="ph-s">Álbum · 2024</div></div></div>
+        </div>
+        <div class="scrim" data-close></div>
+        <div class="drawerA">
+          <div class="eclipse"></div>
+          <div class="inner">
+            <span class="eyebrow">Navegar</span>
+            <nav>
+              <a class="item active" href="#"><span class="n">01</span><span class="t">Início</span></a>
+              <a class="item" href="#"><span class="n">02</span><span class="t">Discografia</span></a>
+            </nav>
+            <div class="foot">
+              <span class="eyebrow">Booking · Imprensa · Colaborações</span><br /><br />
+              <a class="mail" href="#">booking@vandilsonneto.com</a>
+              <div class="soc"><span>Instagram</span><span>YouTube</span><span>Spotify</span><span>Apple</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button class="replay" data-replay="phA">Replay entrada</button>
+      <div class="cmeta">
+        <div class="vtag">Variação A · segura</div>
+        <div class="vname">Eclipse</div>
+        <p>Folha de topo em vidro (mesmo tratamento do tooltip das órbitas), revelada com clip-path. O limbo prateado do eclipse decoracao o canto; os links sobem em stagger com números de índice.</p>
+        <p class="keep"><b>Manter:</b> mais próxima do header atual, implementação direta em framer-motion.<br /><b>Risco:</b> é a menos "espacial" das três.</p>
+      </div>
+    </div>
+
+    <!-- ═══════ B · ÓRBITA ═══════ -->
+    <div class="concept">
+      <div class="phone" id="phB">
+        <div class="p-status"><span>9:41</span><span class="batt"><i></i></span></div>
+        <div class="p-header">
+          <span class="p-brand">Vandilson Neto</span>
+          <button class="burger" aria-label="Abrir menu"><span></span><span></span></button>
+        </div>
+        <div class="p-page">
+          <div class="ph-row"><div class="ph-planet"></div><div><div class="ph-t">Horizonte Infinito</div><div class="ph-s">Single · 2026</div></div></div>
+          <div class="ph-row"><div class="ph-planet" style="filter:hue-rotate(20deg)"></div><div><div class="ph-t">Cartas ao Mundo</div><div class="ph-s">EP · 2025</div></div></div>
+          <div class="ph-row"><div class="ph-planet" style="filter:brightness(1.2)"></div><div><div class="ph-t">Gravidade</div><div class="ph-s">Álbum · 2024</div></div></div>
+        </div>
+        <div class="scrim" data-close></div>
+        <div class="drawerB">
+          <svg class="orbits" width="340" height="470" viewBox="0 0 340 470" fill="none">
+            <ellipse cx="170" cy="235" rx="150" ry="200" transform="rotate(-14 170 235)"
+              stroke="rgba(255,255,255,0.14)" stroke-width="1" stroke-dasharray="2 9"/>
+            <ellipse cx="170" cy="235" rx="95" ry="130" transform="rotate(12 170 235)"
+              stroke="rgba(216,219,224,0.26)" stroke-width="1" stroke-dasharray="2 9"/>
+          </svg>
+          <div class="sys">
+            <div class="sun">VN</div>
+            <div class="node n1 active" style="left: 78%; top: 22%;">
+              <span class="ball">01</span>
+              <span class="nlabel">Início</span>
+              <span class="nsub">Órbita interna</span>
+            </div>
+            <div class="node n2" style="left: 20%; top: 72%;">
+              <span class="ball">02</span>
+              <span class="nlabel">Discografia</span>
+              <span class="nsub">Órbita externa</span>
+            </div>
+          </div>
+          <div class="foot">
+            <span class="k">Booking</span><br />
+            <a class="m" href="#">booking@vandilsonneto.com</a>
+          </div>
+        </div>
+      </div>
+      <button class="replay" data-replay="phB">Replay entrada</button>
+      <div class="cmeta">
+        <div class="vtag">Variação B · assinatura</div>
+        <div class="vname">Órbita</div>
+        <p>O menu É a secção Sintonia: sol prateado ao centro (o artista), rotas como corpos em órbitas tracejadas. Tocar num "planeta" navega. A rota ativa ganha anel tracejado próprio.</p>
+        <p class="keep"><b>Manter:</b> a mais memorável e coerente com a homepage; reutiliza .orbit-* do site.<br /><b>Risco:</b> só 2 rotas hoje — brilha quando houver 3–5.</p>
+      </div>
+    </div>
+
+    <!-- ═══════ C · PLANETA ═══════ -->
+    <div class="concept">
+      <div class="phone" id="phC">
+        <div class="p-status"><span>9:41</span><span class="batt"><i></i></span></div>
+        <div class="p-header">
+          <span class="p-brand">Vandilson Neto</span>
+          <button class="burger" aria-label="Abrir menu"><span></span><span></span></button>
+        </div>
+        <div class="p-page">
+          <div class="ph-row"><div class="ph-planet"></div><div><div class="ph-t">Horizonte Infinito</div><div class="ph-s">Single · 2026</div></div></div>
+          <div class="ph-row"><div class="ph-planet" style="filter:hue-rotate(20deg)"></div><div><div class="ph-t">Cartas ao Mundo</div><div class="ph-s">EP · 2025</div></div></div>
+          <div class="ph-row"><div class="ph-planet" style="filter:brightness(1.2)"></div><div><div class="ph-t">Gravidade</div><div class="ph-s">Álbum · 2024</div></div></div>
+        </div>
+        <div class="scrim" data-close></div>
+        <div class="drawerC">
+          <div class="meteor"></div>
+          <div class="inner">
+            <span class="eyebrow">Sistema</span>
+            <div class="rows">
+              <a class="r r1 active" href="#">
+                <span class="dplanet"><span class="ring"></span><span class="ring front"></span><span class="body"></span></span>
+                <span><span class="rt">Início</span><div class="rs">Página · órbita 01</div></span>
+                <span class="meta">Estás aqui</span>
+              </a>
+              <a class="r r2" href="#">
+                <span class="dplanet"><span class="body" style="filter:hue-rotate(25deg)"></span></span>
+                <span><span class="rt">Discografia</span><div class="rs">Página · órbita 02</div></span>
+                <span class="meta">4 lançamentos</span>
+              </a>
+            </div>
+            <div class="foot">
+              <a class="mail" href="#">booking@vandilsonneto.com</a>
+              <div class="soc"><span>Instagram</span><span>YouTube</span><span>Spotify</span><span>Apple</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button class="replay" data-replay="phC">Replay entrada</button>
+      <div class="cmeta">
+        <div class="vtag">Variação C · editorial</div>
+        <div class="vname">Planeta</div>
+        <p>Takeover de ecrã inteiro: cada rota é uma fila como as da Discografia — planeta dot-matrix (anel no primeiro), título serifa, metadados à direita. Campo estelar denso + estrela cadente ocasional.</p>
+        <p class="keep"><b>Manter:</b> escala bem com conteúdo (rotas futuras = novas filas); reutiliza .planet-*.<br /><b>Risco:</b> takeover total esconde o contexto da página.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // abrir/fechar — um listener por telefone
+  document.querySelectorAll(".phone").forEach(function (phone) {
+    var burger = phone.querySelector(".burger");
+    var scrim = phone.querySelector(".scrim");
+    function toggle() { phone.classList.toggle("open"); }
+    burger.addEventListener("click", toggle);
+    if (scrim) scrim.addEventListener("click", function () { phone.classList.remove("open"); });
+    phone.querySelectorAll(".drawerA a.item, .drawerB .node, .drawerC a.r").forEach(function (el) {
+      el.addEventListener("click", function (e) { e.preventDefault(); });
+    });
+  });
+
+  // replay: fecha, força reflow, reabre — repõe as transições de entrada
+  document.querySelectorAll("[data-replay]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var phone = document.getElementById(btn.getAttribute("data-replay"));
+      phone.classList.remove("open");
+      void phone.offsetWidth;
+      setTimeout(function () { phone.classList.add("open"); }, 60);
+    });
+  });
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") document.querySelectorAll(".phone.open").forEach(function (p) { p.classList.remove("open"); });
+  });
+
+  // abre a variação A por defeito — primeira impressão imediata
+  window.addEventListener("load", function () {
+    setTimeout(function () { document.getElementById("phA").classList.add("open"); }, 400);
+  });
+</script>
+</body>
+</html>
