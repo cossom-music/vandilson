@@ -1,13 +1,72 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Reveal from "@/components/Reveal";
 import { useSiteContent } from "@/components/SiteContentProvider";
+import type { Show } from "@/content";
 
 /**
  * Painéis "Eclipse" (bio) + "Trânsitos" (agenda) — detalhes de universo
  * na linguagem do site: prata sobre preto, Playfair, grão de pontos.
  * Partilhados entre a página /sobre e a secção final da homepage.
  */
+
+/**
+ * Contagem decrescente até ao próximo show — só conta quando o show tem
+ * `eventDate`. Sem hidratação: o SSR renderiza null e o contador acorda
+ * no cliente (useEffect), com tique a cada minuto.
+ */
+function useCountdown(eventDate?: string) {
+  const [now, setNow] = useState<number | null>(null);
+  useEffect(() => {
+    if (!eventDate) return;
+    setNow(Date.now());
+    const id = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(id);
+  }, [eventDate]);
+  if (!eventDate || now === null) return null;
+  const target = new Date(`${eventDate}T00:00:00`).getTime();
+  if (Number.isNaN(target)) return null;
+  const diff = target - now;
+  if (diff <= 0) return null; // chegou o dia — sem countdown
+  const days = Math.floor(diff / 86_400_000);
+  const hours = Math.floor((diff % 86_400_000) / 3_600_000);
+  const mins = Math.floor((diff % 3_600_000) / 60_000);
+  return { days, hours, mins };
+}
+
+/** Banda do countdown — o próximo show com eventDate válido. */
+function NextShowCountdown({ shows }: { shows: Show[] }) {
+  const next = shows.find((s) => s.eventDate);
+  const cd = useCountdown(next?.eventDate);
+  if (!next || !cd) return null;
+  const units: [number, string][] = [
+    [cd.days, "dias"],
+    [cd.hours, "horas"],
+    [cd.mins, "min"],
+  ];
+  return (
+    <div
+      className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 rounded-2xl border border-white/[0.06] bg-night-950/50 px-6 py-4"
+      aria-label={`Próximo show em ${next.city} — ${cd.days} dias, ${cd.hours} horas e ${cd.mins} minutos`}
+    >
+      <span className="text-[10px] uppercase tracking-[0.24em] text-silver-500">
+        Próximo: {next.city}
+      </span>
+      <span className="flex items-baseline gap-3 font-mono text-sm tracking-[0.1em] text-cream">
+        {units.map(([v, u]) => (
+          <span key={u} className="flex items-baseline gap-1">
+            <b className="font-mono text-lg font-normal text-white tabular-nums">
+              {String(v).padStart(2, "0")}
+            </b>
+            <span className="text-[10px] uppercase tracking-[0.16em] text-silver-600">{u}</span>
+          </span>
+        ))}
+      </span>
+    </div>
+  );
+}
+
 export default function SobrePanels() {
   const { artist, shows: allShows } = useSiteContent();
   /**
@@ -115,6 +174,8 @@ export default function SobrePanels() {
               Próximos trânsitos
             </span>
           </div>
+
+          <NextShowCountdown shows={shows} />
 
           <ul className="mt-8">
             {shows.map((s, i) => (
