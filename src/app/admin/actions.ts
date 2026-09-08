@@ -170,6 +170,47 @@ export async function toggleFeatured(id: string, featured: boolean): Promise<Act
   return { ok: true };
 }
 
+/**
+ * Reordena os lançamentos para a ordem exata de `ids` (drag-and-drop no
+ * admin). Escreve `position = índice + 1` para cada id — update (não
+ * upsert): o upsert parcial violava as constraints NOT NULL das restantes
+ * colunas (title, year, …).
+ */
+export async function reorderReleases(ids: string[]): Promise<ActionResult> {
+  const supabase = await requireAdmin();
+  if (!supabase) return { ok: false, error: "Sessão expirada. Entre novamente." };
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return { ok: false, error: "Lista de ordem vazia." };
+  }
+  if (new Set(ids).size !== ids.length) {
+    return { ok: false, error: "Ordem inválida (ids repetidos)." };
+  }
+
+  // Confirma que todos os ids existem — evita escrever posições para
+  // lançamentos apagados entretanto por outro separador.
+  const { data: existing, error: listError } = await supabase
+    .from("releases")
+    .select("id");
+  if (listError) return { ok: false, error: listError.message };
+  const existingIds = new Set((existing ?? []).map((r) => r.id));
+  if (ids.some((id) => !existingIds.has(id))) {
+    return { ok: false, error: "A lista mudou — recarregue a página." };
+  }
+
+  let position = 0;
+  for (const id of ids) {
+    position += 1;
+    const { error } = await supabase
+      .from("releases")
+      .update({ position })
+      .eq("id", id);
+    if (error) return { ok: false, error: error.message };
+  }
+
+  revalidateSiteContent();
+  return { ok: true };
+}
+
 /** Move um lançamento para cima/baixo (troca a position com o vizinho). */
 export async function moveRelease(id: string, direction: "up" | "down"): Promise<ActionResult> {
   const supabase = await requireAdmin();
