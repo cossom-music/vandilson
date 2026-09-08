@@ -44,6 +44,8 @@ export type Show = {
    * o show sai automaticamente da agenda pública — sem editar o CMS.
    */
   eventDate?: string;
+  /** Hora de início (HH:mm, opcional) — usada nos countdowns. */
+  eventTime?: string;
 };
 
 export type Artist = {

@@ -277,10 +277,15 @@ function HeroCountdown() {
   }, [next?.eventDate]);
 
   if (!next?.eventDate || now === null) return null;
-  const target = new Date(`${next.eventDate}T00:00:00`).getTime();
+  // Com hora definida conta para a hora exata; sem hora, para as 21:00
+  // (convenção de início de concerto) — nunca para a meia-noite.
+  const time = next.eventTime && /^\d{2}:\d{2}$/.test(next.eventTime)
+    ? next.eventTime
+    : "21:00";
+  const target = new Date(`${next.eventDate}T${time}:00`).getTime();
   if (Number.isNaN(target)) return null;
   const diff = target - now;
-  // Só os últimos 7 dias (e nada depois de começar o dia do show)
+  // Só os últimos 7 dias (e nada depois da hora de início)
   if (diff <= 0 || diff > 7 * 86_400_000) return null;
 
   const days = Math.floor(diff / 86_400_000);
@@ -292,7 +297,7 @@ function HeroCountdown() {
     <div
       data-hero-text
       className="mt-7 flex items-center justify-center gap-3 md:justify-start md:gap-4"
-      aria-label={`Próximo show em ${next.city} em ${days} dias, ${hours} horas e ${mins} minutos`}
+      aria-label={`Próximo show em ${next.city} às ${time} — em ${days} dias, ${hours} horas e ${mins} minutos`}
     >
       {([
         [days, "dias"],
@@ -315,6 +320,9 @@ function HeroCountdown() {
         Em cena em
         <b className="block font-display text-base normal-case tracking-wide text-white">
           {next.city}
+        </b>
+        <b className="mt-0.5 block font-mono text-xs tracking-[0.14em] text-silver-400">
+          {time}
         </b>
       </span>
     </div>

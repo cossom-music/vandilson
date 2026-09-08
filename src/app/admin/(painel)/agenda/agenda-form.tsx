@@ -18,7 +18,7 @@ export function ShowsForm({ initial }: { initial: Show[] }) {
   const addRow = () =>
     setRows((rs) => [
       ...rs,
-      { date: "", city: "", venue: "", status: "Em breve", ticketsUrl: "", eventDate: "" },
+      { date: "", city: "", venue: "", status: "Em breve", ticketsUrl: "", eventDate: "", eventTime: "" },
     ]);
 
   const removeRow = (i: number) => setRows((rs) => rs.filter((_, j) => j !== i));
@@ -78,15 +78,22 @@ export function ShowsForm({ initial }: { initial: Show[] }) {
             <Button type="button" variant="ghost" onClick={() => removeRow(i)} aria-label="Remover show">
               ×
             </Button>
-            <div className="md:col-span-2">
+            <div className="grid gap-3 md:col-span-2 md:grid-cols-[1fr_140px]">
               <Field
                 label="Data do evento"
-                hint="Formato yyyy-mm-dd. Passado o momento, o show sai automaticamente da agenda pública. Deixe vazio para nunca sair."
+                hint="Passado o momento, o show sai automaticamente da agenda pública. Deixe vazio para nunca sair."
               >
                 <TextInput
                   type="date"
                   value={row.eventDate ?? ""}
                   onChange={(e) => setRow(i, { eventDate: e.target.value })}
+                />
+              </Field>
+              <Field label="Hora de início">
+                <TextInput
+                  type="time"
+                  value={row.eventTime ?? ""}
+                  onChange={(e) => setRow(i, { eventTime: e.target.value })}
                 />
               </Field>
             </div>

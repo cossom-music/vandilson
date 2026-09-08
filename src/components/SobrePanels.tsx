@@ -13,10 +13,11 @@ import type { Show } from "@/content";
 
 /**
  * Contagem decrescente até ao próximo show — só conta quando o show tem
- * `eventDate`. Sem hidratação: o SSR renderiza null e o contador acorda
- * no cliente (useEffect), com tique a cada minuto.
+ * `eventDate`. Com `eventTime` conta para a hora exata; sem hora, para as
+ * 21:00 (convenção de início de concerto). Sem hidratação: o SSR
+ * renderiza null e o contador acorda no cliente, com tique a cada minuto.
  */
-function useCountdown(eventDate?: string) {
+function useCountdown(eventDate?: string, eventTime?: string) {
   const [now, setNow] = useState<number | null>(null);
   useEffect(() => {
     if (!eventDate) return;
@@ -25,20 +26,23 @@ function useCountdown(eventDate?: string) {
     return () => clearInterval(id);
   }, [eventDate]);
   if (!eventDate || now === null) return null;
-  const target = new Date(`${eventDate}T00:00:00`).getTime();
+  const time = eventTime && /^\d{2}:\d{2}$/.test(eventTime)
+    ? eventTime
+    : "21:00";
+  const target = new Date(`${eventDate}T${time}:00`).getTime();
   if (Number.isNaN(target)) return null;
   const diff = target - now;
-  if (diff <= 0) return null; // chegou o dia — sem countdown
+  if (diff <= 0) return null; // chegou a hora — sem countdown
   const days = Math.floor(diff / 86_400_000);
   const hours = Math.floor((diff % 86_400_000) / 3_600_000);
   const mins = Math.floor((diff % 3_600_000) / 60_000);
-  return { days, hours, mins };
+  return { days, hours, mins, time };
 }
 
 /** Banda do countdown — o próximo show com eventDate válido. */
 function NextShowCountdown({ shows }: { shows: Show[] }) {
   const next = shows.find((s) => s.eventDate);
-  const cd = useCountdown(next?.eventDate);
+  const cd = useCountdown(next?.eventDate, next?.eventTime);
   if (!next || !cd) return null;
   const units: [number, string][] = [
     [cd.days, "dias"],
@@ -48,10 +52,13 @@ function NextShowCountdown({ shows }: { shows: Show[] }) {
   return (
     <div
       className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 rounded-2xl border border-white/[0.06] bg-night-950/50 px-6 py-4"
-      aria-label={`Próximo show em ${next.city} — ${cd.days} dias, ${cd.hours} horas e ${cd.mins} minutos`}
+      aria-label={`Próximo show em ${next.city} às ${cd.time} — ${cd.days} dias, ${cd.hours} horas e ${cd.mins} minutos`}
     >
       <span className="text-[10px] uppercase tracking-[0.24em] text-silver-500">
         Próximo: {next.city}
+        <b className="ml-2 font-mono text-[11px] tracking-[0.14em] text-silver-400">
+          {cd.time}
+        </b>
       </span>
       <span className="flex items-baseline gap-3 font-mono text-sm tracking-[0.1em] text-cream">
         {units.map(([v, u]) => (
