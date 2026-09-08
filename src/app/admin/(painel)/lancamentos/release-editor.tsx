@@ -192,21 +192,22 @@ export function ReleaseEditor({ release }: { release: AdminRelease | null }) {
         </span>
         <div className="space-y-2">
           {draft.tracklist.map((track, i) => (
-            <div key={i} className="flex items-center gap-2">
-              <span className="w-6 shrink-0 text-right font-mono text-[11px] text-silver-600">
+            <div
+              key={i}
+              className="grid grid-cols-[1.75rem_minmax(0,1fr)_4.5rem_auto] items-center gap-2"
+            >
+              <span className="text-right font-mono text-[11px] text-silver-600">
                 {String(i + 1).padStart(2, "0")}
               </span>
               <TextInput
                 value={track.title}
                 onChange={(e) => setTrack(i, { title: e.target.value })}
                 placeholder="Título da faixa"
-                className="flex-1"
               />
               <TextInput
                 value={track.duration ?? ""}
                 onChange={(e) => setTrack(i, { duration: e.target.value })}
                 placeholder="3:42"
-                className="w-20 shrink-0"
               />
               <Button type="button" variant="ghost" aria-label="Remover faixa" onClick={() => set("tracklist", draft.tracklist.filter((_, j) => j !== i))}>
                 ×
@@ -231,13 +232,12 @@ export function ReleaseEditor({ release }: { release: AdminRelease | null }) {
         </span>
         <div className="space-y-2">
           {draft.curiosities.map((curio, i) => (
-            <div key={i} className="flex items-start gap-2">
+            <div key={i} className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
               <TextArea
                 rows={1}
                 value={curio}
                 onChange={(e) => setCurio(i, e.target.value)}
                 placeholder="Uma curiosidade sobre o lançamento"
-                className="flex-1"
               />
               <Button type="button" variant="ghost" aria-label="Remover curiosidade" onClick={() => set("curiosities", draft.curiosities.filter((_, j) => j !== i))}>
                 ×
@@ -262,18 +262,19 @@ export function ReleaseEditor({ release }: { release: AdminRelease | null }) {
         </span>
         <div className="space-y-2">
           {draft.facts.map((fact, i) => (
-            <div key={i} className="flex items-center gap-2">
+            <div
+              key={i}
+              className="grid grid-cols-[minmax(7rem,10rem)_minmax(0,1fr)_auto] items-center gap-2"
+            >
               <TextInput
                 value={fact.label}
                 onChange={(e) => setFact(i, { ...fact, label: e.target.value })}
                 placeholder="Produção"
-                className="w-40 shrink-0"
               />
               <TextInput
                 value={fact.value}
                 onChange={(e) => setFact(i, { ...fact, value: e.target.value })}
                 placeholder="A confirmar"
-                className="flex-1"
               />
               <Button type="button" variant="ghost" aria-label="Remover linha da ficha" onClick={() => set("facts", draft.facts.filter((_, j) => j !== i))}>
                 ×
