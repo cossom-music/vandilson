@@ -289,18 +289,51 @@ export function SocialsForm({ initial }: { initial: Social[] }) {
   const setRow = (i: number, patch: Partial<Social>) =>
     setRows((rs) => rs.map((r, j) => (j === i ? { ...r, ...patch } : r)));
 
+  /** Move uma rede uma posição — a ordem define as órbitas (1.ª = interna). */
+  const moveRow = (i: number, dir: -1 | 1) =>
+    setRows((rs) => {
+      const j = i + dir;
+      if (j < 0 || j >= rs.length) return rs;
+      const next = [...rs];
+      [next[i], next[j]] = [next[j], next[i]];
+      return next;
+    });
+
   return (
     <Panel title="Redes sociais">
       <p className="-mt-2 mb-5 text-xs leading-relaxed text-mist/70">
-        Cada rede ativa é uma órbita na secção Sintonia. Liga ou desliga cada rede com o
-        interruptor — as desligadas deixam de aparecer em todo o site.
+        Cada rede ativa é uma órbita na secção Sintonia — a ordem define a distância ao
+        sol: a 1.ª fica na órbita interna, a última na externa. Use ↑/↓ para reordenar e
+        o interruptor para ligar/desligar cada rede.
       </p>
       <div className="space-y-4">
         {rows.map((row, i) => (
           <div
             key={row.label}
-            className="grid items-end gap-3 rounded-xl border border-white/[0.07] bg-night-950/40 p-4 md:grid-cols-[150px_1fr_1.4fr_auto]"
+            className="grid items-end gap-3 rounded-xl border border-white/[0.07] bg-night-950/40 p-4 md:grid-cols-[auto_150px_1fr_1.4fr_auto]"
           >
+            <div className="flex items-center gap-1 self-end">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => moveRow(i, -1)}
+                disabled={i === 0}
+                aria-label={`Mover ${row.label} para dentro (mais perto do sol)`}
+                className="px-2"
+              >
+                ↑
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => moveRow(i, 1)}
+                disabled={i === rows.length - 1}
+                aria-label={`Mover ${row.label} para fora (mais longe do sol)`}
+                className="px-2"
+              >
+                ↓
+              </Button>
+            </div>
             <Field label="Rede">
               <TextInput value={row.label} readOnly className="opacity-60" />
             </Field>
