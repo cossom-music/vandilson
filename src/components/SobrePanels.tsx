@@ -133,18 +133,29 @@ export default function SobrePanels() {
                   style={{ animationDelay: `${-i * 2.5}s` }}
                 />
 
-                {/* Estado — pill apenas onde importa */}
-                <span
-                  className={`rounded-full border px-4 py-2 text-[10px] uppercase tracking-[0.18em] md:px-5 ${
-                    s.status === "À venda"
-                      ? "border-silver-300/40 text-white"
-                      : s.status === "Esgotado"
-                        ? "border-red-400/30 text-red-300/80"
-                        : "border-white/10 text-mist"
-                  }`}
-                >
-                  {s.status}
-                </span>
+                {/* Estado — pill, ou link de bilhetes quando há venda ativa */}
+                {s.status === "À venda" && s.ticketsUrl ? (
+                  <a
+                    href={s.ticketsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`group/pill rounded-full border border-silver-300/40 px-4 py-2 text-[10px] uppercase tracking-[0.18em] text-white transition-colors hover:border-white hover:bg-white/10 md:px-5`}
+                  >
+                    {s.status} ↗
+                  </a>
+                ) : (
+                  <span
+                    className={`rounded-full border px-4 py-2 text-[10px] uppercase tracking-[0.18em] md:px-5 ${
+                      s.status === "À venda"
+                        ? "border-silver-300/40 text-white"
+                        : s.status === "Esgotado"
+                          ? "border-red-400/30 text-red-300/80"
+                          : "border-white/10 text-mist"
+                    }`}
+                  >
+                    {s.status}
+                  </span>
+                )}
               </li>
             ))}
           </ul>

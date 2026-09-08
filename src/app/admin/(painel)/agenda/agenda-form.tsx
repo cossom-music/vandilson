@@ -16,7 +16,7 @@ export function ShowsForm({ initial }: { initial: Show[] }) {
     setRows((rs) => rs.map((r, j) => (j === i ? { ...r, ...patch } : r)));
 
   const addRow = () =>
-    setRows((rs) => [...rs, { date: "", city: "", venue: "", status: "Em breve" }]);
+    setRows((rs) => [...rs, { date: "", city: "", venue: "", status: "Em breve", ticketsUrl: "" }]);
 
   const removeRow = (i: number) => setRows((rs) => rs.filter((_, j) => j !== i));
 
@@ -75,6 +75,19 @@ export function ShowsForm({ initial }: { initial: Show[] }) {
             <Button type="button" variant="ghost" onClick={() => removeRow(i)} aria-label="Remover show">
               ×
             </Button>
+            <div className="md:col-span-2">
+              <Field
+                label="Link de bilhetes"
+                hint="Aparece no botão “À venda” da agenda. Só usado quando o estado é À venda — nos outros fica guardado mas inativo."
+              >
+                <TextInput
+                  value={row.ticketsUrl ?? ""}
+                  onChange={(e) => setRow(i, { ticketsUrl: e.target.value })}
+                  placeholder="https://bilheteira…"
+                  type="url"
+                />
+              </Field>
+            </div>
           </div>
         ))}
       </div>

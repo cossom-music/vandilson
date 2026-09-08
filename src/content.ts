@@ -37,6 +37,8 @@ export type Show = {
   city: string;
   venue: string;
   status: "À venda" | "Esgotado" | "Em breve";
+  /** Link de venda de bilhetes — usado no botão "À venda" da agenda. */
+  ticketsUrl?: string;
 };
 
 export type Artist = {
@@ -195,6 +197,7 @@ export const seedContent: SiteContent = {
     { date: "12 OUT 2026", city: "Lisboa", venue: "Grande Sala (placeholder)", status: "À venda" },
     { date: "25 OUT 2026", city: "Porto", venue: "Teatro (placeholder)", status: "À venda" },
     { date: "08 NOV 2026", city: "São Paulo", venue: "Casa de shows (placeholder)", status: "Em breve" },
+    { date: "15 DEZ 2026", city: "Maputo", venue: "Casa de shows (placeholder)", status: "À venda", ticketsUrl: "" },
   ],
 
   homeSections: {
