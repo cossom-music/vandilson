@@ -42,11 +42,49 @@ const PANE_LABELS: Record<PaneKey, string> = {
 
 const PANE_ORDER: PaneKey[] = ["tracklist", "curiosities", "facts"];
 
+/**
+ * Ficha técnica pronta a mostrar — as linhas "Faixas" e "Duração" são
+ * SEMPRE derivadas da tracklist real, para nunca dessincronizarem quando
+ * o gestor edita faixas/durações no admin. As restantes linhas (Produção,
+ * etc.) vêm do CMS como estão.
+ */
+function displayFacts(release: Release): NonNullable<Release["facts"]> {
+  const facts = release.facts ?? [];
+  if (!release.tracklist?.length) return facts;
+
+  const total = release.tracklist.reduce((acc, t) => {
+    const m = /^(\d+):(\d{1,2})$/.exec(t.duration ?? "");
+    return m ? acc + Number(m[1]) * 60 + Number(m[2]) : acc;
+  }, 0);
+  const fmt = (s: number) =>
+    s >= 3600
+      ? `${Math.floor(s / 3600)}:${String(Math.floor((s % 3600) / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`
+      : `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+
+  const derived: Record<string, string> = {
+    Faixas: String(release.tracklist.length),
+    ...(total > 0 ? { Duração: fmt(total) } : {}),
+  };
+
+  const normalize = (label: string) =>
+    label.trim().toLocaleLowerCase("pt").replace(/s$/, "");
+  const derivedKeys = new Set(Object.keys(derived).map(normalize));
+
+  // Linhas do CMS mantidas, exceto as que agora são calculadas
+  const kept = facts.filter((f) => !derivedKeys.has(normalize(f.label)));
+  // Calculadas entram na posição da primeira linha substituída (ou no fim)
+  const firstReplaced = facts.findIndex((f) => derivedKeys.has(normalize(f.label)));
+  const computed = Object.entries(derived).map(([label, value]) => ({ label, value }));
+  const out = [...kept];
+  out.splice(firstReplaced >= 0 ? Math.min(firstReplaced, out.length) : out.length, 0, ...computed);
+  return out;
+}
+
 function availablePanes(release: Release): PaneKey[] {
   return PANE_ORDER.filter((key) => {
     if (key === "tracklist") return !!release.tracklist?.length;
     if (key === "curiosities") return !!release.curiosities?.length;
-    return !!release.facts?.length;
+    return true; // "Faixas"/"Duração" são derivadas da tracklist — sempre há Ficha com tracklist
   });
 }
 
@@ -84,6 +122,7 @@ export default function ReleaseRow({
   index?: number;
 }) {
   const panes = availablePanes(release);
+  const facts = displayFacts(release);
   const [active, setActive] = useState<PaneKey | null>(panes[0] ?? null);
   const activePane = active && panes.includes(active) ? active : null;
   const [direction, setDirection] = useState(0);
@@ -246,9 +285,9 @@ export default function ReleaseRow({
                     </ul>
                   ) : null}
 
-                  {activePane === "facts" && release.facts ? (
+                  {activePane === "facts" && facts.length > 0 ? (
                     <dl>
-                      {release.facts.map((fact, i) => (
+                      {facts.map((fact, i) => (
                         <div
                           key={i}
                           className="grid grid-cols-[120px_1fr] gap-3 border-b border-dashed border-white/10 py-2.5"

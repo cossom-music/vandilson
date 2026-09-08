@@ -28,12 +28,23 @@ export default function SobrePanels() {
               }}
             />
 
-            {/* O eclipse — disco escuro com limbo prateado rotativo */}
+            {/* O eclipse — disco escuro com limbo prateado rotativo.
+                Com foto do CMS: a fotografia vive dentro do disco, com o
+                limbo por cima — integrada no sistema visual. Sem foto:
+                corpo escuro (placeholder). */}
             <div className="eclipse-disc relative aspect-square w-[58%] max-w-[240px]">
               {/* Limbo de luz — mesma luz do limbo do globo e do sol da Sintonia */}
               <div className="eclipse-rim absolute inset-0" />
-              {/* Corpo escuro do disco */}
-              <div className="absolute inset-[6%] rounded-full bg-[radial-gradient(circle_at_42%_38%,#1c2027_0%,#0a0d12_60%,#05070b_100%)]" />
+              {artist.photo ? (
+                // eslint-disable-next-line @next/next/no-img-element -- URL do Storage
+                <img
+                  src={artist.photo}
+                  alt={artist.photoAlt}
+                  className="absolute inset-[6%] h-[88%] w-[88%] rounded-full object-cover"
+                />
+              ) : (
+                <div className="absolute inset-[6%] rounded-full bg-[radial-gradient(circle_at_42%_38%,#1c2027_0%,#0a0d12_60%,#05070b_100%)]" />
+              )}
             </div>
 
             <p className="absolute bottom-5 left-0 right-0 text-center text-[10px] uppercase tracking-[0.3em] text-silver-600">
@@ -58,26 +69,20 @@ export default function SobrePanels() {
               ))}
             </div>
 
-            {/* Coordenadas — origem / base / órbita, como dados de carta celeste */}
+            {/* Coordenadas — origem / base / órbita, do CMS, como dados de carta celeste */}
             <div className="mt-10 flex flex-wrap gap-8 font-mono text-[11px] tracking-[0.14em] text-silver-600">
-              <div>
-                <b className="mb-1 block text-[10px] font-normal uppercase tracking-[0.2em] text-silver-400">
-                  Origem
-                </b>
-                Moçambique
-              </div>
-              <div>
-                <b className="mb-1 block text-[10px] font-normal uppercase tracking-[0.2em] text-silver-400">
-                  Base
-                </b>
-                Lisboa
-              </div>
-              <div>
-                <b className="mb-1 block text-[10px] font-normal uppercase tracking-[0.2em] text-silver-400">
-                  Órbita
-                </b>
-                Mundo
-              </div>
+              {([
+                ["Origem", artist.origin ?? "Moçambique"],
+                ["Base", artist.base ?? "Lisboa"],
+                ["Órbita", artist.orbit ?? "Mundo"],
+              ] as const).map(([label, value]) => (
+                <div key={label}>
+                  <b className="mb-1 block text-[10px] font-normal uppercase tracking-[0.2em] text-silver-400">
+                    {label}
+                  </b>
+                  {value}
+                </div>
+              ))}
             </div>
 
             <p className="mt-8 font-display text-[15px] italic text-silver-500">

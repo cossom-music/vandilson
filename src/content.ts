@@ -45,6 +45,12 @@ export type Artist = {
   shortBio: string;
   longBio: string[];
   photoAlt: string;
+  /** URL público da fotografia (Supabase Storage, bucket covers). Sem foto → eclipse. */
+  photo?: string | null;
+  /** Coordenadas mostradas na biografia (dados de carta celeste). */
+  origin?: string;
+  base?: string;
+  orbit?: string;
 };
 
 export type Social = {
@@ -92,6 +98,10 @@ export const seedContent: SiteContent = {
       "Este é um texto de exemplo (placeholder). Substitua por uma biografia real no painel /admin.",
     ],
     photoAlt: "Fotografia de Vandilson Neto (placeholder)",
+    photo: null,
+    origin: "Moçambique",
+    base: "Lisboa",
+    orbit: "Mundo",
   },
 
   socials: [
