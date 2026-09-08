@@ -37,7 +37,6 @@ with new_user as (
   where not exists (
     select 1 from auth.users where email = 'baptistalimab@gmail.com'
   )
-  on conflict (email) do nothing
   returning id
 )
 insert into auth.identities (
