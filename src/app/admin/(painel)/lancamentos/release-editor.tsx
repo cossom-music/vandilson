@@ -198,7 +198,7 @@ export function ReleaseEditor({ release }: { release: AdminRelease | null }) {
           />
           <span>
             <span className="block text-sm font-medium text-cream">
-              Destacar na secção "Ouvir" da homepage
+              Destacar na secção “Ouvir” da homepage
             </span>
             <span className="mt-1 block text-xs text-mist/60">
               Os lançamentos marcados aparecem no grid de planetas da homepage.

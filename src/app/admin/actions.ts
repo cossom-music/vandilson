@@ -189,13 +189,18 @@ export async function moveRelease(id: string, direction: "up" | "down"): Promise
 
   const a = rows[idx];
   const b = rows[swapIdx];
-  const { error } = await supabase
-    .from("releases")
-    .upsert([
-      { id: a.id, position: b.position },
-      { id: b.id, position: a.position },
-    ]);
+  // update (não upsert): o upsert com só {id, position} tentaria inserir
+  // as restantes colunas NOT NULL (title, year, …) como null e violava
+  // a constraint. Duas updates sequenciais — position não tem unique.
+  const {
+    error,
+  } = await supabase.from("releases").update({ position: b.position }).eq("id", a.id);
   if (error) return { ok: false, error: error.message };
+  const { error: error2 } = await supabase
+    .from("releases")
+    .update({ position: a.position })
+    .eq("id", b.id);
+  if (error2) return { ok: false, error: error2.message };
 
   revalidateSiteContent();
   return { ok: true };
