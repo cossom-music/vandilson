@@ -93,8 +93,8 @@ export default function OrbitSystem() {
   // ainda não tiver o campo `visible`)
   const visibleSocials = allSocials.some((s) => s.visible === false)
     ? allSocials.filter((s) => s.visible !== false)
-    : allSocials;
-  const RINGS = useMemo(() => buildRings(visibleSocials.length), [visibleSocials.length]);
+    : allSocials;  const RINGS = useMemo(() => buildRings(visibleSocials.length), [visibleSocials.length]);
+  const ringCount = visibleSocials.length;
   const stageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -103,6 +103,9 @@ export default function OrbitSystem() {
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const canHover = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+
+
+
 
     const nodes: NodeState[] = RINGS.map((ring, i) => ({
       el: stage.querySelectorAll<HTMLAnchorElement>(".orbit-node")[i],
@@ -276,7 +279,14 @@ export default function OrbitSystem() {
         document.removeEventListener("click", onDocClick);
       }
     };
-  }, []);
+    // Dependência CRÍTICA: sem ringCount, este efeito corre UMA vez com a
+    // lista do primeiro render. Se o admin ocultar/adicionar redes, os
+    // nodes[] ficam dessincronizados dos elementos (um node podia ficar
+    // sem elemento — parado, exatamente o bug reportado) ou mapear a rede
+    // errada ao anel errado. ringCount muda quando o conjunto visível muda,
+    // e o cleanup acima desfaz tudo (ticker, observador, listeners) antes
+    // de reconstruir.
+  }, [ringCount]);
 
   return (
     <div
