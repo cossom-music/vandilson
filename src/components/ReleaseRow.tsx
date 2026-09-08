@@ -281,6 +281,7 @@ function ReleasePlanetSlot({ release, index }: { release: Release; index: number
           title={release.title}
           type={release.type}
           year={release.year}
+          image={release.image ?? null}
           className="h-full w-full"
         />
       </div>

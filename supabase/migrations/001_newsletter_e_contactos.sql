@@ -41,3 +41,4 @@ create policy "qualquer pessoa pode enviar mensagem"
 -- Índices úteis
 create index if not exists idx_contact_messages_created_at
   on public.contact_messages (created_at desc);
+

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import SectionHeading from "@/components/SectionHeading";
 import Reveal from "@/components/Reveal";
 import ReleaseRow from "@/components/ReleaseRow";
-import { releases } from "@/content";
+import { getSiteContent } from "@/lib/content-server";
 
 export const metadata: Metadata = {
   title: "Discografia",
@@ -10,7 +10,9 @@ export const metadata: Metadata = {
     "Discografia de Vandilson Neto — singles, EPs e álbuns em todas as plataformas.",
 };
 
-export default function DiscografiaPage() {
+export default async function DiscografiaPage() {
+  const { releases } = await getSiteContent();
+
   // overflow-x-clip: o anel do 1.º planeta (150% da largura) sangra para
   // fora do viewport em mobile e criava overflow horizontal — clipamos na
   // borda do ecrã (mesmo padrão do HomeOutro). Em md+ o anel cabe no viewport.

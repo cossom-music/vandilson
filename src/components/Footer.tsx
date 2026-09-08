@@ -1,7 +1,7 @@
 "use client";
 
 import { animate } from "@/lib/anime";
-import { artist, socials, contact } from "@/content";
+import { useSiteContent } from "@/components/SiteContentProvider";
 import { useEffect, useRef } from "react";
 
 /**
@@ -9,6 +9,7 @@ import { useEffect, useRef } from "react";
  * artista, não captar e-mails). O contacto é o e-mail, em destaque tipográfico.
  */
 export default function Footer() {
+  const { artist, socials, contact } = useSiteContent();
   const emailRef = useRef<HTMLAnchorElement>(null);
 
   // anime.js v4 — sublinhado do e-mail desenha-se ao entrar no ecrã

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { artist, contact } from "@/content";
+import { useSiteContent } from "@/components/SiteContentProvider";
 
 const links = [
   { href: "/", label: "Início" },
@@ -24,6 +24,7 @@ const EASE = [0.16, 1, 0.3, 1] as const;
  */
 export default function Header() {
   const pathname = usePathname();
+  const { artist, contact } = useSiteContent();
   const [open, setOpen] = useState(false);
   const isHome = pathname === "/";
   const [scrolled, setScrolled] = useState(false);

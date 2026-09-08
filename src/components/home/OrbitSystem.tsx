@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { gsap } from "@/lib/gsap";
-import { socials } from "@/content";
+import { useSiteContent } from "@/components/SiteContentProvider";
 
 /**
  * Secção "Sintonia" — o artista como centro do seu próprio sistema:
@@ -65,6 +65,7 @@ type NodeState = {
 };
 
 export default function OrbitSystem() {
+  const { socials } = useSiteContent();
   const stageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

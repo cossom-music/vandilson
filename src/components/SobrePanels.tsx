@@ -1,5 +1,7 @@
+"use client";
+
 import Reveal from "@/components/Reveal";
-import { artist, shows } from "@/content";
+import { useSiteContent } from "@/components/SiteContentProvider";
 
 /**
  * Painéis "Eclipse" (bio) + "Trânsitos" (agenda) — detalhes de universo
@@ -7,6 +9,7 @@ import { artist, shows } from "@/content";
  * Partilhados entre a página /sobre e a secção final da homepage.
  */
 export default function SobrePanels() {
+  const { artist, shows } = useSiteContent();
   return (
     <>
       {/* ===== Vinheta — eclipse prateado + biografia ===== */}

@@ -3,6 +3,8 @@ import { Space_Grotesk, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { SiteContentProvider } from "@/components/SiteContentProvider";
+import { getSiteContent } from "@/lib/content-server";
 
 const grotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -40,17 +42,23 @@ export const metadata: Metadata = {
   icons: { icon: "/favicon.svg" },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Conteúdo real (Supabase) montado no servidor e partilhado por SSR —
+  // os componentes consomem-no via useSiteContent(), sem fetch no cliente.
+  const content = await getSiteContent();
+
   return (
     <html lang="pt" className={`${grotesk.variable} ${playfair.variable}`}>
       <body className="film-grain flex min-h-screen flex-col bg-night-950 text-cream">
-        <Header />
-        <main className="flex-1">{children}</main>
-        <Footer />
+        <SiteContentProvider initial={content}>
+          <Header />
+          <main className="flex-1">{children}</main>
+          <Footer />
+        </SiteContentProvider>
       </body>
     </html>
   );

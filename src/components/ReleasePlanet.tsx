@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { socials } from "@/content";
+import { useSiteContent } from "@/components/SiteContentProvider";
 
 /**
  * ReleasePlanet — um lançamento como um PLANETA SÓLIDO:
@@ -24,6 +24,7 @@ export default function ReleasePlanet({
   year,
   type,
   index,
+  image = null,
   size = "md",
   className = "",
 }: {
@@ -31,6 +32,8 @@ export default function ReleasePlanet({
   year: string;
   type: string;
   index: number;
+  /** URL da capa real — quando existe, a capa vira a superfície do planeta. */
+  image?: string | null;
   /** md = homepage (pilha), lg = página /discografia */
   size?: "md" | "lg";
   className?: string;
@@ -104,7 +107,10 @@ export default function ReleasePlanet({
         />
       )}
 
-      {/* O planeta — corpo SÓLIDO no tom próprio, dimensão fixa */}
+      {/* O planeta — corpo SÓLIDO no tom próprio, dimensão fixa.
+          Com capa real (image): a capa enche o disco (object-cover) e os
+          continentes dot-matrix ficam ocultos — a iluminação/terminador
+          mantém-se por cima para o planeta continuar a "assentar" no site. */}
       <div
         className="planet-body relative z-10 flex aspect-square items-center justify-center overflow-hidden rounded-full"
         style={{
@@ -113,27 +119,40 @@ export default function ReleasePlanet({
         }}
       >
         {/* Continentes em dot-matrix — rotação lenta contínua (GPU) */}
-        <svg
-          aria-hidden="true"
-          className={`planet-spots pointer-events-none absolute inset-0 h-full w-full ${planet.spinReverse ? "planet-spin-reverse" : "planet-spin"}`}
-          viewBox="0 0 100 100"
-          preserveAspectRatio="none"
-          style={{
-            transform: `rotate(${planet.spotRot}deg)`,
-            animationDuration: `${planet.spinDuration.toFixed(0)}s`,
-            animationDelay: `${((-planet.spotRot / 360) * planet.spinDuration).toFixed(1)}s`,
-          }}
-        >
-          {planet.dots.map((d, i) => (
-            <circle
-              key={i}
-              cx={d.x}
-              cy={d.y}
-              r={d.r}
-              fill="rgba(216,219,224,0.22)"
-            />
-          ))}
-        </svg>
+        {!image && (
+          <svg
+            aria-hidden="true"
+            className={`planet-spots pointer-events-none absolute inset-0 h-full w-full ${planet.spinReverse ? "planet-spin-reverse" : "planet-spin"}`}
+            viewBox="0 0 100 100"
+            preserveAspectRatio="none"
+            style={{
+              transform: `rotate(${planet.spotRot}deg)`,
+              animationDuration: `${planet.spinDuration.toFixed(0)}s`,
+              animationDelay: `${((-planet.spotRot / 360) * planet.spinDuration).toFixed(1)}s`,
+            }}
+          >
+            {planet.dots.map((d, i) => (
+              <circle
+                key={i}
+                cx={d.x}
+                cy={d.y}
+                r={d.r}
+                fill="rgba(216,219,224,0.22)"
+              />
+            ))}
+          </svg>
+        )}
+
+        {/* Capa real — enche o disco quando existe imagem */}
+        {image && (
+          // eslint-disable-next-line @next/next/no-img-element -- capas de utilizador no CMS; next/image exige domínios configurados
+          <img
+            src={image}
+            alt={`Capa de ${title}`}
+            className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+            loading="lazy"
+          />
+        )}
 
         {/* Terminador + limbo — estático (a luz não gira com o planeta) */}
         <span
@@ -172,13 +191,16 @@ export default function ReleasePlanet({
 
 /** Links de plataformas (usados na página /discografia, por baixo do planeta). */
 export function ReleasePlanetLinks() {
+  const { socials } = useSiteContent();
+  const urlFor = (label: string) => socials.find((s) => s.label === label)?.url ?? "#";
+
   return (
     <div className="mt-4 flex gap-3 text-xs text-mist">
       {["Spotify", "YouTube", "Apple Music"].map((label) => (
         <span key={label} className="flex items-center gap-3">
           {label !== "Spotify" && <span className="text-white/20">·</span>}
           <a
-            href={socials.find((s) => s.label === label)?.url}
+            href={urlFor(label)}
             target="_blank"
             rel="noopener noreferrer"
             className="transition-colors hover:text-white"

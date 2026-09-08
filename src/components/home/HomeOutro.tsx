@@ -5,7 +5,7 @@ import OrbitSystem from "@/components/home/OrbitSystem";
 import AnimeReveal from "@/components/home/AnimeReveal";
 import RevealTitle from "@/components/home/RevealTitle";
 import SobrePanels from "@/components/SobrePanels";
-import { homeSections, contact } from "@/content";
+import { useSiteContent } from "@/components/SiteContentProvider";
 
 /**
  * Fim da homepage — dois painéis empilhados:
@@ -25,6 +25,7 @@ import { homeSections, contact } from "@/content";
  * prefers-reduced-motion: sem pin — as secções fluem normalmente.
  */
 export default function HomeOutro() {
+  const { homeSections, contact } = useSiteContent();
   const scopeRef = useGsapContext(({ reduced, scope }) => {
     if (!scope || reduced) return;
     const sintonia = scope.querySelector<HTMLElement>("[data-sintonia]");

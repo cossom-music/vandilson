@@ -6,7 +6,7 @@ import GlassGlobe from "@/components/earth/GlassGlobe";
 import { useGsapContext, gsap, ScrollTrigger } from "@/lib/gsap";
 import { earthZoom } from "@/lib/earthZoom";
 import { animate, stagger, utils, prefersReducedMotion } from "@/lib/anime";
-import { artist, homeSections, homeHighlights, releases } from "@/content";
+import { useSiteContent } from "@/components/SiteContentProvider";
 import { LiquidGlassLink } from "@/components/ui/LiquidGlass";
 import ReleasePlanet from "@/components/ReleasePlanet";
 
@@ -260,6 +260,7 @@ export default function HomeIntro() {
  * É o H1 real da página (o sr-only foi removido — sem duplicação).
  */
 function HeroSignatures() {
+  const { artist } = useSiteContent();
   const rootRef = useRef<HTMLDivElement>(null);
 
   // anime.js v4 — revelação palavra a palavra na entrada
@@ -344,6 +345,7 @@ function HeroSignatures() {
 
 /** Conteúdo da secção Discografia — compacto para caber num ecrã (100svh). */
 function DiscografiaContent() {
+  const { homeSections, homeHighlights, releases } = useSiteContent();
   return (
     <div className="mx-auto w-full max-w-6xl px-6 py-8 md:py-10">
       <p className="text-xs uppercase tracking-[0.35em] text-mist">
@@ -377,6 +379,7 @@ function DiscografiaContent() {
                 title={r.title}
                 type={r.type}
                 year={r.year}
+                image={r.image ?? null}
                 className="h-full w-full"
               />
             </div>
