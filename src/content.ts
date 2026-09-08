@@ -39,6 +39,11 @@ export type Show = {
   status: "À venda" | "Esgotado" | "Em breve";
   /** Link de venda de bilhetes — usado no botão "À venda" da agenda. */
   ticketsUrl?: string;
+  /**
+   * Data do evento (ISO yyyy-mm-dd, opcional). Quando o momento passa,
+   * o show sai automaticamente da agenda pública — sem editar o CMS.
+   */
+  eventDate?: string;
 };
 
 export type Artist = {

@@ -16,7 +16,10 @@ export function ShowsForm({ initial }: { initial: Show[] }) {
     setRows((rs) => rs.map((r, j) => (j === i ? { ...r, ...patch } : r)));
 
   const addRow = () =>
-    setRows((rs) => [...rs, { date: "", city: "", venue: "", status: "Em breve", ticketsUrl: "" }]);
+    setRows((rs) => [
+      ...rs,
+      { date: "", city: "", venue: "", status: "Em breve", ticketsUrl: "", eventDate: "" },
+    ]);
 
   const removeRow = (i: number) => setRows((rs) => rs.filter((_, j) => j !== i));
 
@@ -75,6 +78,18 @@ export function ShowsForm({ initial }: { initial: Show[] }) {
             <Button type="button" variant="ghost" onClick={() => removeRow(i)} aria-label="Remover show">
               ×
             </Button>
+            <div className="md:col-span-2">
+              <Field
+                label="Data do evento"
+                hint="Formato yyyy-mm-dd. Passado o momento, o show sai automaticamente da agenda pública. Deixe vazio para nunca sair."
+              >
+                <TextInput
+                  type="date"
+                  value={row.eventDate ?? ""}
+                  onChange={(e) => setRow(i, { eventDate: e.target.value })}
+                />
+              </Field>
+            </div>
             <div className="md:col-span-2">
               <Field
                 label="Link de bilhetes"

@@ -9,7 +9,21 @@ import { useSiteContent } from "@/components/SiteContentProvider";
  * Partilhados entre a página /sobre e a secção final da homepage.
  */
 export default function SobrePanels() {
-  const { artist, shows } = useSiteContent();
+  const { artist, shows: allShows } = useSiteContent();
+  /**
+   * Shows com `eventDate` no passado saem da agenda automaticamente —
+   * sem precisar editar o CMS. Avaliado a cada render de cliente; no
+   * servidor, o conteúdo é cacheado por 60 s (revalidate), por isso o
+   * show pode permanecer até ~1 min depois do momento — aceitável.
+   */
+  const now = Date.now();
+  const shows = allShows.filter((s) => {
+    if (!s.eventDate) return true; // sem data → nunca sai
+    // Fim do dia do evento (23:59:59 local) — o show conta como passado
+    // só depois de o dia terminar inteiro.
+    const end = new Date(`${s.eventDate}T23:59:59`).getTime();
+    return Number.isNaN(end) || end >= now;
+  });
   return (
     <>
       {/* ===== Vinheta — eclipse prateado + biografia ===== */}
