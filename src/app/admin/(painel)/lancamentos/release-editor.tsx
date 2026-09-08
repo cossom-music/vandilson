@@ -206,7 +206,7 @@ export function ReleaseEditor({ release }: { release: AdminRelease | null }) {
                 value={track.duration ?? ""}
                 onChange={(e) => setTrack(i, { duration: e.target.value })}
                 placeholder="3:42"
-                className="w-24"
+                className="w-20 shrink-0"
               />
               <Button type="button" variant="ghost" aria-label="Remover faixa" onClick={() => set("tracklist", draft.tracklist.filter((_, j) => j !== i))}>
                 ×
