@@ -259,6 +259,68 @@ export default function HomeIntro() {
  * com stagger. SAÍDA: fade no primeiro scroll (GSAP via [data-hero-text]).
  * É o H1 real da página (o sr-only foi removido — sem duplicação).
  */
+/**
+ * Contagem decrescente para o próximo show — PROMINENTE, mas só aparece
+ * quando falta menos de 7 dias (com eventDate definida). Abaixo do nome:
+ * “Em cena em {cidade} · DDd HHh MMm”. Sem hidratação: SSR renderiza null.
+ */
+function HeroCountdown() {
+  const { shows } = useSiteContent();
+  const next = shows.find((s) => s.eventDate);
+  const [now, setNow] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!next?.eventDate) return;
+    setNow(Date.now());
+    const id = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(id);
+  }, [next?.eventDate]);
+
+  if (!next?.eventDate || now === null) return null;
+  const target = new Date(`${next.eventDate}T00:00:00`).getTime();
+  if (Number.isNaN(target)) return null;
+  const diff = target - now;
+  // Só os últimos 7 dias (e nada depois de começar o dia do show)
+  if (diff <= 0 || diff > 7 * 86_400_000) return null;
+
+  const days = Math.floor(diff / 86_400_000);
+  const hours = Math.floor((diff % 86_400_000) / 3_600_000);
+  const mins = Math.floor((diff % 3_600_000) / 60_000);
+  const pad = (n: number) => String(n).padStart(2, "0");
+
+  return (
+    <div
+      data-hero-text
+      className="mt-7 flex items-center justify-center gap-3 md:justify-start md:gap-4"
+      aria-label={`Próximo show em ${next.city} em ${days} dias, ${hours} horas e ${mins} minutos`}
+    >
+      {([
+        [days, "dias"],
+        [hours, "horas"],
+        [mins, "min"],
+      ] as const).map(([v, u]) => (
+        <div
+          key={u}
+          className="rounded-xl border border-white/[0.12] bg-white/[0.04] px-3.5 py-2 text-center backdrop-blur-sm md:px-5 md:py-3"
+        >
+          <span className="block font-mono text-2xl tabular-nums text-white md:text-4xl">
+            {pad(v)}
+          </span>
+          <span className="mt-0.5 block text-[9px] uppercase tracking-[0.22em] text-silver-400 md:text-[10px]">
+            {u}
+          </span>
+        </div>
+      ))}
+      <span className="ml-1 hidden max-w-[9rem] text-left text-[10px] uppercase leading-relaxed tracking-[0.2em] text-silver-300 md:block">
+        Em cena em
+        <b className="block font-display text-base normal-case tracking-wide text-white">
+          {next.city}
+        </b>
+      </span>
+    </div>
+  );
+}
+
 function HeroSignatures() {
   const { artist } = useSiteContent();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -339,6 +401,9 @@ function HeroSignatures() {
           </span>
         ))}
       </h3>
+
+      {/* Countdown — últimos 7 dias antes do próximo show */}
+      <HeroCountdown />
     </div>
   );
 }
