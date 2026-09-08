@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { deleteRelease, moveRelease } from "../../actions";
+import { deleteRelease, moveRelease, toggleFeatured } from "../../actions";
 import type { AdminRelease } from "@/lib/admin-releases";
 import { Alert, Button } from "../../_ui";
 
@@ -67,6 +67,23 @@ export function ReleaseList({ rows }: { rows: AdminRelease[] }) {
                 {row.type} · {row.year}
                 {row.tracklist.length > 0 ? ` · ${row.tracklist.length} faixas` : ""}
               </p>
+              <button
+                type="button"
+                disabled={busyId === row.id}
+                onClick={() => run(row.id, () => toggleFeatured(row.id, !row.featured))}
+                className={`mt-1 inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] uppercase tracking-[0.14em] transition-colors disabled:opacity-50 ${
+                  row.featured
+                    ? "border-silver-300/50 bg-silver-300/10 text-cream"
+                    : "border-white/10 text-mist/60 hover:border-white/25 hover:text-mist"
+                }`}
+                title="Mostrar/ocultar na secção Ouvir da homepage"
+              >
+                <span
+                  aria-hidden="true"
+                  className={`h-1.5 w-1.5 rounded-full ${row.featured ? "bg-silver-300" : "bg-white/20"}`}
+                />
+                {row.featured ? "Na homepage" : "Fora da homepage"}
+              </button>
             </div>
 
             <div className="flex shrink-0 items-center gap-1.5">

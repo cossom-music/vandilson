@@ -83,6 +83,7 @@ export type ReleaseInput = {
   type: "Single" | "EP" | "Álbum";
   description: string;
   coverPath: string | null;
+  featured: boolean;
   tracklist: { title: string; duration?: string }[];
   curiosities: string[];
   facts: { label: string; value: string }[];
@@ -102,6 +103,7 @@ function cleanRelease(input: ReleaseInput) {
     type: input.type,
     description: input.description.trim() || null,
     cover_path: input.coverPath || null,
+    featured: input.featured,
     tracklist,
     curiosities,
     facts,
@@ -152,6 +154,17 @@ export async function deleteRelease(id: string): Promise<ActionResult> {
   }
 
   const { error } = await supabase.from("releases").delete().eq("id", id);
+  if (error) return { ok: false, error: error.message };
+  revalidateSiteContent();
+  return { ok: true };
+}
+
+/** Liga/desliga o destaque na secção "Ouvir" da homepage. */
+export async function toggleFeatured(id: string, featured: boolean): Promise<ActionResult> {
+  const supabase = await requireAdmin();
+  if (!supabase) return { ok: false, error: "Sessão expirada. Entre novamente." };
+
+  const { error } = await supabase.from("releases").update({ featured }).eq("id", id);
   if (error) return { ok: false, error: error.message };
   revalidateSiteContent();
   return { ok: true };

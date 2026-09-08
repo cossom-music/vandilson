@@ -19,6 +19,7 @@ export function ReleaseEditor({ release }: { release: AdminRelease | null }) {
     type: "Single",
     description: "",
     coverPath: null,
+    featured: false,
     tracklist: [{ title: "", duration: "" }],
     curiosities: [""],
     facts: [{ label: "", value: "" }],
@@ -30,6 +31,7 @@ export function ReleaseEditor({ release }: { release: AdminRelease | null }) {
     type: r.type,
     description: r.description,
     coverPath: r.coverPath,
+    featured: r.featured,
     tracklist: r.tracklist,
     curiosities: r.curiosities,
     facts: r.facts,
@@ -183,6 +185,27 @@ export function ReleaseEditor({ release }: { release: AdminRelease | null }) {
             </p>
           </div>
         </div>
+      </div>
+
+      {/* ── Destaque na homepage ── */}
+      <div className="mt-6">
+        <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/[0.07] bg-night-950/40 p-4">
+          <input
+            type="checkbox"
+            checked={draft.featured}
+            onChange={(e) => set("featured", e.target.checked)}
+            className="mt-0.5 h-4 w-4 accent-silver-300"
+          />
+          <span>
+            <span className="block text-sm font-medium text-cream">
+              Destacar na secção "Ouvir" da homepage
+            </span>
+            <span className="mt-1 block text-xs text-mist/60">
+              Os lançamentos marcados aparecem no grid de planetas da homepage.
+              Se nenhum estiver marcado, a homepage mostra todos.
+            </span>
+          </span>
+        </label>
       </div>
 
       {/* ── Tracklist ── */}

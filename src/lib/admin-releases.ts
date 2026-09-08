@@ -5,6 +5,7 @@ import type { ReleaseInput } from "@/app/admin/actions";
 export type AdminRelease = ReleaseInput & {
   id: string;
   imageUrl: string | null;
+  featured: boolean;
 };
 
 const STORAGE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -16,6 +17,7 @@ function rowToAdminRelease(row: {
   type: string;
   description: string | null;
   cover_path: string | null;
+  featured: boolean | null;
   tracklist: unknown;
   curiosities: unknown;
   facts: unknown;
@@ -32,6 +34,7 @@ function rowToAdminRelease(row: {
     imageUrl: row.cover_path && STORAGE_URL
       ? `${STORAGE_URL}/storage/v1/object/public/covers/${row.cover_path}`
       : null,
+    featured: row.featured ?? false,
     tracklist: Array.isArray(row.tracklist)
       ? (row.tracklist as ReleaseInput["tracklist"])
       : [],
@@ -54,7 +57,7 @@ export async function getAdminReleases(): Promise<AdminRelease[] | null> {
 
   const { data, error } = await supabase
     .from("releases")
-    .select("id, title, year, type, description, cover_path, tracklist, curiosities, facts")
+    .select("id, title, year, type, description, cover_path, featured, tracklist, curiosities, facts")
     .order("position", { ascending: true });
 
   if (error) return null;
@@ -67,7 +70,7 @@ export async function getAdminRelease(id: string): Promise<AdminRelease | null> 
 
   const { data, error } = await supabase
     .from("releases")
-    .select("id, title, year, type, description, cover_path, tracklist, curiosities, facts")
+    .select("id, title, year, type, description, cover_path, featured, tracklist, curiosities, facts")
     .eq("id", id)
     .maybeSingle();
 

@@ -29,6 +29,7 @@ function rowToRelease(row: {
   type: string;
   description: string | null;
   cover_path: string | null;
+  featured: boolean | null;
   tracklist: unknown;
   curiosities: unknown;
   facts: unknown;
@@ -42,6 +43,7 @@ function rowToRelease(row: {
       : "Single",
     description: row.description ?? undefined,
     image: publicCoverUrl(row.cover_path),
+    featured: row.featured ?? false,
     tracklist: Array.isArray(row.tracklist) ? (row.tracklist as Release["tracklist"]) : undefined,
     curiosities: Array.isArray(row.curiosities)
       ? row.curiosities.map((c) => String(c))
@@ -85,7 +87,7 @@ async function fetchSiteContent(): Promise<SiteContent> {
     // vazia (schema ainda não corrido) → seed.
     const { data: releaseRows, error: releasesError } = await supabase
       .from("releases")
-      .select("id, title, year, type, description, cover_path, tracklist, curiosities, facts")
+      .select("id, title, year, type, description, cover_path, featured, tracklist, curiosities, facts")
       .order("position", { ascending: true });
 
     if (releasesError) {

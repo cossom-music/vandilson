@@ -345,7 +345,11 @@ function HeroSignatures() {
 
 /** Conteúdo da secção Discografia — compacto para caber num ecrã (100svh). */
 function DiscografiaContent() {
-  const { homeSections, homeHighlights, releases } = useSiteContent();
+  const { homeSections, homeHighlights, releases: allReleases } = useSiteContent();
+  // Só os marcados como destacados no admin; sem nenhum marcado → todos
+  // (a secção nunca fica vazia, mesmo antes de a migração 004 ser aplicada)
+  const featured = allReleases.filter((r) => r.featured);
+  const releases = featured.length > 0 ? featured : allReleases;
   return (
     <div className="mx-auto w-full max-w-6xl px-6 py-8 md:py-10">
       <p className="text-xs uppercase tracking-[0.35em] text-mist">

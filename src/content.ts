@@ -25,6 +25,8 @@ export type Release = {
   description?: string;
   /** URL pública da capa real (Supabase Storage). Sem imagem → planeta procedural. */
   image?: string | null;
+  /** Aparece na secção "Ouvir" da homepage (escolha no admin). */
+  featured?: boolean;
   tracklist?: TracklistItem[];
   curiosities?: string[];
   facts?: { label: string; value: string }[];
