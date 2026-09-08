@@ -289,53 +289,73 @@ export function SocialsForm({ initial }: { initial: Social[] }) {
   const setRow = (i: number, patch: Partial<Social>) =>
     setRows((rs) => rs.map((r, j) => (j === i ? { ...r, ...patch } : r)));
 
-  /** Move uma rede uma posição — a ordem define as órbitas (1.ª = interna). */
-  const moveRow = (i: number, dir: -1 | 1) =>
+  // ── Drag-and-drop — a ordem define as órbitas (1.ª = interna) ──
+  const [dragLabel, setDragLabel] = useState<string | null>(null);
+  const [overLabel, setOverLabel] = useState<string | null>(null);
+  const dragIndex = useRef<number>(-1);
+
+  const onDragStart = (i: number, label: string) => (e: React.DragEvent) => {
+    dragIndex.current = i;
+    setDragLabel(label);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", label); // Firefox exige data
+  };
+
+  const onDragOver = (label: string) => (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (label !== overLabel) setOverLabel(label);
+  };
+
+  const onDrop = (label: string) => (e: React.DragEvent) => {
+    e.preventDefault();
+    const from = dragIndex.current;
+    const target = rows.findIndex((r) => r.label === label);
+    setDragLabel(null);
+    setOverLabel(null);
+    dragIndex.current = -1;
+    if (from < 0 || target < 0 || from === target) return;
     setRows((rs) => {
-      const j = i + dir;
-      if (j < 0 || j >= rs.length) return rs;
       const next = [...rs];
-      [next[i], next[j]] = [next[j], next[i]];
+      const [moved] = next.splice(from, 1);
+      next.splice(target, 0, moved);
       return next;
     });
+  };
+
+  const onDragEnd = () => {
+    setDragLabel(null);
+    setOverLabel(null);
+    dragIndex.current = -1;
+  };
 
   return (
     <Panel title="Redes sociais">
       <p className="-mt-2 mb-5 text-xs leading-relaxed text-mist/70">
         Cada rede ativa é uma órbita na secção Sintonia — a ordem define a distância ao
-        sol: a 1.ª fica na órbita interna, a última na externa. Use ↑/↓ para reordenar e
-        o interruptor para ligar/desligar cada rede.
+        sol: a 1.ª fica na órbita interna, a última na externa. Arraste as linhas para
+        reordenar e use o interruptor para ligar/desligar cada rede.
       </p>
       <div className="space-y-4">
-        {rows.map((row, i) => (
+        {rows.map((row, i) => {
+          const isDragging = dragLabel === row.label;
+          const isOver = overLabel === row.label && dragLabel !== null && dragLabel !== row.label;
+          return (
           <div
             key={row.label}
-            className="grid items-end gap-3 rounded-xl border border-white/[0.07] bg-night-950/40 p-4 md:grid-cols-[auto_150px_1fr_1.4fr_auto]"
+            draggable
+            onDragStart={onDragStart(i, row.label)}
+            onDragOver={onDragOver(row.label)}
+            onDragLeave={() => setOverLabel((cur) => (cur === row.label ? null : cur))}
+            onDrop={onDrop(row.label)}
+            onDragEnd={onDragEnd}
+            className={`grid cursor-grab items-end gap-3 rounded-xl border border-white/[0.07] bg-night-950/40 p-4 transition-opacity active:cursor-grabbing md:grid-cols-[150px_1fr_1.4fr_auto] ${
+              isDragging ? "opacity-40" : ""
+            } ${isOver ? "border-silver-300/60 border-dashed" : ""}`}
+            title="Arraste para reordenar — a 1.ª linha fica na órbita interna"
           >
-            <div className="flex items-center gap-1 self-end">
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => moveRow(i, -1)}
-                disabled={i === 0}
-                aria-label={`Mover ${row.label} para dentro (mais perto do sol)`}
-                className="px-2"
-              >
-                ↑
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => moveRow(i, 1)}
-                disabled={i === rows.length - 1}
-                aria-label={`Mover ${row.label} para fora (mais longe do sol)`}
-                className="px-2"
-              >
-                ↓
-              </Button>
-            </div>
             <Field label="Rede">
-              <TextInput value={row.label} readOnly className="opacity-60" />
+              <TextInput value={row.label} readOnly className="opacity-60" draggable={false} />
             </Field>
             <Field label="Handle">
               <TextInput
@@ -358,12 +378,12 @@ export function SocialsForm({ initial }: { initial: Social[] }) {
                   checked={row.visible !== false}
                   onChange={(e) => setRow(i, { visible: e.target.checked })}
                   className="h-4 w-4 accent-mist"
-                />
-                {row.visible !== false ? "Na órbita" : "Oculta"}
+                />                {row.visible !== false ? "Na órbita" : "Oculta"}
               </label>
             </Field>
           </div>
-        ))}
+          );
+        })}
       </div>
       <div className="mt-6 border-t border-white/10 pt-5">
         <SaveBar pending={pending} notice={notice} onSave={() => save(rows)} />
