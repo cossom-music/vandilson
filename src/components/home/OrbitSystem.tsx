@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { gsap } from "@/lib/gsap";
 import { useSiteContent } from "@/components/SiteContentProvider";
 
@@ -40,15 +40,38 @@ const LOGOS: Record<string, string> = {
     '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5" stroke-width="1.6"/><circle cx="12" cy="12" r="4" stroke-width="1.6"/><circle class="orbit-logo-fill" cx="17" cy="7" r="1.4"/></svg>',
   YouTube:
     '<svg viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="13" rx="3.5" stroke-width="1.6"/><path class="orbit-logo-fill" d="M10.2 9.6 L15.4 12.5 L10.2 15.4 Z"/></svg>',
+  TikTok:
+    '<svg viewBox="0 0 24 24"><path d="M14.5 4 v9.2 a3.6 3.6 0 1 1 -3.1 -3.57" stroke-width="1.6" stroke-linecap="round"/><path d="M14.5 5.4 c0.9 1.7 2.4 2.8 4.4 3" stroke-width="1.6" stroke-linecap="round"/></svg>',
+  Facebook:
+    '<svg viewBox="0 0 24 24"><path d="M14.8 4.5 h-2.1 a3.1 3.1 0 0 0 -3.1 3.1 v2.2 H7.4 v3 h2.2 v7.2 h3 v-7.2 h2.6 l0.5 -3 h-3.1 V8 a1.1 1.1 0 0 1 1.1 -1.1 h1.1 Z" stroke-width="1.4" stroke-linejoin="round"/></svg>',
+  X:
+    '<svg viewBox="0 0 24 24"><path d="M5 4.5 L18.8 19.5 M18.8 4.5 L5 19.5" stroke-width="1.7" stroke-linecap="round"/></svg>',
+  Threads:
+    '<svg viewBox="0 0 24 24"><path d="M16.6 11.2 c-1.2 -0.5 -2.4 -0.8 -3.6 -0.9 c-2.6 -0.15 -4.4 1 -4.5 2.7 c-0.1 1.6 1.2 2.9 3.1 2.9 c2.5 0 4.4 -1.9 4.6 -4.6 c0.06 -0.9 0.05 -1.9 -0.15 -2.8 c-0.5 -2.4 -2.3 -3.7 -4.6 -3.6 c-2.2 0.1 -3.9 1.3 -4.6 3.3" stroke-width="1.5" stroke-linecap="round"/><path d="M16.9 12.4 c0.5 2.9 -0.7 5.6 -3 6.6 c-2 0.85 -4.3 0.4 -5.6 -1" stroke-width="1.5" stroke-linecap="round"/></svg>',
+  SoundCloud:
+    '<svg viewBox="0 0 24 24"><path d="M4 15.5 v-3.4 M6.4 16 v-5.2 M8.8 16.5 v-6.6 M11.2 16.8 V8.4 c0 -1.5 1.1 -2.7 2.6 -2.9 c2 -0.25 3.8 1.2 4 3.2" stroke-width="1.5" stroke-linecap="round"/><path d="M17.8 8.7 c1.6 0.3 2.7 1.5 2.7 3.1 c0 1.9 -1.5 3.3 -3.4 3.3 h-2.6" stroke-width="1.5" stroke-linecap="round"/></svg>',
 };
 
-/** Variante B — 4 anéis alternados (tracejado/sólido), sol médio. */
-const RINGS = [
-  { si: 2, rx: 205, ry: 68, speed: 0.11, dash: true, angle0: 0.7 },   // Spotify
-  { si: 3, rx: 290, ry: 94, speed: -0.085, dash: false, angle0: 2.6 }, // Apple Music
-  { si: 0, rx: 368, ry: 118, speed: 0.07, dash: true, angle0: 4.1 },   // Instagram
-  { si: 1, rx: 430, ry: 140, speed: -0.06, dash: false, angle0: 5.5 }, // YouTube
-];
+/**
+ * Geometria das órbitas — gerada para N redes visíveis (a ordem do CMS
+ * manda: de dentro para fora). Mantém a alternância tracejado/sólido,
+ * direções alternadas e ângulos iniciais desfasados do desenho original.
+ */
+function buildRings(count: number) {
+  const INNER = { rx: 205, ry: 68, speed: 0.11 };
+  const OUTER = { rx: 430, ry: 140, speed: -0.06 };
+  const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+  return Array.from({ length: count }, (_, i) => {
+    const t = count <= 1 ? 0 : i / (count - 1);
+    return {
+      rx: Math.round(lerp(INNER.rx, OUTER.rx, t)),
+      ry: Math.round(lerp(INNER.ry, OUTER.ry, t)),
+      speed: Math.round(lerp(INNER.speed, OUTER.speed, t) * 1000) / 1000,
+      dash: i % 2 === 0,
+      angle0: Math.round((0.7 + i * 1.55) * 100) / 100,
+    };
+  });
+}
 
 const pctX = (x: number) => (x / SPACE.w) * 100;
 const pctY = (y: number) => (y / SPACE.h) * 100;
@@ -65,7 +88,13 @@ type NodeState = {
 };
 
 export default function OrbitSystem() {
-  const { socials } = useSiteContent();
+  const { socials: allSocials } = useSiteContent();
+  // Só as redes visíveis entram no sistema (fallback: todas, se o CMS
+  // ainda não tiver o campo `visible`)
+  const visibleSocials = allSocials.some((s) => s.visible === false)
+    ? allSocials.filter((s) => s.visible !== false)
+    : allSocials;
+  const RINGS = useMemo(() => buildRings(visibleSocials.length), [visibleSocials.length]);
   const stageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -84,7 +113,7 @@ export default function OrbitSystem() {
       reveal: reduced ? 1 : 0,
       lastOp: -1,
       lastZ: -1,
-    }));
+    })).filter((n) => n.el); // defenses: menos nós DOM que anéis esperados
 
     const sun = stage.querySelector<HTMLElement>(".orbit-sun");
     const ringEls = Array.from(stage.querySelectorAll<SVGEllipseElement>(".ring-ellipse"));
@@ -282,8 +311,10 @@ export default function OrbitSystem() {
       />
 
       {/* Bolas de vidro com logotipos + tooltips */}
-      {RINGS.map((ring) => {
-        const s = socials[ring.si];
+      {RINGS.map((ring, i) => {
+        const s = visibleSocials[i];
+        if (!s) return null;
+        const logo = LOGOS[s.label] ?? LOGOS.Instagram; // rede desconhecida → glifo neutro
         const x0 = pctX(SPACE.w / 2 + ring.rx * Math.cos(ring.angle0));
         const y0 = pctY(SUN_CY + ring.ry * Math.sin(ring.angle0));
         const depth0 = (Math.sin(ring.angle0) + 1) / 2;
@@ -309,7 +340,7 @@ export default function OrbitSystem() {
               <span className="orbit-tip-handle">{s.handle}</span>
               <span className="orbit-tip-open">Toque novamente para abrir ↗</span>
             </span>
-            <span className="orbit-ball" dangerouslySetInnerHTML={{ __html: LOGOS[s.label] }} />
+            <span className="orbit-ball" dangerouslySetInnerHTML={{ __html: logo }} />
           </a>
         );
       })}

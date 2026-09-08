@@ -265,11 +265,24 @@ export function ArtistForm({ initial }: { initial: Artist }) {
 
 /* ── Redes sociais ────────────────────────────────────────── */
 
-const NETWORKS: Social["label"][] = ["Instagram", "YouTube", "Spotify", "Apple Music"];
+const NETWORKS: Social["label"][] = [
+  "Instagram",
+  "YouTube",
+  "Spotify",
+  "Apple Music",
+  "TikTok",
+  "Facebook",
+  "X",
+  "Threads",
+  "SoundCloud",
+];
 
 export function SocialsForm({ initial }: { initial: Social[] }) {
   const [rows, setRows] = useState<Social[]>(
-    NETWORKS.map((label) => initial.find((s) => s.label === label) ?? { label, handle: "", url: "" }),
+    NETWORKS.map(
+      (label) =>
+        initial.find((s) => s.label === label) ?? { label, handle: "", url: "", visible: false },
+    ),
   );
   const { save, pending, notice } = useSectionSave("socials");
 
@@ -279,14 +292,14 @@ export function SocialsForm({ initial }: { initial: Social[] }) {
   return (
     <Panel title="Redes sociais">
       <p className="-mt-2 mb-5 text-xs leading-relaxed text-mist/70">
-        Cada rede é uma órbita na secção Sintonia — a ordem é fixa (o desenho das órbitas
-        depende dela). Edite o handle e o link de cada uma.
+        Cada rede ativa é uma órbita na secção Sintonia. Liga ou desliga cada rede com o
+        interruptor — as desligadas deixam de aparecer em todo o site.
       </p>
       <div className="space-y-4">
         {rows.map((row, i) => (
           <div
             key={row.label}
-            className="grid items-end gap-3 rounded-xl border border-white/[0.07] bg-night-950/40 p-4 md:grid-cols-[160px_1fr_1.4fr]"
+            className="grid items-end gap-3 rounded-xl border border-white/[0.07] bg-night-950/40 p-4 md:grid-cols-[150px_1fr_1.4fr_auto]"
           >
             <Field label="Rede">
               <TextInput value={row.label} readOnly className="opacity-60" />
@@ -304,6 +317,17 @@ export function SocialsForm({ initial }: { initial: Social[] }) {
                 onChange={(e) => setRow(i, { url: e.target.value })}
                 placeholder="https://…"
               />
+            </Field>
+            <Field label="Visível">
+              <label className="flex h-[38px] cursor-pointer items-center justify-center gap-2 rounded-lg border border-white/10 px-3 text-xs text-mist/80 select-none">
+                <input
+                  type="checkbox"
+                  checked={row.visible !== false}
+                  onChange={(e) => setRow(i, { visible: e.target.checked })}
+                  className="h-4 w-4 accent-mist"
+                />
+                {row.visible !== false ? "Na órbita" : "Oculta"}
+              </label>
             </Field>
           </div>
         ))}

@@ -57,17 +57,19 @@ export default function Footer() {
 
         <div className="flex flex-col gap-6 md:items-end">
           <nav className="flex gap-6">
-            {socials.map((s) => (
-              <a
-                key={s.label}
-                href={s.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-mist transition-colors hover:text-white"
-              >
-                {s.label}
-              </a>
-            ))}
+            {socials
+              .filter((s) => s.visible !== false && s.url)
+              .map((s) => (
+                <a
+                  key={s.label}
+                  href={s.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-mist transition-colors hover:text-white"
+                >
+                  {s.label}
+                </a>
+              ))}
           </nav>
           <p className="text-xs text-mist/60">
             © {new Date().getFullYear()} {artist.name}. Todos os direitos reservados.

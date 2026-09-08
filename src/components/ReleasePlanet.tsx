@@ -192,7 +192,7 @@ export default function ReleasePlanet({
 /** Links de plataformas (usados na página /discografia, por baixo do planeta). */
 export function ReleasePlanetLinks() {
   const { socials } = useSiteContent();
-  const urlFor = (label: string) => socials.find((s) => s.label === label)?.url ?? "#";
+  const urlFor = (label: string) => socials.find((s) => s.label === label && s.visible !== false)?.url ?? "#";
 
   return (
     <div className="mt-4 flex gap-3 text-xs text-mist">

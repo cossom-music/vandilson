@@ -59,6 +59,8 @@ export type Social = {
   label: string;
   handle: string;
   url: string;
+  /** Aparece na Sintonia (órbita) e no footer. Ausente = visível (compatibilidade). */
+  visible?: boolean;
 };
 
 export type Contact = {
@@ -107,10 +109,16 @@ export const seedContent: SiteContent = {
   },
 
   socials: [
-    { label: "Instagram", handle: "@vandilsonneto", url: "https://instagram.com/vandilsonneto" },
-    { label: "YouTube", handle: "@vandilsonneto", url: "https://youtube.com/@vandilsonneto" },
-    { label: "Spotify", handle: "Vandilson Neto", url: "https://open.spotify.com/artist/vandilsonneto" },
-    { label: "Apple Music", handle: "Vandilson Neto", url: "https://music.apple.com/artist/vandilsonneto" },
+    // Ordem fixa = ordem das órbitas na Sintonia (de dentro para fora)
+    { label: "Spotify", handle: "Vandilson Neto", url: "https://open.spotify.com/artist/vandilsonneto", visible: true },
+    { label: "Apple Music", handle: "Vandilson Neto", url: "https://music.apple.com/artist/vandilsonneto", visible: true },
+    { label: "Instagram", handle: "@vandilsonneto", url: "https://instagram.com/vandilsonneto", visible: true },
+    { label: "YouTube", handle: "@vandilsonneto", url: "https://youtube.com/@vandilsonneto", visible: true },
+    { label: "TikTok", handle: "", url: "", visible: false },
+    { label: "Facebook", handle: "", url: "", visible: false },
+    { label: "X", handle: "", url: "", visible: false },
+    { label: "Threads", handle: "", url: "", visible: false },
+    { label: "SoundCloud", handle: "", url: "", visible: false },
   ],
 
   contact: {
