@@ -9,6 +9,8 @@ import { animate, stagger, utils, prefersReducedMotion } from "@/lib/anime";
 import { useSiteContent } from "@/components/SiteContentProvider";
 import { LiquidGlassLink } from "@/components/ui/LiquidGlass";
 import ReleasePlanet from "@/components/ReleasePlanet";
+import HeroLayers, { HeroLayersFront } from "@/components/home/HeroLayers";
+import type { GlobeVariant } from "@/components/earth/GlassGlobe";
 
 /**
  * Intro da homepage ao estilo animejs.com — três atos num viewport FIXO:
@@ -22,7 +24,14 @@ import ReleasePlanet from "@/components/ReleasePlanet";
  * Paleta monocromática (medida no vídeo de referência): prata sobre preto.
  * Sem dourado — o acento é o limbo prateado do vidro.
  */
-export default function HomeIntro() {
+export default function HomeIntro({
+  variant = "silver",
+}: {
+  /** Variante visual do herói — "silver" é a atual; as páginas /hero-a..d
+   *  passam as variantes em teste. As cores extra vivem em HeroLayers e
+   *  desvanecem com o globo (data-hero-fx), garantindo a transição prateada. */
+  variant?: GlobeVariant;
+}) {
   const [reduced, setReduced] = useState(false);
 
   useEffect(() => {
@@ -40,6 +49,12 @@ export default function HomeIntro() {
     const indicator = scope.querySelector<HTMLElement>("[data-indicator]");
     const music = scope.querySelector<HTMLElement>("[data-music]");
     if (!globe || !vignette || !indicator || !music) return;
+
+    // Camadas de cor da variante (nebulosa, sol, flare…) — desvanecem junto
+    // com o globo no Ato 2. Em "silver" o grupo não existe (querySelector null).
+    const heroFx = scope.querySelector<HTMLElement>("[data-hero-fx]")
+      ? Array.from(scope.querySelectorAll<HTMLElement>("[data-hero-fx]"))
+      : [];
 
     // Assinaturas do herói (nome + tagline) — saem suavemente no primeiro
     // scroll, precisamente quando o header entra com o mesmo nome.
@@ -81,6 +96,11 @@ export default function HomeIntro() {
     // Ato 2 — já dentro do globo: cross-fade para a Música
     tl.to(globe, { autoAlpha: 0, duration: 0.16 }, 0.58);
     tl.to(vignette, { autoAlpha: 0, duration: 0.16 }, 0.58);
+    // Cores extra da variante saem um pouco antes — a cena já está prateada
+    // quando a Música faz fade in (transição garantida por construção).
+    if (heroFx.length) {
+      tl.to(heroFx, { autoAlpha: 0, duration: 0.14, ease: "power1.in" }, 0.44);
+    }
     tl.to(music, { autoAlpha: 1, y: 0, duration: 0.22, ease: "power1.out" }, 0.68);
     // Globo invisível → pausa o trabalho por frame da cena Three.js
     // (o render WebGL contínuo escondido roubava frames à página inteira).
@@ -180,9 +200,11 @@ export default function HomeIntro() {
           aria-hidden="true"
           className="star-layer star-layer--hero pointer-events-none absolute inset-0"
         />
+        {variant !== "silver" && <HeroLayers variant={variant} />}
         <div data-globe className="absolute inset-0 z-0">
-          <GlassGlobe className="h-full w-full" />
+          <GlassGlobe className="h-full w-full" variant={variant} />
         </div>
+        {variant !== "silver" && <HeroLayersFront variant={variant} />}
           <div
             data-vignette
             className="pointer-events-none absolute inset-0 z-20 bg-[radial-gradient(ellipse_62%_55%_at_50%_46%,rgba(3,5,9,0)_58%,#030509_100%)]"
@@ -204,10 +226,12 @@ export default function HomeIntro() {
           aria-hidden="true"
           className="star-layer star-layer--hero pointer-events-none absolute inset-0"
         />
+        {variant !== "silver" && <HeroLayers variant={variant} />}
         {/* Globo de vidro — a câmara mergulha para dentro com o scroll */}
         <div data-globe className="absolute inset-0 z-0">
-          <GlassGlobe className="h-full w-full" />
+          <GlassGlobe className="h-full w-full" variant={variant} />
         </div>
+        {variant !== "silver" && <HeroLayersFront variant={variant} />}
 
         <div
           data-vignette

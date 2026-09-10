@@ -26,6 +26,32 @@ const DOLLY_TO = 0.55; // câmara dentro da casca de pontos no fim do zoom
 // Medido no vídeo de referência: 1 rotação completa a cada 30 s (corr = 1.000)
 const SPIN = (2 * Math.PI) / 30; // ≈ 0.2094 rad/s
 
+/* ----------------------------- variantes --------------------------------- */
+
+/**
+ * Variantes de cor do herói — "silver" é o atual; as outras 4 são as direções
+ * em teste nas páginas /hero-a..d. Só mudam CORES (pontos, vidro, halo) —
+ * geometria, dolly e interação permanecem iguais.
+ */
+export type GlobeVariant = "silver" | "galaxy" | "atmo" | "ember" | "dawn";
+
+type GlobePalette = {
+  dots: string; // cor dos continentes pontilhistas
+  shell: string; // fresnel do vidro (limbo)
+  shellIntensity: number;
+  halo: string; // halo atmosférico exterior
+  haloOpacity: number;
+};
+
+const PALETTES: Record<GlobeVariant, GlobePalette> = {
+  // Medido no vídeo: monocromático — centro ~#3a3a3a, limbo ~#808080
+  silver: { dots: "#c6cad0", shell: "#c9ccd2", shellIntensity: 0.6, halo: "#3a3f47", haloOpacity: 0.05 },
+  galaxy: { dots: "#bcc9e2", shell: "#c2cfe6", shellIntensity: 0.72, halo: "#4a6b9f", haloOpacity: 0.09 },
+  atmo: { dots: "#aecdf2", shell: "#5aa8ff", shellIntensity: 0.95, halo: "#3d82e6", haloOpacity: 0.16 },
+  ember: { dots: "#d9cdbb", shell: "#d9c4a4", shellIntensity: 0.68, halo: "#b07a3c", haloOpacity: 0.1 },
+  dawn: { dots: "#a9c6ea", shell: "#7fb4e8", shellIntensity: 0.88, halo: "#3d82e6", haloOpacity: 0.13 },
+};
+
 /* ------------------------------ helpers ---------------------------------- */
 
 /** Converte lat/lon para posição numa esfera de raio 1. */
@@ -102,7 +128,7 @@ function sampleLandPoints(
 
 /** Casca de vidro — fresnel: transparente ao centro, brilha na silhueta.
  *  É ISTO que dá o efeito "vidro": o lado oposto vê-se através dela. */
-function GlassShell() {
+function GlassShell({ palette }: { palette: GlobePalette }) {
   const material = useMemo(
     () =>
       new THREE.ShaderMaterial({
@@ -111,10 +137,9 @@ function GlassShell() {
         blending: THREE.AdditiveBlending,
         side: THREE.FrontSide,
         uniforms: {
-          // Medido no vídeo: monocromático — centro ~#3a3a3a, limbo ~#808080
-          uColor: { value: new THREE.Color("#c9ccd2") },
+          uColor: { value: new THREE.Color(palette.shell) },
           uPower: { value: 2.6 }, // gradiente largo: escuro no centro → claro no limbo
-          uIntensity: { value: 0.6 },
+          uIntensity: { value: palette.shellIntensity },
         },
         vertexShader: /* glsl */ `
           varying vec3 vNormal;
@@ -136,9 +161,8 @@ function GlassShell() {
             float fres = pow(1.0 - abs(dot(normalize(vNormal), normalize(vViewDir))), uPower);
             gl_FragColor = vec4(uColor, fres * uIntensity);
           }
-        `,
-      }),
-    [],
+        `,      }),
+    [palette],
   );
 
   return (
@@ -149,14 +173,14 @@ function GlassShell() {
 }
 
 /** Halo exterior — brilho suave visto de trás (espessura atmosférica). */
-function OuterHalo() {
+function OuterHalo({ palette }: { palette: GlobePalette }) {
   return (
     <mesh scale={1.12}>
       <sphereGeometry args={[EARTH_RADIUS, 48, 48]} />
       <meshBasicMaterial
-        color="#3a3f47"
+        color={palette.halo}
         transparent
-        opacity={0.05}
+        opacity={palette.haloOpacity}
         side={THREE.BackSide}
         blending={THREE.AdditiveBlending}
         depthWrite={false}
@@ -175,9 +199,11 @@ type GlobeInteraction = {
 function ContinentDots({
   texture,
   interaction,
+  color,
 }: {
   texture: string;
   interaction: GlobeInteraction;
+  color: string;
 }) {
   const [img, setImg] = useState<HTMLImageElement | null>(null);
   const { size, camera, gl } = useThree();
@@ -206,7 +232,7 @@ function ContinentDots({
         blending: THREE.AdditiveBlending,
         uniforms: {
           uTime: { value: 0 },
-          uColor: { value: new THREE.Color("#c6cad0") },
+          uColor: { value: new THREE.Color(color) },
           uSize: { value: 0.0115 }, // tamanho mundial do ponto
           uScale: { value: 400 }, // px por unidade mundial (atualizado por frame)
           uMaxPx: { value: 4.5 }, // teto em px de dispositivo (crítico no dolly)
@@ -270,7 +296,7 @@ function ContinentDots({
           }
         `,
       }),
-    [interaction],
+    [interaction, color],
   );
 
   // Atualiza tempo e escala de atenuação (px reais do viewport) por frame
@@ -344,7 +370,7 @@ function CameraRig() {
  * amortecido e escreve uniforms do shader. Framer Motion anima DOM/componentes
  * e não tem ponte limpa para uniforms a 60 fps.
  */
-function RotatingGlobe({ texture }: { texture: string }) {
+function RotatingGlobe({ texture, dotColor }: { texture: string; dotColor: string }) {
   const group = useRef<THREE.Group>(null);
 
   // Interação ponteiro↔pontos — escrita por frame, lida pelo shader
@@ -411,15 +437,22 @@ function RotatingGlobe({ texture }: { texture: string }) {
 
   return (
     <group ref={group}>
-      <ContinentDots texture={texture} interaction={interaction} />
+      <ContinentDots texture={texture} interaction={interaction} color={dotColor} />
     </group>
   );
 }
 
 /* ------------------------------ componente -------------------------------- */
 
-export default function GlassGlobe({ className }: { className?: string }) {
+export default function GlassGlobe({
+  className,
+  variant = "silver",
+}: {
+  className?: string;
+  variant?: GlobeVariant;
+}) {
   const [webgl, setWebgl] = useState<boolean | null>(null);
+  const palette = PALETTES[variant] ?? PALETTES.silver;
 
   // Sonda de capacidades WebGL (efeito — seguro para SSR)
   useEffect(() => {
@@ -455,10 +488,10 @@ export default function GlassGlobe({ className }: { className?: string }) {
                   fica visível à volta e através do globo de vidro. */}
               <CameraRig />
               {/* Vidro + halo NÃO rodam (a fresnel é uniforme na esfera) */}
-              <GlassShell />
-              <OuterHalo />
+              <GlassShell palette={palette} />
+              <OuterHalo palette={palette} />
               {/* Continentes, graticula, arcos e hubs rodam juntos */}
-              <RotatingGlobe texture="/textures/earth-water.png" />
+              <RotatingGlobe texture="/textures/earth-water.png" dotColor={palette.dots} />
             </Canvas>
           </Suspense>
         </div>
