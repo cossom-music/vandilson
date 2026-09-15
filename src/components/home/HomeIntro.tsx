@@ -2,15 +2,17 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import GlassGlobe from "@/components/earth/GlassGlobe";
+import EarthScene from "@/components/home/EarthScene";
 import { useGsapContext, gsap, ScrollTrigger } from "@/lib/gsap";
+import type { GlobeVariant } from "@/components/earth/GlassGlobe";
 import { earthZoom } from "@/lib/earthZoom";
 import { animate, stagger, utils, prefersReducedMotion } from "@/lib/anime";
+import { motion, useReducedMotion, useScroll, useSpring, useTransform } from "framer-motion";
+import { heroCine } from "@/lib/heroCine";
 import { useSiteContent } from "@/components/SiteContentProvider";
 import { LiquidGlassLink } from "@/components/ui/LiquidGlass";
 import ReleasePlanet from "@/components/ReleasePlanet";
 import HeroLayers, { HeroLayersFront } from "@/components/home/HeroLayers";
-import type { GlobeVariant } from "@/components/earth/GlassGlobe";
 
 /**
  * Intro da homepage ao estilo animejs.com — três atos num viewport FIXO:
@@ -23,7 +25,38 @@ import type { GlobeVariant } from "@/components/earth/GlassGlobe";
  *
  * Paleta monocromática (medida no vídeo de referência): prata sobre preto.
  * Sem dourado — o acento é o limbo prateado do vidro.
+ *
+ * VARIANTES (/hero-a..d, refs 1-4): a cor vive em HeroLayers (o que é fino) e
+ * em EarthScene (geometria e shaders — limbo atmosférico, luzes de cidade, sol
+ * estrelado). A coreografia cinematográfica escreve em `heroCine`, que a cena
+ * Three.js lê por frame: o mergulho deixa de ser só um zoom.
  */
+/**
+ * Arco de FUSÃO — funde o fim do mergulho no globo com a secção de Música
+ * (cores contínuas, sem corte). A cor segue a variante: prata na homepage,
+ * azul elétrico no /hero-b (a cena é azul de ponta a ponta), azul→âmbar no
+ * /hero-d (o nascer do sol atravessa a transição).
+ */
+const MERGE_ARC: Record<GlobeVariant, string> = {
+  silver:
+    "radial-gradient(ellipse 60% 46% at 50% 58%, rgba(202,204,208,0.10) 0%, rgba(58,58,58,0.05) 45%, rgba(3,5,9,0.9) 100%)",
+  galaxy:
+    "radial-gradient(ellipse 60% 46% at 50% 58%, rgba(202,204,208,0.10) 0%, rgba(58,58,58,0.05) 45%, rgba(3,5,9,0.9) 100%)",
+  ember:
+    "radial-gradient(ellipse 60% 46% at 50% 58%, rgba(202,204,208,0.10) 0%, rgba(58,58,58,0.05) 45%, rgba(3,5,9,0.9) 100%)",
+  // O arco de fusão vive SOBRE o planeta (50% 58%): e o brilho da Terra a
+  // entregar o passe à secção seguinte — por isso o azul é contido (o resto do
+  // gradiente é o escurecimento da borda, não mais cor para o céu).
+  atmo: "radial-gradient(ellipse 60% 46% at 50% 58%, rgba(120,190,255,0.11) 0%, rgba(40,90,180,0.05) 45%, rgba(3,5,9,0.9) 100%)",
+  dawn: "radial-gradient(ellipse 60% 46% at 50% 58%, rgba(255,200,140,0.13) 0%, rgba(60,110,200,0.05) 45%, rgba(3,5,9,0.9) 100%)",
+};
+
+/** Brilho do nome por variante — lido dos modelos das refs 2 e 4. */
+const NAME_GLOW: Partial<Record<GlobeVariant, string>> = {
+  atmo: "0 2px 30px rgba(80,150,255,0.38)",
+  dawn: "0 2px 26px rgba(255,190,110,0.26)",
+};
+
 export default function HomeIntro({
   variant = "silver",
 }: {
@@ -55,6 +88,7 @@ export default function HomeIntro({
     const heroFx = scope.querySelector<HTMLElement>("[data-hero-fx]")
       ? Array.from(scope.querySelectorAll<HTMLElement>("[data-hero-fx]"))
       : [];
+    // EarthScene faz o seu próprio zoom do fundo — não interagimos diretamente.
 
     // Assinaturas do herói (nome + tagline) — saem suavemente no primeiro
     // scroll, precisamente quando o header entra com o mesmo nome.
@@ -92,6 +126,25 @@ export default function HomeIntro({
     tl.to(indicator, { autoAlpha: 0, duration: 0.14 }, 0);
     // Nome + tagline desvanecem mais lentamente (0.35 ≈ 119svh de scroll)
     tl.to(heroTexts, { autoAlpha: 0, duration: 0.35 }, 0);
+
+    // CINEMA DA VARIANTE — o scroll escreve os sinais que a cena Three.js lê
+    // por frame (heroCine). Corre no mesmo arco do dolly: o mergulho e o
+    // espetáculo da variante são o mesmo movimento, não dois.
+    if (variant === "atmo") {
+      // As cidades do lado noturno ganham corpo enquanto a câmara desce.
+      tl.fromTo(heroCine.cities, { value: 0.9 }, { value: 1.3, duration: 0.5 }, 0);
+    } else if (variant === "dawn") {
+      // O AMANHECER sobe: o sol sai de trás do limbo, o flare abre e o ponto
+      // de contacto incendeia-se — tudo durante o mesmo mergulho.
+      tl.fromTo(
+        heroCine.sunrise,
+        { value: 0.35 },
+        { value: 1, duration: 0.5, ease: "power1.inOut" },
+        0,
+      );
+      // Parallax: o sol desliza lateralmente contra o limbo.
+      tl.fromTo(heroCine.drift, { value: 0 }, { value: 1, duration: 0.5, ease: "sine.inOut" }, 0);
+    }
 
     // Ato 2 — já dentro do globo: cross-fade para a Música
     tl.to(globe, { autoAlpha: 0, duration: 0.16 }, 0.58);
@@ -202,14 +255,14 @@ export default function HomeIntro({
         />
         {variant !== "silver" && <HeroLayers variant={variant} />}
         <div data-globe className="absolute inset-0 z-0">
-          <GlassGlobe className="h-full w-full" variant={variant} />
+          <EarthScene variant={variant} />
         </div>
         {variant !== "silver" && <HeroLayersFront variant={variant} />}
           <div
             data-vignette
             className="pointer-events-none absolute inset-0 z-20 bg-[radial-gradient(ellipse_62%_55%_at_50%_46%,rgba(3,5,9,0)_58%,#030509_100%)]"
           />
-          <HeroSignatures />
+          <HeroSignatures glow={NAME_GLOW[variant]} />
         </div>
         <section id="home-music" className="relative bg-night-950 py-20">
           <DiscografiaContent />
@@ -227,9 +280,9 @@ export default function HomeIntro({
           className="star-layer star-layer--hero pointer-events-none absolute inset-0"
         />
         {variant !== "silver" && <HeroLayers variant={variant} />}
-        {/* Globo de vidro — a câmara mergulha para dentro com o scroll */}
+        {/* Cena da terra — scroll faz zoom no fundo (estrelas) e no objeto */}
         <div data-globe className="absolute inset-0 z-0">
-          <GlassGlobe className="h-full w-full" variant={variant} />
+          <EarthScene variant={variant} />
         </div>
         {variant !== "silver" && <HeroLayersFront variant={variant} />}
 
@@ -238,26 +291,23 @@ export default function HomeIntro({
           className="pointer-events-none absolute inset-0 z-20 bg-[radial-gradient(ellipse_62%_55%_at_50%_46%,rgba(3,5,9,0)_58%,#030509_100%)]"
         />
 
-        <HeroSignatures />
+        <HeroSignatures glow={NAME_GLOW[variant]} />
 
-        {/* Indicador de scroll — some no arranque do mergulho */}
+        {/* Indicador de scroll — some no arranque do mergulho.
+            O FADE é do GSAP ([data-indicator]); a entrada com mola e o
+            parallax com o scroll são Framer Motion, em nós INTERNOS, para as
+            duas bibliotecas nunca escreverem no mesmo elemento. */}
         <div
           data-indicator
           className="absolute bottom-3 left-1/2 z-20 -translate-x-1/2"
           aria-hidden="true"
         >
-          <div className="flex flex-col items-center gap-3">
-            <span className="text-[10px] uppercase tracking-[0.4em] text-mist/80">
-              Deslize para explorar
-            </span>
-            <div className="h-10 w-px animate-pulse bg-gradient-to-b from-transparent via-white/60 to-transparent" />
-          </div>
+          <ScrollCue />
         </div>
 
-        {/* Arco de prata — funde o fim do mergulho no globo com a secção
-            de Música (cores contínuas, sem corte; sem dourado). */}
+        {/* Arco de fusão — a cor segue a variante (ver MERGE_ARC) */}
         <div className="pointer-events-none absolute inset-0 z-20">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_46%_at_50%_58%,rgba(202,204,208,0.10)_0%,rgba(58,58,58,0.05)_45%,rgba(3,5,9,0.9)_100%)]" />
+          <div className="absolute inset-0" style={{ background: MERGE_ARC[variant] }} />
         </div>
 
         {/* Secção de Música — sobrepõe o globo e entra em fade in.
@@ -360,7 +410,40 @@ function HeroCountdown() {
   );
 }
 
-function HeroSignatures() {
+/**
+ * Indicador de scroll do herói (Framer Motion): entra com um fade depois do
+ * nome ficar revelado e faz parallax para baixo com o scroll — o gesto de
+ * "empurrar" a página para dentro do globo.
+ */
+function ScrollCue() {
+  const reduced = useReducedMotion();
+  const { scrollY } = useScroll();
+  const drift = useSpring(useTransform(scrollY, [0, 640], [0, 96]), {
+    stiffness: 90,
+    damping: 22,
+    mass: 0.6,
+  });
+  return (
+    <motion.div
+      className="flex flex-col items-center gap-3"
+      initial={reduced ? false : { opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: 0.9, duration: 1, ease: "easeOut" }}
+    >
+      <motion.div
+        className="flex flex-col items-center gap-3"
+        style={reduced ? undefined : { y: drift }}
+      >
+        <span className="text-[10px] uppercase tracking-[0.4em] text-mist/80">
+          Deslize para explorar
+        </span>
+        <div className="h-10 w-px animate-pulse bg-gradient-to-b from-transparent via-white/60 to-transparent" />
+      </motion.div>
+    </motion.div>
+  );
+}
+
+function HeroSignatures({ glow }: { glow?: string }) {
   const { artist } = useSiteContent();
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -398,6 +481,7 @@ function HeroSignatures() {
       <h1
         data-hero-text
         className="font-display text-4xl leading-[0.95] text-white sm:text-5xl md:text-7xl"
+        style={glow ? { textShadow: glow } : undefined}
       >
         <span className="block overflow-hidden">
           <span

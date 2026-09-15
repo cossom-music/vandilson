@@ -16,10 +16,24 @@ next-env.d.ts
 model-videos/
 freebuff/
 .freebuff/
+_tempo/
+
+# Protótipos e artefactos de design desta sessão
+_temp/
+tmp_ref*.jpg
+
+# Supabase CLI local (não versionar)
+supabase/
 
 # Artefactos locais de desenvolvimento
 build.log
+tsc_out.txt
+tsc_done.txt
 dev.log
+pw_done.txt
+pw_log.txt
+shot-*.png
+shot-*.jpg
 dev.pid
 credentials.txt
 public/videos/

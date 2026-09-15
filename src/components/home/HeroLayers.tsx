@@ -1,16 +1,18 @@
 /**
- * Camadas decorativas do herói por VARIANTE — as cores extra que cada modelo
- * de teste acrescenta por cima do campo estelar e à volta do globo:
+ * Camadas decorativas do herói por VARIANTE — só o que é FINO (névoa, haze
+ * atmosférico, bloom de contacto). O que é corpo vive na cena Three.js
+ * (ver EarthScene):
  *
  *   galaxy (A) — nebulosa galáctica + sol quente + lua (ref1)
- *   atmo   (B) — arco atmosférico azul no horizonte + luzes de cidade (ref2)
+ *   atmo   (B) — névoa fria + haze azul por cima do limbo elétrico (ref2);
+ *                as LUZES DE CIDADE passaram a ser WebGL (CityLights)
  *   ember  (C) — sol de fogo + anéis de órbita + planeta anelado (ref3)
- *   dawn   (D) — sol estrelado com flare + limbo a arder (ref4)
+ *   dawn   (D) — bloom do incêndio no contacto (ref4); o SOL ESTRELADO com
+ *                flare passou a ser WebGL (StarSun)
  *
  * Tudo é pointer-events-none e vive DE TRÁS do globo (z-0, inserido antes
- * do [data-globe]) — exceto o flare do dawn, que tem de ficar POR CIMA do
- * globo (o sol nasce na frente do limbo) e por isso vive num segundo bloco
- * com z-[15] (entre o globo z-0 e a vinheta z-20).
+ * do [data-globe]) — exceto o bloom do amanhecer, que tem de ficar POR CIMA
+ * do globo (z-[15], entre o globo z-0 e a vinheta z-20).
  *
  * Todas as camadas levam [data-hero-fx]: a timeline do HomeIntro desvanece
  * este grupo JUNTO com o globo no Ato 2 — as cores saem antes da secção de
@@ -80,33 +82,30 @@ export default function HeroLayers({
   if (variant === "atmo") {
     return (
       <>
-        {/* Arco atmosférico — o limbo azul elétrico a subir do fundo (ref2).
-            Vive atrás do globo; a sombra azul do CSS faz o horizonte. */}
+        {/* HAZE DO CÉU — o tom azul elétrico que sobe do limbo para o espaço.
+            O limbo em si é WebGL (AtmosphereLimb); isto é o que assenta por
+            cima dele, largo e sem arestas. (ref2) */}
         <div
           data-hero-fx
           aria-hidden="true"
-          className="pointer-events-none absolute left-1/2 top-[58%] z-0 h-[130vmin] w-[130vmin] -translate-x-1/2 rounded-full"
+          className="pointer-events-none absolute inset-x-0 bottom-0 z-0 h-[78vmin]"
           style={{
             background:
-              "radial-gradient(circle at 50% 12%, rgba(18,35,61,0.85) 0%, rgba(10,21,38,0.9) 34%, rgba(5,11,22,0.95) 60%, #02050c 100%)",
-            boxShadow:
-              "0 -4px 22px 2px rgba(96,178,255,0.7), 0 -14px 56px 6px rgba(45,120,220,0.4), 0 -36px 140px 30px rgba(25,70,150,0.28)",
+              "radial-gradient(120% 100% at 50% 112%, rgba(45,120,220,0.24) 0%, rgba(20,60,140,0.11) 42%, transparent 74%)",
           }}
         />
-        {/* Luzes de cidade douradas sobre o arco (ref2) — pontinhos quentes */}
+        {/* NÉVOA FRIA — duas manchas sobre a curvatura, uma de cada lado:
+            o ar que assenta no hemisfério e que um shader (sem
+            post-processing) não desenha. (ref2) */}
         <div
           data-hero-fx
           aria-hidden="true"
-          className="pointer-events-none absolute left-1/2 top-[58%] z-0 h-[130vmin] w-[130vmin] -translate-x-1/2 rounded-full"
+          className="pointer-events-none absolute inset-x-0 bottom-[14%] z-0 h-[48vmin]"
           style={{
-            backgroundImage:
-              "radial-gradient(2px 1.5px at 40% 9%, rgba(217,164,65,0.9) 50%, transparent 51%)," +
-              "radial-gradient(1.5px 1.5px at 47% 12%, rgba(217,164,65,0.75) 50%, transparent 51%)," +
-              "radial-gradient(2.5px 1.5px at 55% 10%, rgba(240,190,90,0.85) 50%, transparent 51%)," +
-              "radial-gradient(1.5px 1.5px at 62% 13%, rgba(217,164,65,0.6) 50%, transparent 51%)," +
-              "radial-gradient(2px 1.5px at 34% 13%, rgba(217,164,65,0.55) 50%, transparent 51%)," +
-              "radial-gradient(1.5px 1.5px at 50% 16%, rgba(240,190,90,0.5) 50%, transparent 51%)",
-            filter: "blur(0.4px)",
+            background:
+              "radial-gradient(58% 100% at 22% 100%, rgba(70,110,180,0.22), transparent 72%)," +
+              "radial-gradient(52% 96% at 78% 100%, rgba(126,98,196,0.15), transparent 74%)",
+            filter: "blur(12px)",
           }}
         />
       </>
@@ -168,59 +167,32 @@ export default function HeroLayers({
     );
   }
 
-  // dawn — o sol estrelado vive POR CIMA do globo (bloco separado, z-[15])
-  return (
-    <>
-      {/* Este bloco só desenha o limbo a arder ATRÁS do globo */}
-      <div
-        data-hero-fx
-        aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-[46%] z-0 h-24 w-[60vmin] -translate-x-1/2"
-        style={{
-          background: "radial-gradient(50% 100% at 50% 50%, rgba(255,190,110,0.28), transparent 75%)",
-          filter: "blur(6px)",
-        }}
-      />
-    </>
-  );
+  // dawn — sem véu CSS: a meia-lua de luz (radial 50% 100% at 50% 0%) é
+  // ANCORADA à viewport — no zoom fica parada no ecrã, atrás da lua, e lia-se
+  // como um brilho a sair do meio da lua até à Terra. Todo o calor do
+  // amanhecer já vem do WebGL (AtmosphereGlow + StarSun), que acompanha a
+  // câmara.
+  return null;
 }
 
-/** Camada FRONT — só o dawn a usa: o sol + flare sobre o limbo (ref4). */
+/** Camada FRONT — só o dawn a usa: o bloom quente sobre o ponto de contacto.
+ *  Os raios do sol são WebGL (StarSun); o que um shader sem post-processing
+ *  não faz é esta difusão larga sobre a imagem — e é ela que dá o "véu" da
+ *  lente quando o sol nasce no limbo (ref4).
+ *  O centro do véu acompanha o disco do sol (logo abaixo da lua, ~58% da
+ *  altura) e o gradiente é APERTADO: há muito que este véu descia do meio da
+ *  lua até à Terra e lia-se como um feixe. */
 export function HeroLayersFront({ variant }: { variant: "galaxy" | "atmo" | "ember" | "dawn" }) {
   if (variant !== "dawn") return null;
   return (
     <div data-hero-fx aria-hidden="true" className="pointer-events-none absolute inset-0 z-[15]">
-      {/* Sol nascendo sobre o limbo — centro superior do globo */}
       <div
-        className="absolute left-1/2 top-[41%] h-6 w-6 -translate-x-1/2 -translate-y-1/2 rounded-full"
+        className="absolute left-1/2 top-[58%] h-[34vmin] w-[34vmin] -translate-x-1/2 -translate-y-1/2"
         style={{
-          background: "radial-gradient(circle, #fffdf4 0%, #ffeec2 45%, #ffc879 75%, rgba(255,180,90,0) 100%)",
-          boxShadow:
-            "0 0 14px 5px rgba(255,235,180,0.9), 0 0 44px 18px rgba(255,195,110,0.5), 0 0 110px 50px rgba(255,170,80,0.22)",
+          background:
+            "radial-gradient(circle, rgba(255,228,186,0.18) 0%, rgba(255,182,94,0.06) 40%, transparent 62%)",
+          filter: "blur(6px)",
         }}
-      />
-      {/* Flare: agulha horizontal + vertical + 2 diagonais fracas */}
-      <div
-        className="absolute left-1/2 top-[41%] h-px w-[52vmin] -translate-x-1/2 -translate-y-1/2"
-        style={{
-          background: "linear-gradient(to right, transparent, rgba(255,230,175,0.85), transparent)",
-          filter: "blur(0.6px)",
-        }}
-      />
-      <div
-        className="absolute left-1/2 top-[41%] h-[34vmin] w-px -translate-x-1/2 -translate-y-1/2"
-        style={{
-          background: "linear-gradient(to bottom, transparent, rgba(255,230,175,0.8), transparent)",
-          filter: "blur(0.6px)",
-        }}
-      />
-      <div
-        className="absolute left-1/2 top-[41%] h-px w-[24vmin] -translate-x-1/2 -translate-y-1/2 rotate-45"
-        style={{ background: "linear-gradient(to right, transparent, rgba(255,215,150,0.4), transparent)" }}
-      />
-      <div
-        className="absolute left-1/2 top-[41%] h-px w-[24vmin] -translate-x-1/2 -translate-y-1/2 -rotate-45"
-        style={{ background: "linear-gradient(to right, transparent, rgba(255,215,150,0.4), transparent)" }}
       />
     </div>
   );
