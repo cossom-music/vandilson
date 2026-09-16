@@ -74,6 +74,31 @@ function NextShowCountdown({ shows }: { shows: Show[] }) {
   );
 }
 
+/**
+ * Highlight de chegada via planeta: quando o hash da URL é o âncora do
+ * painel (clique no hub de escolha), o card acorda com um GLOW âmbar
+ * suave que respira 2x e desvanece (~3s). Partilhado pela Biografia
+ * (#home-biografia) e pela Agenda (#home-agenda).
+ */
+function useArrivalGlow(hash: string) {
+  const [glow, setGlow] = useState(false);
+  useEffect(() => {
+    if (window.location.hash !== hash) return;
+    // Pequeno atraso: deixa o scroll suave assentar antes do glow acordar
+    const t1 = setTimeout(() => setGlow(true), 450);
+    const t2 = setTimeout(() => setGlow(false), 3600);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, [hash]);
+  return glow;
+}
+
+/** Sombras do glow âmbar de chegada — a cor dos planetas âmbar/dourados da carta. */
+const GLOW_SHADOW =
+  "0 0 0 1px rgba(255,182,94,0.35), 0 0 44px rgba(255,182,94,0.16), inset 0 0 30px rgba(255,182,94,0.05)";
+
 export default function SobrePanels() {
   const { artist, shows: allShows } = useSiteContent();
   /**
@@ -83,6 +108,8 @@ export default function SobrePanels() {
    * show pode permanecer até ~1 min depois do momento — aceitável.
    */
   const now = Date.now();
+  /** Chegada via planeta Biografia → glow âmbar no painel do eclipse. */
+  const bioGlow = useArrivalGlow("#home-biografia");
   const shows = allShows.filter((s) => {
     if (!s.eventDate) return true; // sem data → nunca sai
     // Fim do dia do evento (23:59:59 local) — o show conta como passado
@@ -92,9 +119,19 @@ export default function SobrePanels() {
   });
   return (
     <>
-      {/* ===== Vinheta — eclipse prateado + biografia ===== */}
+      {/* ===== Vinheta — eclipse prateado + biografia =====
+          id próprio (#home-biografia): o planeta "Biografia" do hub aponta
+          para cá, a depositar NO painel da biografia e não no topo da
+          secção. GLOW de chegada âmbar, igual ao da Agenda. */}
       <Reveal>
-        <section className="grid overflow-hidden rounded-3xl border border-white/[0.06] bg-[#05070b] md:grid-cols-[5fr_7fr]">
+        <section
+          id="home-biografia"
+          className="grid overflow-hidden rounded-3xl border border-white/[0.06] bg-[#05070b] transition-shadow duration-700 md:grid-cols-[5fr_7fr]"
+          style={{
+            scrollMarginTop: "4rem",
+            boxShadow: bioGlow ? GLOW_SHADOW : "none",
+          }}
+        >
           {/* Painel do eclipse — o retrato real viverá dentro do disco escuro */}
           <div className="relative flex min-h-[320px] items-center justify-center border-b border-white/[0.06] bg-[#03050a] md:min-h-[520px] md:border-b-0 md:border-r">
             {/* Grão de pontos (eco do dot-matrix do globo) */}
@@ -191,18 +228,7 @@ export default function SobrePanels() {
  */
 function AgendaCard({ shows }: { shows: Show[] }) {
   const ref = useRef<HTMLElement>(null);
-  const [glow, setGlow] = useState(false);
-
-  useEffect(() => {
-    if (window.location.hash !== "#home-agenda") return;
-    // Pequeno atraso: deixa o scroll suave assentar antes do glow acordar
-    const t1 = setTimeout(() => setGlow(true), 450);
-    const t2 = setTimeout(() => setGlow(false), 3600);
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-    };
-  }, []);
+  const glow = useArrivalGlow("#home-agenda");
 
   return (
     <Reveal delay={0.1}>
@@ -212,9 +238,7 @@ function AgendaCard({ shows }: { shows: Show[] }) {
         className="mt-14 rounded-3xl border border-white/[0.06] bg-gradient-to-b from-[#07090d] to-[#04060a] px-6 py-10 transition-shadow duration-700 md:px-16 md:py-16"
         style={{
           scrollMarginTop: "6rem",
-          boxShadow: glow
-            ? "0 0 0 1px rgba(255,182,94,0.35), 0 0 44px rgba(255,182,94,0.16), inset 0 0 30px rgba(255,182,94,0.05)"
-            : "none",
+          boxShadow: glow ? GLOW_SHADOW : "none",
         }}
       >
           <div className="flex items-baseline justify-between">

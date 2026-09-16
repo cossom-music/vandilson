@@ -273,7 +273,7 @@ export default function HomeIntro({
     // e o CTA estarem 100% assentados — a página não desce para a Sintonia
     // a meio da animação da Ouvir.
     tl.to({}, { duration: 0.2 }, choiceHub ? 1.74 : 1.22);
-    tl.to({}, { duration: choiceHub ? 0.36 : 0 }, choiceHub ? 1.94 : 1);
+    tl.to({}, { duration: choiceHub ? 0.8 : 0 }, choiceHub ? 1.94 : 1);
   }, []);
 
   // Reduced motion: sem pin, sem dolly — globo estático + música em fluxo normal
@@ -306,7 +306,10 @@ export default function HomeIntro({
 
   return (
     <>
-    <div ref={scopeRef} className="relative h-[460svh]">
+    {/* data-hero-scope: o ChoiceHub usa este container para calcular a
+        posição de scroll que "aterra" na Ouvir assentada (a secção vive
+        DENTRO do palco sticky, por isso uma âncora nativa não a alcança). */}
+    <div ref={scopeRef} data-hero-scope className="relative h-[460svh]">
       <div className="sticky top-0 h-[100lvh] overflow-hidden">
         {/* Reforço estelar local — atrás do globo, mais denso que o canvas global */}
         <div
