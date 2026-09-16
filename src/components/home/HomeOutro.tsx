@@ -48,11 +48,17 @@ export default function HomeOutro() {
       {/*
         Ato 3 — Sintonia: o artista no centro, as redes em órbita, o e-mail
         como booking. FICARÁ FIXA no topo pelo pin do ScrollTrigger.
+        MOBILE: min-h de 100svh + conteúdo centrado — a secção sozinha
+        preenche o ecrã inteiro (antes, com só py-24, a Biografia espreitava
+        por baixo porque as órbitas encolhiam para ~335px de altura).
+        O TEXTO SOBE UM POUCO e só ele: o bloco do título leva mb extra no
+        mobile, que o empurra para cima dentro do bloco centrado sem mexer
+        nas órbitas nem no e-mail (justify-start subia TUDO — demais).
       */}
       <section
         id="home-contact"
         data-sintonia
-        className="relative overflow-x-clip border-t border-white/5 bg-night-950 py-24 md:py-32"
+        className="relative flex min-h-[100svh] flex-col justify-center overflow-x-clip border-t border-white/5 bg-night-950 py-20 md:min-h-0 md:py-32"
       >
         {/* Reforço estelar local — atrás do sistema de órbitas */}
         <div
@@ -68,7 +74,7 @@ export default function HomeOutro() {
 
           <RevealTitle
             text={homeSections.contact.title}
-            className="mt-3 text-center font-display text-4xl leading-none text-white md:text-6xl"
+            className="mb-7 mt-3 text-center font-display text-4xl leading-none text-white md:mb-0 md:text-6xl"
           />
 
           {/* Sistema de órbitas — uma rede por anel, sol prateado ao centro */}
@@ -90,6 +96,18 @@ export default function HomeOutro() {
           </AnimeReveal>
         </div>
       </section>
+
+      {/*
+        ESPAÇADOR — a distância que a Biografia percorre ANTES de começar a
+        cobrir a Sintonia. Com pinSpacing: false a Biografia estava
+        imediatamente a seguir da Sintonia no fluxo: mal a Sintonia fixava no
+        topo, a Biografia já subia e tapava o e-mail (que vive na base da
+        secção). Este bloco transparente dá o respiro: durante todo o seu
+        percurso de scroll, a Sintonia continua pinada e TOTALMENTE visível —
+        e só quando a Biografia chega é que cobre, já com o e-mail lido.
+        min-h de 55svh só no mobile (desktop mantém o ritmo original).
+      */}
+      <div aria-hidden="true" className="h-[55svh] md:hidden" />
 
       {/*
         Ato 4 — Sobre + Agenda. Fundo sólido + z-index acima: sobe POR CIMA
