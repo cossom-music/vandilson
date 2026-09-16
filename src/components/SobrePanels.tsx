@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Reveal from "@/components/Reveal";
 import { useSiteContent } from "@/components/SiteContentProvider";
 import type { Show } from "@/content";
@@ -176,13 +176,47 @@ export default function SobrePanels() {
           id próprio: o planeta "Agenda" do hub de escolha aponta para cá
           (#home-agenda), a depositar NO painel da agenda e não no topo da
           secção Sobre (que abre na biografia). scroll-margin-top deixa o
-          card RESPIRAR no topo do ecrã (o título não fica colado à borda). */}
-      <Reveal delay={0.1}>
-        <section
-          id="home-agenda"
-          className="mt-14 rounded-3xl border border-white/[0.06] bg-gradient-to-b from-[#07090d] to-[#04060a] px-6 py-10 md:px-16 md:py-16"
-          style={{ scrollMarginTop: "6rem" }}
-        >
+          card RESPIRAR no topo do ecrã (o título não fica colado à borda).
+          HIGHLIGHT: chegado via planeta, o card acorda com um GLOW âmbar
+          suave (a cor do planeta) que respira 2x e desvanece. */}
+      <AgendaCard shows={shows} />
+    </>
+  );
+}
+
+/**
+ * Card da Agenda com highlight de chegada: quando o hash é #home-agenda
+ * (clique no planeta do hub de escolha), o card acorda com um GLOW âmbar
+ * suave que respira 2x e desvanece (~3s). Sem hash, é o card normal.
+ */
+function AgendaCard({ shows }: { shows: Show[] }) {
+  const ref = useRef<HTMLElement>(null);
+  const [glow, setGlow] = useState(false);
+
+  useEffect(() => {
+    if (window.location.hash !== "#home-agenda") return;
+    // Pequeno atraso: deixa o scroll suave assentar antes do glow acordar
+    const t1 = setTimeout(() => setGlow(true), 450);
+    const t2 = setTimeout(() => setGlow(false), 3600);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, []);
+
+  return (
+    <Reveal delay={0.1}>
+      <section
+        ref={ref}
+        id="home-agenda"
+        className="mt-14 rounded-3xl border border-white/[0.06] bg-gradient-to-b from-[#07090d] to-[#04060a] px-6 py-10 transition-shadow duration-700 md:px-16 md:py-16"
+        style={{
+          scrollMarginTop: "6rem",
+          boxShadow: glow
+            ? "0 0 0 1px rgba(255,182,94,0.35), 0 0 44px rgba(255,182,94,0.16), inset 0 0 30px rgba(255,182,94,0.05)"
+            : "none",
+        }}
+      >
           <div className="flex items-baseline justify-between">
             <h3 className="font-display text-3xl text-white md:text-4xl">Agenda</h3>
             <span className="text-[12px] uppercase tracking-[0.2em] text-silver-500">
@@ -250,7 +284,6 @@ export default function SobrePanels() {
             ))}
           </ul>
         </section>
-      </Reveal>
-    </>
+    </Reveal>
   );
 }

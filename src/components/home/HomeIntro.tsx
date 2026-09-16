@@ -168,23 +168,26 @@ export default function HomeIntro({
     const choiceHub = scope.querySelector<HTMLElement>("[data-choice-hub]");
     if (choiceHub) {
       gsap.set(choiceHub, { autoAlpha: 0, y: 40 });
-      // Hub entra após o cross-fade e SAI quando a Ouvir vai entrar —
-      // as duas fases coexistem no palco, uma de cada vez visível.
+      // Hub entra após o cross-fade e fica VISÍVEL MUITO MAIS TEMPO:
+      // janela 0.68 → 1.16 (antes saía a 0.86). O usuário tem ~48% da
+      // timeline para ler a carta e escolher um rumo sem pressa.
       tl.to(choiceHub, { autoAlpha: 1, y: 0, duration: 0.24, ease: "power1.out" }, 0.68);
-      tl.to(choiceHub, { autoAlpha: 0, y: -30, duration: 0.12, ease: "power1.in" }, 0.86);
+      tl.to(choiceHub, { autoAlpha: 0, y: -30, duration: 0.12, ease: "power1.in" }, 1.16);
     }
     // A Ouvir entra DEPOIS do hub (na dawn) ou no cross-fade (restantes)
     if (music) {
       tl.to(
         music,
         { autoAlpha: 1, y: 0, duration: 0.16, ease: "power1.out" },
-        choiceHub ? 0.94 : 0.68,
+        choiceHub ? 1.22 : 0.68,
       );
     }
     // Globo invisível → pausa o trabalho por frame da cena Three.js
     // (o render WebGL contínuo escondido roubava frames à página inteira).
     // Reversível: o scrub repõe false ao voltar a subir.
     tl.fromTo(earthZoom.paused, { value: false }, { value: true, duration: 0.01 }, 0.74);
+    // (a Ouvir chega DEPOIS do hub — a pausa do render WebGL fica no
+    // 0.74, durante o cross-fade, e não afeta o hub que é puro DOM)
 
     // Ato 3 — pilha REAL: os cartões nascem empilhados no centro do palco
     // (delta medido em px do layout real) e o scroll abre a pilha até às
@@ -249,7 +252,7 @@ export default function HomeIntro({
             // por último — e só então o CTA pode aparecer.
             ease: "power2.inOut",
           },
-          (choiceHub ? 1.04 : 0.86) + i * 0.022,
+          (choiceHub ? 1.32 : 0.86) + i * 0.022,
         );
       });
 
@@ -260,13 +263,17 @@ export default function HomeIntro({
     // Ato 4 — o CTA só existe depois de TODOS os cartões estarem sentados.
     if (cta) {
       gsap.set(cta, { autoAlpha: 0, y: 24 });
-      tl.to(cta, { autoAlpha: 1, y: 0, duration: 0.08, ease: "power1.out" }, choiceHub ? 1.34 : 1.02);
+      tl.to(cta, { autoAlpha: 1, y: 0, duration: 0.08, ease: "power1.out" }, choiceHub ? 1.62 : 1.02);
     }
 
     // Respiro final — um espaçador vazio estende a timeline:
     // a animação completa aos ~85% do scroll e o sticky segura a secção
-    // assentada ANTES de soltar para a secção de Contactos.
-    tl.to({}, { duration: 0.2 }, choiceHub ? 1.46 : 1.22);
+    // assentada ANTES de soltar para a secção de Contactos. Na dawn o
+    // respiro é MAIOR (1.74 → 2.1): o sticky só larga DEPOIS de a pilha
+    // e o CTA estarem 100% assentados — a página não desce para a Sintonia
+    // a meio da animação da Ouvir.
+    tl.to({}, { duration: 0.2 }, choiceHub ? 1.74 : 1.22);
+    tl.to({}, { duration: choiceHub ? 0.36 : 0 }, choiceHub ? 1.94 : 1);
   }, []);
 
   // Reduced motion: sem pin, sem dolly — globo estático + música em fluxo normal
@@ -290,7 +297,7 @@ export default function HomeIntro({
           />
           <HeroSignatures glow={NAME_GLOW[variant]} />
         </div>
-        <section id="home-music" className="relative bg-night-950 py-20">
+        <section className="relative bg-night-950 py-20">
           <DiscografiaContent />
         </section>
       </div>
@@ -338,11 +345,14 @@ export default function HomeIntro({
         </div>
 
         {/* SECÇÃO OUVIR — no palco sticky, como FASE POSTERIOR do scroll
-            (na dawn entra DEPOIS do hub: 0.94 → pilha abre a 1.04+).
-            A camada de estrelas do palco fica visível atrás (fundo
-            transparente). overflow-x-hidden: com a pilha de planetas em
-            voo, nenhum transform pode criar scroll horizontal. */}
+            (na dawn entra DEPOIS do hub). A camada de estrelas do palco
+            fica visível atrás (fundo transparente). id="home-music" no
+            PRÓPRIO palco: quando a secção está visível (timeline > 0.94),
+            o âncora #home-music do hub aponta para o ecrã atual — o scroll
+            não salta. overflow-x-hidden: com a pilha em voo, nenhum
+            transform pode criar scroll horizontal. */}
         <section
+          id="home-music"
           data-music
           className="invisible absolute inset-0 z-30 overflow-x-hidden overflow-y-auto"
         >
