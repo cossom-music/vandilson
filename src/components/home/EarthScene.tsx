@@ -1239,13 +1239,32 @@ function RealisticEarth({
   useEffect(() => {
     if (!nightTexture) return;
     let alive = true;
-    new THREE.TextureLoader().load(nightTexture, (tex) => {
+    // O Black Marble vem gradado a azul pela NASA (continentes com B−R de +12
+    // a +21) e o tint multiplicava AINDA mais azul — a Terra ficava meia
+    // azulada toda. A passagem por canvas com `saturate` dessatura o mapa
+    // antes de criar a textura: continentes neutros, oceanos azul-escuros,
+    // luzes de cidade intactas (estas são desenhadas pelo CityLights à parte).
+    const el = new Image();
+    el.onload = () => {
       if (!alive) return;
+      const cv = document.createElement("canvas");
+      cv.width = el.naturalWidth;
+      cv.height = el.naturalHeight;
+      const ctx = cv.getContext("2d")!;
+      try {
+        ctx.filter = "saturate(0.55)";
+      } catch {
+        /* filtro opcional — sem ele fica o mapa original */
+      }
+      ctx.drawImage(el, 0, 0);
+      ctx.filter = "none";
+      const tex = new THREE.CanvasTexture(cv);
       tex.colorSpace = THREE.SRGBColorSpace;
       tex.wrapS = THREE.RepeatWrapping;
       tex.anisotropy = MAX_ANISO;
       setNight(tex);
-    });
+    };
+    el.src = nightTexture;
     return () => {
       alive = false;
     };
@@ -2046,7 +2065,9 @@ function AtmoScene() {
         spin={0.05}
         clouds={false}
         nightTexture="/textures/earth-night.jpg"
-        nightTint="#e6ecfb"
+        // Tint NEUTRO: o mapa (agora dessaturado) já não precisa de correção de
+        // cor — um tint azulado pintava os continentes de azul.
+        nightTint="#efefef"
       />
       {/* UM brilho: azul elétrico, com a aresta viva no limbo e o halo a
           desfazer-se no espaço — tudo na mesma camada, sem anéis. */}
@@ -2121,7 +2142,7 @@ function DawnScene() {
         spin={0.04}
         sunDir={DAWN_SUN_DIR}
         nightTexture="/textures/earth-night.jpg"
-        nightTint="#b6c2dc"
+        nightTint="#ddd6c8"
       />
       {/* UM brilho: azul frio em todo o arco, a INCENDIAR-SE no ponto de
           contacto à medida que o sol nasce (azul a fundir com dourado). */}

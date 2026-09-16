@@ -24,6 +24,17 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Rotação lenta dos anéis orbitais dos mini-planetas do hub de escolha
+   (Carta de Trajetória). Duracao/direção definidas inline por planeta. */
+@keyframes orbit-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 body {
   background-color: var(--color-night-950);
   color: var(--color-cream);

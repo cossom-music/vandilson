@@ -99,6 +99,7 @@ export default function HomeOutro() {
       */}
       <section
         data-sobre
+        id="home-sobre"
         className="rise-shadow relative z-10 bg-night-950 pt-24 md:pt-32"
       >
         <div className="mx-auto max-w-6xl px-6 pb-28">

@@ -172,9 +172,17 @@ export default function SobrePanels() {
         </section>
       </Reveal>
 
-      {/* ===== Agenda — tabela de trânsitos ===== */}
+      {/* ===== Agenda — tabela de trânsitos =====
+          id próprio: o planeta "Agenda" do hub de escolha aponta para cá
+          (#home-agenda), a depositar NO painel da agenda e não no topo da
+          secção Sobre (que abre na biografia). scroll-margin-top deixa o
+          card RESPIRAR no topo do ecrã (o título não fica colado à borda). */}
       <Reveal delay={0.1}>
-        <section className="mt-14 rounded-3xl border border-white/[0.06] bg-gradient-to-b from-[#07090d] to-[#04060a] px-6 py-10 md:px-16 md:py-16">
+        <section
+          id="home-agenda"
+          className="mt-14 rounded-3xl border border-white/[0.06] bg-gradient-to-b from-[#07090d] to-[#04060a] px-6 py-10 md:px-16 md:py-16"
+          style={{ scrollMarginTop: "6rem" }}
+        >
           <div className="flex items-baseline justify-between">
             <h3 className="font-display text-3xl text-white md:text-4xl">Agenda</h3>
             <span className="text-[12px] uppercase tracking-[0.2em] text-silver-500">

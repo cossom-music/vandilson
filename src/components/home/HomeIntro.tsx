@@ -13,6 +13,14 @@ import { useSiteContent } from "@/components/SiteContentProvider";
 import { LiquidGlassLink } from "@/components/ui/LiquidGlass";
 import ReleasePlanet from "@/components/ReleasePlanet";
 import HeroLayers, { HeroLayersFront } from "@/components/home/HeroLayers";
+import ChoiceHub from "@/components/home/ChoiceHub";
+
+/**
+ * Variante dawn: no fim da transição NÃO entra a Discografia — entra o HUB
+ * DE ESCOLHA (Carta de Trajetória): o usuário escolhe para onde navegar.
+ * O cross-fade do Ato 2 passa a ser globo → hub; o conteúdo da secção de
+ * música continua disponível via destinos do hub.
+ */
 
 /**
  * Intro da homepage ao estilo animejs.com — três atos num viewport FIXO:
@@ -66,6 +74,8 @@ export default function HomeIntro({
   variant?: GlobeVariant;
 }) {
   const [reduced, setReduced] = useState(false);
+  // Variante dawn termina no HUB DE ESCOLHA em vez da Discografia.
+  const useChoiceHub = variant === "dawn";
 
   useEffect(() => {
     setReduced(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
@@ -81,7 +91,10 @@ export default function HomeIntro({
     const vignette = scope.querySelector<HTMLElement>("[data-vignette]");
     const indicator = scope.querySelector<HTMLElement>("[data-indicator]");
     const music = scope.querySelector<HTMLElement>("[data-music]");
-    if (!globe || !vignette || !indicator || !music) return;
+    // Na dawn a Ouvir não vive no palco (está fora, em fluxo normal) —
+    // o guard exige só o palco; a secção de música é opcional.
+    if (!globe || !vignette || !indicator) return;
+    if (music) gsap.set(music, { autoAlpha: 0, y: 64 });
 
     // Camadas de cor da variante (nebulosa, sol, flare…) — desvanecem junto
     // com o globo no Ato 2. Em "silver" o grupo não existe (querySelector null).
@@ -102,9 +115,6 @@ export default function HomeIntro({
     );
     const cardGrid = scope.querySelector<HTMLElement>("[data-release-grid]");
     const cta = scope.querySelector<HTMLElement>("[data-cta]");
-
-    // A música começa invisível (o GSAP controla opacity + visibility)
-    gsap.set(music, { autoAlpha: 0, y: 64 });
 
     // Timeline única com scrub EXATO sobre todo o container.
     // scrub: true (e não um valor suavizado) — o scroll controla a animação
@@ -146,7 +156,8 @@ export default function HomeIntro({
       tl.fromTo(heroCine.drift, { value: 0 }, { value: 1, duration: 0.5, ease: "sine.inOut" }, 0);
     }
 
-    // Ato 2 — já dentro do globo: cross-fade para a Música
+    // Ato 2 — já dentro do globo: cross-fade para a Música (ou, na dawn,
+    // para o HUB DE ESCOLHA — a única secção que vive no palco).
     tl.to(globe, { autoAlpha: 0, duration: 0.16 }, 0.58);
     tl.to(vignette, { autoAlpha: 0, duration: 0.16 }, 0.58);
     // Cores extra da variante saem um pouco antes — a cena já está prateada
@@ -154,7 +165,13 @@ export default function HomeIntro({
     if (heroFx.length) {
       tl.to(heroFx, { autoAlpha: 0, duration: 0.14, ease: "power1.in" }, 0.44);
     }
-    tl.to(music, { autoAlpha: 1, y: 0, duration: 0.22, ease: "power1.out" }, 0.68);
+    const choiceHub = scope.querySelector<HTMLElement>("[data-choice-hub]");
+    if (choiceHub) {
+      gsap.set(choiceHub, { autoAlpha: 0, y: 40 });
+      tl.to(choiceHub, { autoAlpha: 1, y: 0, duration: 0.24, ease: "power1.out" }, 0.68);
+    } else if (music) {
+      tl.to(music, { autoAlpha: 1, y: 0, duration: 0.22, ease: "power1.out" }, 0.68);
+    }
     // Globo invisível → pausa o trabalho por frame da cena Three.js
     // (o render WebGL contínuo escondido roubava frames à página inteira).
     // Reversível: o scrub repõe false ao voltar a subir.
@@ -163,7 +180,9 @@ export default function HomeIntro({
     // Ato 3 — pilha REAL: os cartões nascem empilhados no centro do palco
     // (delta medido em px do layout real) e o scroll abre a pilha até às
     // posições fixas do grid. O scrub inverte tudo ao voltar a subir.
-    if (cards.length && cardGrid) {
+    // Na dawn a secção Ouvir nunca se revela (o hub de escolha é o destino),
+    // por isso toda a coreografia da pilha é dispensada.
+    if (!choiceHub && cards.length && cardGrid) {
       const mid = (cards.length - 1) / 2;
 
       // Mede o delta de cada cartão (no seu slot do grid) até ao centro do
@@ -229,18 +248,19 @@ export default function HomeIntro({
       return () => ScrollTrigger.removeEventListener("refreshInit", onRefresh);
     }
 
-    // Ato 4 — o CTA só existe depois de TODOS os cartões estarem sentados.
-    if (cta) {
+    // Ato 4 — o CTA só existe depois de TODOS os cartões estarem sentados
+    // (na dawn a pilha não corre — o hub substituiu a secção Ouvir).
+    if (!choiceHub && cta) {
       gsap.set(cta, { autoAlpha: 0, y: 24 });
       tl.to(cta, { autoAlpha: 1, y: 0, duration: 0.08, ease: "power1.out" }, 1.02);
     }
 
-    // Respiro final — um espaçador vazio estende a timeline para 1.30:
-    // a animação completa aos ~85% do scroll e o sticky segura a Discografia
-    // assentada (~65svh) ANTES de soltar para a secção de Contactos.
+    // Respiro final — um espaçador vazio estende a timeline para 1.42:
+    // a animação completa aos ~85% do scroll e o sticky segura a secção
+    // assentada ANTES de soltar para a secção de Contactos.
     // Sem isto, o fim da animação coincidia com o release do sticky e o
     // utilizador via a secção seguinte antes de os cartões assentarem.
-    tl.to({}, { duration: 0.2 }, 1.1);
+    tl.to({}, { duration: 0.2 }, 1.22);
   }, []);
 
   // Reduced motion: sem pin, sem dolly — globo estático + música em fluxo normal
@@ -272,6 +292,7 @@ export default function HomeIntro({
   }
 
   return (
+    <>
     <div ref={scopeRef} className="relative h-[460svh]">
       <div className="sticky top-0 h-[100lvh] overflow-hidden">
         {/* Reforço estelar local — atrás do globo, mais denso que o canvas global */}
@@ -310,9 +331,9 @@ export default function HomeIntro({
           <div className="absolute inset-0" style={{ background: MERGE_ARC[variant] }} />
         </div>
 
-        {/* Secção de Música — sobrepõe o globo e entra em fade in.
-            overflow-x-hidden: com a pilha de planetas em voo, nenhum
-            transform pode criar scroll horizontal no mobile. */}
+        {/* Destino do Ato 2 — SECÇÃO OUVIR (Discografia) como sempre, em
+            cross-fade com o globo. overflow-x-hidden: com a pilha de
+            planetas em voo, nenhum transform pode criar scroll horizontal. */}
         <section
           data-music
           className="invisible absolute inset-0 z-30 overflow-x-hidden overflow-y-auto opacity-0"
@@ -321,8 +342,27 @@ export default function HomeIntro({
             <DiscografiaContent />
           </div>
         </section>
+
+        {/* HUB DE ESCOLHA (só dawn) — destino do Ato 2 no cross-fade com
+            o globo, dentro do palco sticky. A secção OUVIR vive FORA deste
+            container (irmã do herói, abaixo) — por isso só aparece depois
+            de o sticky soltar, nunca durante a animação. */}
+        {useChoiceHub && (
+          <div data-choice-hub className="invisible absolute inset-0 z-40 overflow-y-auto opacity-0">
+            <ChoiceHub />
+          </div>
+        )}
       </div>
     </div>
+
+    {/* SECÇÃO OUVIR (só dawn) — FORA do container do herói, em fluxo
+        normal: entra só quando o scroll passa o fim do palco sticky. */}
+    {useChoiceHub && (
+      <section id="home-music" className="relative min-h-[100svh] bg-night-950 py-20">
+        <DiscografiaContent />
+      </section>
+    )}
+    </>
   );
 }
 
