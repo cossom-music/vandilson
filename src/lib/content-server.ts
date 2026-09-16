@@ -13,6 +13,10 @@ const SECTION_KEYS = [
   "homeSections",
   "homeHighlights",
   "shows",
+  "milestones",
+  "eras",
+  "collaborators",
+  "playerPlaylist",
 ] as const;
 
 type SectionKey = (typeof SECTION_KEYS)[number];
@@ -74,9 +78,14 @@ async function fetchSiteContent(): Promise<SiteContent> {
         if (key === "artist") {
           merged.artist = { ...merged.artist, ...(row.value as object) } as SiteContent["artist"];
         } else if (Array.isArray(row.value)) {
-          // socials / shows — substituem por completo
+          // socials / shows / milestones / eras / collaborators /
+          // playerPlaylist — arrays substituem por completo
           if (key === "socials") merged.socials = row.value as SiteContent["socials"];
           if (key === "shows") merged.shows = row.value as SiteContent["shows"];
+          if (key === "milestones") merged.milestones = row.value as SiteContent["milestones"];
+          if (key === "eras") merged.eras = row.value as SiteContent["eras"];
+          if (key === "collaborators") merged.collaborators = row.value as SiteContent["collaborators"];
+          if (key === "playerPlaylist") merged.playerPlaylist = row.value as SiteContent["playerPlaylist"];
         } else {
           (merged as unknown as Record<string, unknown>)[key] = row.value;
         }

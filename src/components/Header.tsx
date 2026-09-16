@@ -9,6 +9,7 @@ import { useSiteContent } from "@/components/SiteContentProvider";
 const links = [
   { href: "/", label: "Início" },
   { href: "/discografia", label: "Discografia" },
+  { href: "/universo", label: "Universo" },
 ];
 
 const EASE = [0.16, 1, 0.3, 1] as const;
@@ -160,6 +161,15 @@ export default function Header() {
                 ry="200"
                 transform="rotate(-14 170 235)"
               />
+              {/* Órbita média — a 3.ª rota (/universo) tem linha própria */}
+              <ellipse
+                className="menu-orbit-ring menu-orbit-ring--dashed"
+                cx="170"
+                cy="235"
+                rx="122"
+                ry="165"
+                transform="rotate(10 170 235)"
+              />
               <ellipse
                 className="menu-orbit-ring"
                 cx="170"
@@ -178,12 +188,14 @@ export default function Header() {
                 // EXATOS das elipses (SVG 340×470, centro a 50%/46%), para
                 // "assentar" na linha tracejada em qualquer viewport:
                 // outer (rx150 ry200, −14°) @ t=300° → (+31, −186)
+                // middle (rx122 ry165, +10°) @ t=30° → (+90, +100)
                 // inner (rx95 ry130, +12°) @ t=120° → (−70, +100)
                 // +28px vertical: centra a ESFERA na linha (a coluna tem
                 // rótulo + legenda abaixo, o centro dela fica mais alto).
                 const spots = [
                   { left: "calc(50% + 31px)", top: "calc(46% - 158px)" },
                   { left: "calc(50% - 70px)", top: "calc(46% + 128px)" },
+                  { left: "calc(50% + 90px)", top: "calc(46% + 128px)" },
                 ];
                 const spot = spots[i] ?? { left: "50%", top: "50%" };
                 return (

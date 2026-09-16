@@ -12,6 +12,10 @@ const SECTION_KEYS = new Set([
   "homeSections",
   "homeHighlights",
   "shows",
+  "milestones",
+  "eras",
+  "collaborators",
+  "playerPlaylist",
 ]);
 
 /** Limpa o cache do conteúdo do site público. */
@@ -19,6 +23,7 @@ function revalidateSiteContent() {
   revalidateTag("site-content");
   revalidatePath("/");
   revalidatePath("/discografia");
+  revalidatePath("/universo");
 }
 
 export type ActionResult = { ok: boolean; error?: string };
@@ -84,14 +89,18 @@ export type ReleaseInput = {
   description: string;
   coverPath: string | null;
   featured: boolean;
-  tracklist: { title: string; duration?: string }[];
+  tracklist: { title: string; duration?: string; audioPath?: string }[];
   curiosities: string[];
   facts: { label: string; value: string }[];
 };
 
 function cleanRelease(input: ReleaseInput) {
   const tracklist = input.tracklist
-    .map((t) => ({ title: t.title.trim(), duration: t.duration?.trim() || undefined }))
+    .map((t) => ({
+      title: t.title.trim(),
+      duration: t.duration?.trim() || undefined,
+      audioPath: t.audioPath?.trim() || undefined,
+    }))
     .filter((t) => t.title.length > 0);
   const curiosities = input.curiosities.map((c) => c.trim()).filter((c) => c.length > 0);
   const facts = input.facts

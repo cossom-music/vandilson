@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import Reveal from "@/components/Reveal";
+import { LiquidGlassLink } from "@/components/ui/LiquidGlass";
 import { useSiteContent } from "@/components/SiteContentProvider";
 import type { Show } from "@/content";
 
@@ -205,6 +207,14 @@ export default function SobrePanels() {
             <p className="mt-8 font-display text-[15px] italic text-silver-500">
               — «cada disco é uma viagem, e o mundo é o mapa»
             </p>
+
+            {/* CTA — liquid glass, igual ao da secção Ouvir: leva ao diário
+                de bordo (/universo), a rota completa da biografia. */}
+            <div className="mt-10">
+              <LiquidGlassLink filterId="glass-universo-cta" href="/universo">
+                Ver a trajetória completa
+              </LiquidGlassLink>
+            </div>
           </div>
         </section>
       </Reveal>

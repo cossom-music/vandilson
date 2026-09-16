@@ -14,6 +14,56 @@
 export type TracklistItem = {
   title: string;
   duration?: string; // "3:42" — opcional
+  /** Caminho do MP3 no bucket "audio" do Storage — quando existe, a faixa
+   *  pode entrar no player "Em Órbita" da página /universo. */
+  audioPath?: string;
+};
+
+/** Marco da Trajetória (diário de bordo da carreira) — secção /universo. */
+export type Milestone = {
+  year: string;
+  title: string;
+  note?: string;
+  /** Marcos "quentes" (âmbar) — os momentos-pivô. */
+  major?: boolean;
+};
+
+/**
+ * Era da Trajetória (/universo, modelo "Diário de Bordo") — uma COLUNA do
+ * diário: nome de fase, intervalo de anos, título e nota de cabeçalho. Os
+ * marcos da janela de anos da era são listados como eventos na coluna.
+ */
+export type Era = {
+  /** Nome da fase — Decolagem, Trânsito, Órbita alta… (âmbar, mono). */
+  phase: string;
+  /** Primeiro ano da era (inclusive) — abre a janela de eventos. */
+  from: string;
+  /** Último ano da era (inclusive) — fecha a janela; omisso = última era. */
+  to?: string;
+  /** Título Playfair da coluna. */
+  title: string;
+  /** Linha de apoio por baixo do título. */
+  note?: string;
+};
+
+/** Colaborador da Constelação (mapa de conexões) — secção /universo. */
+export type Collaborator = {
+  name: string;
+  role: string;
+  /** Projeto(s) em comum — mostrado no painel ao clicar na estrela. */
+  project?: string;
+  /** Parceria em destaque (estrela âmbar + linha acesa). */
+  hot?: boolean;
+};
+
+/** Faixa curada para o player "Em Órbita" — referência a uma tracklist. */
+export type PlayerTrack = {
+  /** Título da faixa (cópia legível — a tracklist pode mudar sem quebrar o player). */
+  title: string;
+  /** Lançamento a que pertence (para a etiqueta do player). */
+  releaseTitle: string;
+  /** Caminho do MP3 no bucket "audio" do Storage. */
+  audioPath: string;
 };
 
 export type Release = {
@@ -95,6 +145,11 @@ export type SiteContent = {
   shows: Show[];
   homeSections: HomeSections;
   homeHighlights: HomeHighlights;
+  /** Secções da página /universo (editáveis no admin, com seed de placeholder). */
+  milestones: Milestone[];
+  eras: Era[];
+  collaborators: Collaborator[];
+  playerPlaylist: PlayerTrack[];
 };
 
 export const seedContent: SiteContent = {
@@ -230,6 +285,37 @@ export const seedContent: SiteContent = {
     bioTeaser:
       "Vandilson Neto é um artista que transforma histórias em canções — entre o íntimo e o infinito, a sua música viaja do acústico ao eletrónico com uma honestidade rara.",
   },
+
+  /* ─── /universo — Trajetória (marcos placeholder; reais via admin) ─── */
+  milestones: [
+    { year: "2019", title: "Primeiro registo", note: "Gravação caseira — o ponto zero da carta.", major: true },
+    { year: "2021", title: "Primeiro EP", note: "Cinco faixas independentes." },
+    { year: "2023", title: "Maputo → Lisboa", note: "A órbita alargou-se.", major: true },
+    { year: "2024", title: "Primeira tour", note: "Sete cidades, um mês." },
+    { year: "2025", title: "«Sob os Astros»", note: "Álbum de estreia em longo formato.", major: true },
+  ],
+
+  /* ─── /universo — Trajetória: eras do "Diário de Bordo" (colunas).
+        Anos inclusivos — a era apanha os marcos do seu intervalo; a última
+        era sem "to" estende-se até hoje. Placeholder: substituir no admin. ─── */
+  eras: [
+    { phase: "Decolagem", from: "2019", to: "2021", title: "A origem", note: "Onde a rota começou — casa, Maputo." },
+    { phase: "Trânsito", from: "2022", to: "2023", title: "O voo", note: "Entre mundos, com escala em estúdios alheios." },
+    { phase: "Órbita alta", from: "2024", title: "O presente", note: "A trajetória continua a subir." },
+  ],
+
+  /* ─── /universo — Constelação (colaboradores placeholder) ─── */
+  collaborators: [
+    { name: "Mário Costa", role: "Produção", project: "Produção e co-autoria em 7 das 9 faixas do álbum." },
+    { name: "Ana Duarte", role: "Voz", project: "Dueto na faixa-título e no fecho do álbum.", hot: true },
+    { name: "Tomás R.", role: "Bateria", project: "Secção rítmica de todos os lançamentos desde o 1.º EP." },
+    { name: "Rita Pinto", role: "Mistura", project: "Mistura e masterização de «Sob os Astros»." },
+    { name: "Jonas M.", role: "Baixo", project: "Gravações e palcos desde 2021." },
+  ],
+
+  /* ─── /universo — Player Em Órbita (vazio por defeito: a playlist é
+        curada no admin a partir das faixas COM audioPath carregado) ─── */
+  playerPlaylist: [],
 };
 
 /* Re-exports das secções — conveniência para quem precisa de uma parte.
@@ -241,3 +327,6 @@ export const releases = seedContent.releases;
 export const shows = seedContent.shows;
 export const homeSections = seedContent.homeSections;
 export const homeHighlights = seedContent.homeHighlights;
+export const milestones = seedContent.milestones;
+export const collaborators = seedContent.collaborators;
+export const playerPlaylist = seedContent.playerPlaylist;

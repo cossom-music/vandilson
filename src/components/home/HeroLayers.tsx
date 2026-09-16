@@ -3,12 +3,12 @@
  * atmosférico, bloom de contacto). O que é corpo vive na cena Three.js
  * (ver EarthScene):
  *
- *   galaxy (A) — nebulosa galáctica + sol quente + lua (ref1)
- *   atmo   (B) — névoa fria + haze azul por cima do limbo elétrico (ref2);
- *                as LUZES DE CIDADE passaram a ser WebGL (CityLights)
- *   ember  (C) — sol de fogo + anéis de órbita + planeta anelado (ref3)
- *   dawn   (D) — bloom do incêndio no contacto (ref4); o SOL ESTRELADO com
- *                flare passou a ser WebGL (StarSun)
+ *   galaxy — nebulosa galáctica + sol quente + lua (ref1)
+ *   atmo   — névoa fria + haze azul por cima do limbo elétrico (ref2);
+ *            as LUZES DE CIDADE passaram a ser WebGL (CityLights)
+ *   ember  — sol de fogo + anéis de órbita + planeta anelado (ref3)
+ *   dawn   — bloom do incêndio no contacto (ref4); o SOL ESTRELADO com
+ *            flare passou a ser WebGL (StarSun). É a variante da homepage.
  *
  * Tudo é pointer-events-none e vive DE TRÁS do globo (z-0, inserido antes
  * do [data-globe]) — exceto o bloom do amanhecer, que tem de ficar POR CIMA
@@ -178,7 +178,7 @@ export default function HeroLayers({
 /** Camada FRONT — só o dawn a usa: o bloom quente sobre o ponto de contacto.
  *  Os raios do sol são WebGL (StarSun); o que um shader sem post-processing
  *  não faz é esta difusão larga sobre a imagem — e é ela que dá o "véu" da
- *  lente quando o sol nasce no limbo (ref4).
+ *  lente quando o sol nasce no limbo (ref4, variante dawn da homepage).
  *  O centro do véu acompanha o disco do sol (logo abaixo da lua, ~58% da
  *  altura) e o gradiente é APERTADO: há muito que este véu descia do meio da
  *  lua até à Terra e lia-se como um feixe. */

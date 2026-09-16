@@ -79,21 +79,22 @@ function loadNightTexture(src: string): Promise<THREE.CanvasTexture | null> {
 }
 
 /**
- * Cena 3D realista do herói para as variantes coloridas (/hero-b e /hero-d
- * são as páginas vivas; galaxy/ember ficam como variantes dormentes).
+ * Cena 3D realista do herói para as variantes coloridas (dawn é a variante
+ * viva na homepage; galaxy/atmo/ember ficam como variantes dormentes).
  *
- *   atmo   (B, ref2) — limbo azul ELÉTRICO + luzes de cidade douradas (WebGL)
- *   dawn   (D, ref4) — limbo da Terra em baixo, lua escura, sol ESTRELADO
+ *   atmo   (dormente) — limbo azul ELÉTRICO + luzes de cidade douradas (WebGL)
+ *   dawn   (homepage /) — limbo da Terra em baixo, lua escura, sol ESTRELADO
  *                      com flare, atmosfera a incendiar-se no contacto
- *   galaxy (ref1, dormente) — Terra centrada + lua
- *   ember  (ref3, dormente) — Sol ao centro + 4 planetas em silhueta
+ *   galaxy (dormente) — Terra centrada + lua
+ *   ember  (dormente) — Sol ao centro + 4 planetas em silhueta
  *
  * O que a variante acrescenta por cima do "globo genérico" é geometria e
  * shader — não CSS: o limbo (AtmosphereLimb), as luzes de cidade
  * (CityLights) e o sol (StarSun) vivem na cena. O HeroLayers só trata do
  * que é verdadeiramente fino (névoa, bloom sobre o contacto).
  *
- * "silver" (homepage /) delega para o GlassGlobe original — zero regressões.
+ * "silver" (homepage anterior) delega para o GlassGlobe original —
+ * zero regressões.
  *
  * ZOOM NO SCROLL: a câmara faz dolly lendo earthZoom.progress e PARA mesmo
  * fora da superfície — a Terra/objeto enche o ecrã no fim do mergulho, por
@@ -2078,7 +2079,7 @@ function GalaxyScene() {
   );
 }
 
-/** Centro da Terra em /hero-b — o limbo sobe do fundo do ecrã (ref2). */
+/** Centro da Terra na variante atmo — o limbo sobe do fundo do ecrã. */
 const ATMO_EARTH: [number, number, number] = [0, -2.85, 0];
 /** O sol está ATRÁS do planeta: o lado que a câmara vê é o NOTURNO — é isso
  *  que faz as luzes de cidade brilharem e o limbo ficar azul elétrico.

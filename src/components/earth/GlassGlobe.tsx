@@ -29,9 +29,9 @@ const SPIN = (2 * Math.PI) / 30; // ≈ 0.2094 rad/s
 /* ----------------------------- variantes --------------------------------- */
 
 /**
- * Variantes de cor do herói — "silver" é o atual; as outras 4 são as direções
- * em teste nas páginas /hero-a..d. Só mudam CORES (pontos, vidro, halo) —
- * geometria, dolly e interação permanecem iguais.
+ * Variantes de cor do herói — "dawn" é a atual (homepage /); "silver" é a
+ * homepage anterior e as restantes são direções dormentes. Só mudam
+ * CORES (pontos, vidro, halo) — geometria, dolly e interação permanecem iguais.
  */
 export type GlobeVariant = "silver" | "galaxy" | "atmo" | "ember" | "dawn";
 

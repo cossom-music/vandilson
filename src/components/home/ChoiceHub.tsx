@@ -7,8 +7,9 @@ import { useSiteContent } from "@/components/SiteContentProvider";
 /**
  * HUB DE ESCOLHA (Modelo 4 · Carta de Trajetória)
  *
- * Surge no fim da transição da /hero-d: em vez de revelar a secção seguinte
- * (Discografia), apresenta os destinos como WAYPOINTS numa rota pontilhada
+ * Surge no fim da transição da variante dawn (homepage /): em vez de revelar
+ * a secção seguinte (Discografia), apresenta os destinos como WAYPOINTS numa
+ * rota pontilhada
  * numa carta de trajetória — o usuário escolhe para onde navegar.
  *
  * Elementos (do modelo aprovado em _temp/design-demos/choice-hub-modelos.html):

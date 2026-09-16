@@ -48,7 +48,7 @@ export function ReleaseEditor({ release }: { release: AdminRelease | null }) {
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setDraft((d) => ({ ...d, [k]: v }));
 
   /* ── listas aninhadas ── */
-  const setTrack = (i: number, patch: Partial<{ title: string; duration?: string }>) =>
+  const setTrack = (i: number, patch: Partial<{ title: string; duration?: string; audioPath?: string }>) =>
     setDraft((d) => ({
       ...d,
       tracklist: d.tracklist.map((t, j) => (j === i ? { ...t, ...patch } : t)),
@@ -76,6 +76,45 @@ export function ReleaseEditor({ release }: { release: AdminRelease | null }) {
   const ext = (name: string) => {
     const m = /\.(jpe?g|png|webp|avif)$/i.exec(name);
     return m ? m[1].toLowerCase() : "jpg";
+  };
+
+  const audioExt = (name: string) => {
+    const m = /\.(mp3|m4a|aac|ogg|wav)$/i.exec(name);
+    return m ? m[1].toLowerCase() : "mp3";
+  };
+
+  /* ── áudio da faixa: upload imediato para o bucket "audio" ──
+     (o caminho fica no audioPath da faixa; o player Em Órbita usa-o) */
+  const [audioBusy, setAudioBusy] = useState<number | null>(null);
+  const pickAudio = async (i: number, file: File | null) => {
+    if (!file) return;
+    if (!supabaseBrowser) {
+      setNotice({ kind: "err", text: "Supabase não configurado para o upload de áudio." });
+      return;
+    }
+    setAudioBusy(i);
+    setNotice(null);
+    try {
+      const name = `t-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${audioExt(file.name)}`;
+      const { error: upErr } = await supabaseBrowser.storage
+        .from("audio")
+        .upload(name, file, { contentType: file.type || "audio/mpeg" });
+      if (upErr) throw new Error(upErr.message);
+      setTrack(i, { audioPath: name });
+      setNotice({ kind: "ok", text: "Áudio carregado — guarda o lançamento para confirmar." });
+    } catch (err) {
+      setNotice({ kind: "err", text: err instanceof Error ? err.message : "Erro no upload do áudio." });
+    } finally {
+      setAudioBusy(null);
+    }
+  };
+
+  const removeAudio = (i: number) => {
+    const path = draft.tracklist[i]?.audioPath;
+    setTrack(i, { audioPath: undefined });
+    if (path && supabaseBrowser) {
+      void supabaseBrowser.storage.from("audio").remove([path]);
+    }
   };
 
   const save = () => {
@@ -235,6 +274,38 @@ export function ReleaseEditor({ release }: { release: AdminRelease | null }) {
               <Button type="button" variant="ghost" aria-label="Remover faixa" onClick={() => set("tracklist", draft.tracklist.filter((_, j) => j !== i))}>
                 ×
               </Button>
+              {/* Áudio da faixa — ativa a faixa no player Em Órbita (/universo). */}
+              <div className="col-span-full flex flex-wrap items-center gap-2 pl-8">
+                <input
+                  type="file"
+                  accept="audio/mpeg,audio/mp4,audio/aac,audio/ogg,audio/wav,.mp3,.m4a,.aac,.ogg,.wav"
+                  className="hidden"
+                  id={`audio-input-${i}`}
+                  onChange={(e) => void pickAudio(i, e.target.files?.[0] ?? null)}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  disabled={audioBusy === i}
+                  onClick={() => document.getElementById(`audio-input-${i}`)?.click()}
+                >
+                  {audioBusy === i ? "A carregar…" : track.audioPath ? "Substituir áudio…" : "Carregar áudio…"}
+                </Button>
+                {track.audioPath ? (
+                  <>
+                    <span className="font-mono text-[11px] text-emerald-300/80">
+                      ✓ {track.audioPath}
+                    </span>
+                    <Button type="button" variant="ghost" aria-label="Remover áudio" onClick={() => removeAudio(i)}>
+                      ×
+                    </Button>
+                  </>
+                ) : (
+                  <span className="text-[11px] text-mist/50">
+                    MP3 até 50 MB — sem áudio, a faixa não entra no player Em Órbita.
+                  </span>
+                )}
+              </div>
             </div>
           ))}
         </div>

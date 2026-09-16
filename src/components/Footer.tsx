@@ -38,7 +38,9 @@ export default function Footer() {
 
   return (
     <footer className="border-t border-white/5 bg-night-950">
-      <div className="mx-auto grid max-w-6xl gap-12 px-6 py-16 md:grid-cols-[1.2fr_1fr]">
+      {/* pb extra: o player "Em Órbita" é global (layout) e vive fixo no fundo —
+          o respiro impede que tape o e-mail/copyright no fim da página. */}
+      <div className="mx-auto grid max-w-6xl gap-12 px-6 pb-28 pt-16 md:grid-cols-[1.2fr_1fr]">
         <div>
           <p className="font-display text-2xl text-cream">{artist.name}</p>
           <p className="mt-2 max-w-md text-sm text-mist">{artist.tagline}</p>

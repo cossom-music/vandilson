@@ -24,6 +24,16 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Disco do player Em Órbita — a capa gira enquanto a faixa toca */
+@keyframes orbit-disc {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.orbit-disc-spin {
+  animation: orbit-disc 9s linear infinite;
+}
+
 /* Rotação lenta dos anéis orbitais dos mini-planetas do hub de escolha
    (Carta de Trajetória). Duracao/direção definidas inline por planeta. */
 @keyframes orbit-spin {
@@ -589,6 +599,59 @@ body {
    com delays; aqui só garantimos o estado final e o reduced-motion. */
 @media (prefers-reduced-motion: reduce) {
   .menu-orbit-sun::after {
+    animation: none;
+  }
+}
+
+/* ─── Trajetória (Variação A-Alt) — planetas a girar sobre a linha ─── */
+/* Anel orbital: tracejado, rotação lenta (duração via style no elemento) */
+.traj-ring {
+  border: 1px dashed rgba(216, 219, 224, 0.35);
+  animation: traj-rot 14s linear infinite;
+}
+/* A lua: ponto prateado na órbita, sentido oposto ao anel */
+.traj-moon {
+  animation: traj-rot 9s linear infinite reverse;
+}
+.traj-moon::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -2px;
+  width: 5px;
+  height: 5px;
+  margin-left: -2.5px;
+  border-radius: 50%;
+  background: #e8ecf2;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+}
+@keyframes traj-rot {
+  to {
+    transform: rotate(360deg);
+  }
+}
+/* Corpos — prata (eras passadas) e âmbar (a era presente) */
+.traj-planet-silver {
+  background: radial-gradient(
+    circle at 34% 28%,
+    #e8ecf2 0%,
+    #6d7684 48%,
+    #23262c 92%
+  );
+  box-shadow: 0 0 14px rgba(255, 255, 255, 0.28);
+}
+.traj-planet-amber {
+  background: radial-gradient(
+    circle at 34% 28%,
+    #ffe9c8 0%,
+    #ffb65e 52%,
+    #7a4a14 94%
+  );
+  box-shadow: 0 0 22px rgba(255, 182, 94, 0.5);
+}
+@media (prefers-reduced-motion: reduce) {
+  .traj-ring,
+  .traj-moon {
     animation: none;
   }
 }

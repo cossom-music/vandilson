@@ -31,6 +31,12 @@ export default async function AdminDashboardPage() {
       desc: "Títulos e destaques das secções Ouvir / Sintonia.",
       meta: "Secções da página inicial",
     },
+    {
+      href: "/admin/universo",
+      title: "Universo",
+      desc: "Player Em Órbita (playlist), Trajetória e Constelação.",
+      meta: `${content.playerPlaylist.length} faixas em órbita · ${content.milestones.length} marcos`,
+    },
   ];
 
   return (

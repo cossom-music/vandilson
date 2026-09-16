@@ -34,16 +34,15 @@ import ChoiceHub from "@/components/home/ChoiceHub";
  * Paleta monocromática (medida no vídeo de referência): prata sobre preto.
  * Sem dourado — o acento é o limbo prateado do vidro.
  *
- * VARIANTES (/hero-a..d, refs 1-4): a cor vive em HeroLayers (o que é fino) e
+ * VARIANTES: a cor vive em HeroLayers (o que é fino) e
  * em EarthScene (geometria e shaders — limbo atmosférico, luzes de cidade, sol
  * estrelado). A coreografia cinematográfica escreve em `heroCine`, que a cena
  * Three.js lê por frame: o mergulho deixa de ser só um zoom.
  */
 /**
- * Arco de FUSÃO — funde o fim do mergulho no globo com a secção de Música
- * (cores contínuas, sem corte). A cor segue a variante: prata na homepage,
- * azul elétrico no /hero-b (a cena é azul de ponta a ponta), azul→âmbar no
- * /hero-d (o nascer do sol atravessa a transição).
+ * Arco de FUSÃO — funde o fim do mergulho no globo com a secção seguinte
+ * (cores contínuas, sem corte). A cor segue a variante: azul→âmbar na dawn
+ * (homepage, o nascer do sol atravessa a transição), prata na silver.
  */
 const MERGE_ARC: Record<GlobeVariant, string> = {
   silver:
@@ -68,8 +67,8 @@ const NAME_GLOW: Partial<Record<GlobeVariant, string>> = {
 export default function HomeIntro({
   variant = "silver",
 }: {
-  /** Variante visual do herói — "silver" é a atual; as páginas /hero-a..d
-   *  passam as variantes em teste. As cores extra vivem em HeroLayers e
+  /** Variante visual do herói — "dawn" é a atual (homepage /); "silver" é a
+   *  homepage anterior. As cores extra vivem em HeroLayers e
    *  desvanecem com o globo (data-hero-fx), garantindo a transição prateada. */
   variant?: GlobeVariant;
 }) {
