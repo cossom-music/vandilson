@@ -18,6 +18,66 @@ import GlassGlobe, { type GlobeVariant } from "@/components/earth/GlassGlobe";
  */
 const MAX_ANISO = 16;
 
+/* ------------------------ cache de texturas (anti-flash) ------------------ */
+
+/**
+ * Texturas carregadas UMA VEZ por sessão (promise em cache ao nível do
+ * módulo): nas remontagens do Canvas (ex.: recuperação de perda de contexto
+ * WebGL) a textura vem da cache em vez de recarregar — os modelos aparecem
+ * prontos de imediato, sem flash do mapa procedural antigo nem da Terra
+ * branca por defeito.
+ */
+
+let moonTexturePromise: Promise<THREE.CanvasTexture> | null = null;
+function loadMoonTexture(): Promise<THREE.CanvasTexture> {
+  moonTexturePromise ??= new Promise((resolve) => {
+    new THREE.TextureLoader().load(
+      "/textures/moon-nasa.jpg",
+      (tex) => {
+        const img = tex.image as HTMLImageElement;
+        resolve(darkenLunar(img, img.width, img.height));
+      },
+      undefined,
+      // Rede/ficheiro falhou → fallback procedural (nada rebenta)
+      () => resolve(darkenLunar(buildMoonMaps(384, 192).map.image as HTMLCanvasElement, 384, 192)),
+    );
+  });
+  return moonTexturePromise;
+}
+
+let nightTexturePromise: Promise<THREE.CanvasTexture | null> | null = null;
+function loadNightTexture(src: string): Promise<THREE.CanvasTexture | null> {
+  nightTexturePromise ??= new Promise((resolve) => {
+    const el = new Image();
+    el.onload = () => {
+      // O Black Marble vem gradado a azul pela NASA (continentes com B−R de +12
+      // a +21) e o tint multiplicava AINDA mais azul — a Terra ficava meia
+      // azulada toda. A passagem por canvas com `saturate` dessatura o mapa
+      // antes de criar a textura: continentes neutros, oceanos azul-escuros,
+      // luzes de cidade intactas (estas são desenhadas pelo CityLights à parte).
+      const cv = document.createElement("canvas");
+      cv.width = el.naturalWidth;
+      cv.height = el.naturalHeight;
+      const ctx = cv.getContext("2d")!;
+      try {
+        ctx.filter = "saturate(0.55)";
+      } catch {
+        /* filtro opcional — sem ele fica o mapa original */
+      }
+      ctx.drawImage(el, 0, 0);
+      ctx.filter = "none";
+      const tex = new THREE.CanvasTexture(cv);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.anisotropy = MAX_ANISO;
+      resolve(tex);
+    };
+    el.onerror = () => resolve(null);
+    el.src = src;
+  });
+  return nightTexturePromise;
+}
+
 /**
  * Cena 3D realista do herói para as variantes coloridas (/hero-b e /hero-d
  * são as páginas vivas; galaxy/ember ficam como variantes dormentes).
@@ -1239,32 +1299,11 @@ function RealisticEarth({
   useEffect(() => {
     if (!nightTexture) return;
     let alive = true;
-    // O Black Marble vem gradado a azul pela NASA (continentes com B−R de +12
-    // a +21) e o tint multiplicava AINDA mais azul — a Terra ficava meia
-    // azulada toda. A passagem por canvas com `saturate` dessatura o mapa
-    // antes de criar a textura: continentes neutros, oceanos azul-escuros,
-    // luzes de cidade intactas (estas são desenhadas pelo CityLights à parte).
-    const el = new Image();
-    el.onload = () => {
-      if (!alive) return;
-      const cv = document.createElement("canvas");
-      cv.width = el.naturalWidth;
-      cv.height = el.naturalHeight;
-      const ctx = cv.getContext("2d")!;
-      try {
-        ctx.filter = "saturate(0.55)";
-      } catch {
-        /* filtro opcional — sem ele fica o mapa original */
-      }
-      ctx.drawImage(el, 0, 0);
-      ctx.filter = "none";
-      const tex = new THREE.CanvasTexture(cv);
-      tex.colorSpace = THREE.SRGBColorSpace;
-      tex.wrapS = THREE.RepeatWrapping;
-      tex.anisotropy = MAX_ANISO;
-      setNight(tex);
-    };
-    el.src = nightTexture;
+    // Cache de promise ao nível do módulo: nas remontagens (perda de
+    // contexto WebGL) a textura chega instantaneamente, sem flash.
+    loadNightTexture(nightTexture).then((tex) => {
+      if (alive && tex) setNight(tex);
+    });
     return () => {
       alive = false;
     };
@@ -1329,6 +1368,10 @@ function RealisticEarth({
   }, [nightTexture]);
 
   const maps = hiMaps ?? baseMaps;
+  // ANTI-BRANCO: sem material pronto (mapa noturno ou procedural), o mesh
+  // nem renderiza — três desenhava um PLANETA BRANCO por defeito durante o
+  // carregamento. Só aparece 100% pronto.
+  const surfaceReady = !!(night || maps);
   const earth = useRef<THREE.Mesh>(null);
   const cloudMesh = useRef<THREE.Mesh>(null);
 
@@ -1340,6 +1383,7 @@ function RealisticEarth({
 
   return (
     <group position={position}>
+      {surfaceReady && (
       <mesh ref={earth} scale={[radius, radius, radius]}>
         <sphereGeometry args={[1, 96, 96]} />
         {night ? (
@@ -1357,6 +1401,7 @@ function RealisticEarth({
           />
         ) : null}
       </mesh>
+      )}
       {cloudTex && (
         <mesh
           ref={cloudMesh}
@@ -1460,25 +1505,15 @@ function DarkMoon({
   position: [number, number, number];
   radius?: number;
 }) {
-  // 1.ª pintura: mapa procedural (instantâneo, já com mares e crateras).
-  const procedural = useMemo(
-    () => darkenLunar(buildMoonMaps(384, 192).map.image as HTMLCanvasElement, 384, 192),
-    [],
-  );
-  const [texture, setTexture] = useState<THREE.CanvasTexture>(procedural);
-
-  // Troca pelo mapa REAL da NASA assim que carrega — mesma mistura, relevo
-  // verdadeiro. Se a rede/ficheiro falhar, fica o procedural (nada rebenta).
+  // ANTI-FLASH: a lua NÃO nasce com o mapa procedural (o "modelo antigo"
+  // que piscava no arranque) — nasce oculta e entra já com a textura FINAL
+  // (cache da sessão → instantâneo nas remontagens). Fallback procedural
+  // só se a rede/ficheiro falhar.
+  const [texture, setTexture] = useState<THREE.CanvasTexture | null>(null);
   useEffect(() => {
     let alive = true;
-    new THREE.TextureLoader().load("/textures/moon-nasa.jpg", (tex) => {
-      if (!alive) return;
-      const img = tex.image as HTMLImageElement;
-      const next = darkenLunar(img, img.width, img.height);
-      setTexture((prev) => {
-        prev.dispose();
-        return next;
-      });
+    loadMoonTexture().then((tex) => {
+      if (alive) setTexture(tex);
     });
     return () => {
       alive = false;
@@ -1537,12 +1572,14 @@ function DarkMoon({
     // Na esfera do three o centro da textura (u = 0.5) cai no +X local; girar
     // -90° em Y leva-o para +Z, a direcção da câmara — é esta a face que se vê.
     <group position={position} scale={[radius, radius, radius]} rotation={[0, -Math.PI / 2, 0]}>
+      {texture && (
       <mesh>
         <sphereGeometry args={[1, 64, 64]} />
         {/* Basic (não standard): em contraluz o que se vê é a silhueta — reagir
             às luzes da cena só a punha com o sol a bater onde não bate. */}
         <meshBasicMaterial map={texture} />
       </mesh>
+      )}
       {/* Casca do bordo, um pouco maior: é ela que desenha o contorno */}
       <mesh material={rimMaterial} scale={1.014}>
         <sphereGeometry args={[1, 64, 64]} />
@@ -2193,6 +2230,9 @@ function DawnScene() {
 
 export default function EarthScene({ variant }: { variant: GlobeVariant }) {
   const [webgl, setWebgl] = useState<boolean | null>(null);
+  // Incrementado quando o contexto WebGL se perde: força o <Canvas> a
+  // remontar do zero com um contexto novo (recuperação automática).
+  const [remountKey, setRemountKey] = useState(0);
 
   useEffect(() => {
     try {
@@ -2231,9 +2271,22 @@ export default function EarthScene({ variant }: { variant: GlobeVariant }) {
     <div className="absolute inset-0 z-0">
       <Suspense fallback={null}>
         <Canvas
+          key={remountKey}
           camera={{ position: [0, 0.25, 3.7], fov: FOV, near: 0.05, far: 500 }}
           dpr={[1, 2]}
           gl={{ alpha: true, antialias: true }}
+          onCreated={({ gl }) => {
+            // PERDA DE CONTEXTO WEBGL (produção, scroll intenso): a GPU
+            // descarta o contexto sob pressão de memória — sem recuperação,
+            // a cena morria para sempre (nem recarregando a página, por
+            // causa da cache do bundle). Aqui: remonta o Canvas inteiro,
+            // e a cache de texturas de sessão faz os modelos reaparecerem
+            // prontos de imediato, sem flash.
+            gl.domElement.addEventListener("webglcontextlost", (e) => {
+              e.preventDefault();
+              setRemountKey((k) => k + 1);
+            });
+          }}
         >
           <CameraRig variant={variant} />
           <StarFieldBackground variant={variant} />

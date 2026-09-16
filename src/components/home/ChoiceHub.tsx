@@ -99,19 +99,13 @@ const WAYPOINTS: Waypoint[] = [
 ];
 
 /**
- * ÂNCORA QUE NÃO FUNCIONA — e porquê:
- * A secção Ouvir (#home-music) vive DENTRO do palco sticky do herói
- * (absolute inset-0): a sua posição no documento é sempre a do palco fixo,
- * por isso uma âncora nativa não tem distância para percorrer — o hash muda
- * e a página não se move. A Ouvir é uma FASE da timeline GSAP (entra a 1.22,
- * pilha assente a ~1.70), controlada pela posição de scroll do container do
- * herói. O clique em Ouvir conduz por isso o SCROLL até essa zona da
- * timeline (landmark/TOTAL do container animado), em vez de depender da
- * âncora. Os restantes destinos (#home-sobre, #home-agenda, #home-contact)
- * vivem fora do sticky (HomeOutro) — âncoras nativas funcionam para eles.
+ * NOTA DE ARQUITETURA — dois palcos sticky:
+ * Na dawn a página tem DOIS palcos sticky irmãos: o do herói (globo → hub
+ * de escolha) e o da Ouvir. A secção Ouvir (#home-music) é REAL no fluxo
+ * do documento, por isso a âncora nativa funciona: ao clicar, o browser
+ * desce até ao palco dela e a timeline GSAP do palco anima a pilha com o
+ * scroll — sem JavaScript de navegação.
  */
-const MUSIC_ARRIVAL = 1.7; // fim do CTA da Ouvir (tudo assente)
-const TIMELINE_TOTAL = 2.74; // duração total da timeline da dawn (1.94 + 0.8)
 
 export default function ChoiceHub() {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -128,22 +122,6 @@ export default function ChoiceHub() {
     mq.addEventListener("change", apply);
     return () => mq.removeEventListener("change", apply);
   }, []);
-
-  // Ouvir: conduz o scroll pela timeline (a âncora nativa não funciona
-  // dentro do palco sticky — ver nota acima). Sem JS/fora do herói, o
-  // href mantém-se como fallback.
-  const handleClick = (e: React.MouseEvent, wp: Waypoint) => {
-    if (wp.href !== "#home-music") return;
-    const scope = document.querySelector<HTMLElement>("[data-hero-scope]");
-    if (!scope) return; // deixa a âncora nativa resolver
-    e.preventDefault();
-    const top = scope.getBoundingClientRect().top + window.scrollY;
-    const range = scope.offsetHeight - window.innerHeight;
-    window.scrollTo({
-      top: top + range * (MUSIC_ARRIVAL / TIMELINE_TOTAL),
-      behavior: "smooth",
-    });
-  };
 
   // Entrada: os planetas surgem em sequência — respeitando reduced motion.
   useEffect(() => {
@@ -202,7 +180,6 @@ export default function ChoiceHub() {
           <Link
             key={wp.name}
             href={wp.href}
-            onClick={(e) => handleClick(e, wp)}
             aria-label={`Navegar para ${wp.name}`}
             className="group absolute flex -translate-x-1/2 -translate-y-1/2 items-center gap-2.5"
             style={{

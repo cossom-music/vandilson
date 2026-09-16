@@ -86,15 +86,23 @@ export default function HomeIntro({
     if (!scope || rm) return;
 
     // Elementos por data-attribute — consultas DOM diretas, sem seletores GSAP
-    const container = scope;
+    const heroStage = scope.querySelector<HTMLElement>("[data-hero-stage]") ?? scope;
+    const musicStage = scope.querySelector<HTMLElement>("[data-music-stage]");
+    // Palco dividido (dawn): herói→hub num sticky, Ouvir noutro — a secção
+    // volta a ser real no fluxo do documento e as âncoras nativas funcionam.
+    const isSplit = musicStage !== null;
     const globe = scope.querySelector<HTMLElement>("[data-globe]");
     const vignette = scope.querySelector<HTMLElement>("[data-vignette]");
     const indicator = scope.querySelector<HTMLElement>("[data-indicator]");
     const music = scope.querySelector<HTMLElement>("[data-music]");
-    // Na dawn a Ouvir não vive no palco (está fora, em fluxo normal) —
-    // o guard exige só o palco; a secção de música é opcional.
     if (!globe || !vignette || !indicator) return;
-    if (music) gsap.set(music, { autoAlpha: 0, y: 64 });
+    // No palco dividido a Ouvir é sempre visível (secção real, com palco
+    // próprio); nos restantes vive no palco do herói e nasce oculta para o
+    // cross-fade.
+    if (music) {
+      if (isSplit) gsap.set(music, { autoAlpha: 1, y: 0 });
+      else gsap.set(music, { autoAlpha: 0, y: 64 });
+    }
 
     // Camadas de cor da variante (nebulosa, sol, flare…) — desvanecem junto
     // com o globo no Ato 2. Em "silver" o grupo não existe (querySelector null).
@@ -124,7 +132,7 @@ export default function HomeIntro({
     const tl = gsap.timeline({
       defaults: { ease: "none" },
       scrollTrigger: {
-        trigger: container,
+        trigger: heroStage,
         start: "top top",
         end: "bottom bottom",
         scrub: true,
@@ -168,14 +176,16 @@ export default function HomeIntro({
     const choiceHub = scope.querySelector<HTMLElement>("[data-choice-hub]");
     if (choiceHub) {
       gsap.set(choiceHub, { autoAlpha: 0, y: 40 });
-      // Hub entra após o cross-fade e fica VISÍVEL MUITO MAIS TEMPO:
-      // janela 0.68 → 1.16 (antes saía a 0.86). O usuário tem ~48% da
-      // timeline para ler a carta e escolher um rumo sem pressa.
+      // Hub entra após o cross-fade e FICA — é o destino final do palco do
+      // herói; a Ouvir tem palco sticky próprio (timeline mtl abaixo).
       tl.to(choiceHub, { autoAlpha: 1, y: 0, duration: 0.24, ease: "power1.out" }, 0.68);
-      tl.to(choiceHub, { autoAlpha: 0, y: -30, duration: 0.12, ease: "power1.in" }, 1.16);
+      // Cauda assente: o hub permanece até o sticky soltar para o palco da
+      // Ouvir — sem fade out, a carta entrega o scroll diretamente.
+      tl.to({}, { duration: 0.28 }, 0.94);
     }
-    // A Ouvir entra DEPOIS do hub (na dawn) ou no cross-fade (restantes)
-    if (music) {
+    // A Ouvir entra no cross-fade (restantes variantes) — na dawn (isSplit)
+    // ela já vive visível no seu próprio palco, fora desta timeline.
+    if (music && !isSplit) {
       tl.to(
         music,
         { autoAlpha: 1, y: 0, duration: 0.16, ease: "power1.out" },
@@ -188,6 +198,26 @@ export default function HomeIntro({
     tl.fromTo(earthZoom.paused, { value: false }, { value: true, duration: 0.01 }, 0.74);
     // (a Ouvir chega DEPOIS do hub — a pausa do render WebGL fica no
     // 0.74, durante o cross-fade, e não afeta o hub que é puro DOM)
+
+    // PALCO PRÓPRIO DA OUVIR (só dawn): timeline GSAP dedicada ao segundo
+    // sticky — a pilha de planetas e o CTA animam com o scroll DESTE palco,
+    // desacoplados do herói.
+    let mtl: gsap.core.Timeline | null = null;
+    if (isSplit && musicStage) {
+      mtl = gsap.timeline({
+        defaults: { ease: "none" },
+        scrollTrigger: {
+          trigger: musicStage,
+          start: "top top",
+          end: "bottom bottom",
+          scrub: true,
+        },
+      });
+    }
+
+    // Cleanup acumulado (o CTA/respiro vivem DEPOIS do bloco dos cartões —
+    // antes, o return dentro do bloco os tornava código morto).
+    let cleanup: (() => void) | undefined;
 
     // Ato 3 — pilha REAL: os cartões nascem empilhados no centro do palco
     // (delta medido em px do layout real) e o scroll abre a pilha até às
@@ -230,17 +260,23 @@ export default function HomeIntro({
       };
       applyStack();
 
+      // A pilha anima na timeline do palco onde a secção vive: mtl (palco
+      // próprio da dawn) ou tl (restantes variantes, dentro do herói).
+      const stackTl = mtl ?? tl;
+      const stackBase = mtl ? 0.06 : choiceHub ? 1.32 : 0.86;
+
       // Resize/rotação do ecrã: re-medir e re-empilhar — mas só enquanto a
       // pilha ainda estiver fechada (a meio do voo, o scrub manda).
       const onRefresh = () => {
-        if (!tl.scrollTrigger || tl.scrollTrigger.progress < 0.84) {
+        if (!stackTl.scrollTrigger || stackTl.scrollTrigger.progress < 0.84) {
           applyStack();
         }
       };
       ScrollTrigger.addEventListener("refreshInit", onRefresh);
+      cleanup = () => ScrollTrigger.removeEventListener("refreshInit", onRefresh);
 
       cards.forEach((card, i) => {
-        tl.to(
+        stackTl.to(
           card,
           {
             x: 0,
@@ -252,18 +288,19 @@ export default function HomeIntro({
             // por último — e só então o CTA pode aparecer.
             ease: "power2.inOut",
           },
-          (choiceHub ? 1.32 : 0.86) + i * 0.022,
+          stackBase + i * 0.022,
         );
       });
-
-      // Cleanup do listener — corre no revert() do contexto GSAP.
-      return () => ScrollTrigger.removeEventListener("refreshInit", onRefresh);
     }
 
     // Ato 4 — o CTA só existe depois de TODOS os cartões estarem sentados.
     if (cta) {
       gsap.set(cta, { autoAlpha: 0, y: 24 });
-      tl.to(cta, { autoAlpha: 1, y: 0, duration: 0.08, ease: "power1.out" }, choiceHub ? 1.62 : 1.02);
+      (mtl ?? tl).to(
+        cta,
+        { autoAlpha: 1, y: 0, duration: 0.08, ease: "power1.out" },
+        mtl ? 0.42 : choiceHub ? 1.62 : 1.02,
+      );
     }
 
     // Respiro final — um espaçador vazio estende a timeline:
@@ -272,8 +309,15 @@ export default function HomeIntro({
     // respiro é MAIOR (1.74 → 2.1): o sticky só larga DEPOIS de a pilha
     // e o CTA estarem 100% assentados — a página não desce para a Sintonia
     // a meio da animação da Ouvir.
-    tl.to({}, { duration: 0.2 }, choiceHub ? 1.74 : 1.22);
-    tl.to({}, { duration: choiceHub ? 0.8 : 0 }, choiceHub ? 1.94 : 1);
+    if (mtl) {
+      // Palco dividido: o respiro vive NA timeline da Ouvir — o palco fica
+      // parado com a pilha e o CTA assentados antes de soltar para Contactos.
+      mtl.to({}, { duration: 0.3 }, 0.55);
+    } else {
+      tl.to({}, { duration: 0.2 }, choiceHub ? 1.74 : 1.22);
+      tl.to({}, { duration: choiceHub ? 0.8 : 0 }, choiceHub ? 1.94 : 1);
+    }
+    return cleanup;
   }, []);
 
   // Reduced motion: sem pin, sem dolly — globo estático + música em fluxo normal
@@ -306,10 +350,20 @@ export default function HomeIntro({
 
   return (
     <>
-    {/* data-hero-scope: o ChoiceHub usa este container para calcular a
-        posição de scroll que "aterra" na Ouvir assentada (a secção vive
-        DENTRO do palco sticky, por isso uma âncora nativa não a alcança). */}
-    <div ref={scopeRef} data-hero-scope className="relative h-[460svh]">
+    {/* ESTRUTURA EM DOIS PALCOS STICKY (dawn):
+        1. Palco do herói (260svh): mergulho no globo → hub de escolha;
+        2. Palco da Ouvir (220svh): a secção é REAL no fluxo do documento —
+           âncoras nativas (#home-music) funcionam e a pilha de planetas
+           tem timeline GSAP própria (scrub do scroll deste palco). */}
+    <div ref={scopeRef} data-hero-scope className="relative">
+      <div
+        data-hero-stage
+        className={
+          useChoiceHub
+            ? "relative h-[260svh]" // dawn: só herói + hub neste palco
+            : "relative h-[460svh]" // restantes: herói + Ouvir no mesmo palco (como antes)
+        }
+      >
       <div className="sticky top-0 h-[100lvh] overflow-hidden">
         {/* Reforço estelar local — atrás do globo, mais denso que o canvas global */}
         <div
@@ -347,31 +401,59 @@ export default function HomeIntro({
           <div className="absolute inset-0" style={{ background: MERGE_ARC[variant] }} />
         </div>
 
-        {/* SECÇÃO OUVIR — no palco sticky, como FASE POSTERIOR do scroll
-            (na dawn entra DEPOIS do hub). A camada de estrelas do palco
-            fica visível atrás (fundo transparente). id="home-music" no
-            PRÓPRIO palco: quando a secção está visível (timeline > 0.94),
-            o âncora #home-music do hub aponta para o ecrã atual — o scroll
-            não salta. overflow-x-hidden: com a pilha em voo, nenhum
+        {/* SECÇÃO OUVIR — no palco sticky (nas variantes SEM hub de escolha).
+            Na dawn ela vive no PALCO PRÓPRIO abaixo (secção real, âncora
+            nativa funcional). overflow-x-hidden: com a pilha em voo, nenhum
             transform pode criar scroll horizontal. */}
-        <section
-          id="home-music"
-          data-music
-          className="invisible absolute inset-0 z-30 overflow-x-hidden overflow-y-auto"
-        >
-          <div className="flex min-h-full items-center">
-            <DiscografiaContent />
-          </div>
-        </section>
+        {!useChoiceHub && (
+          <section
+            id="home-music"
+            data-music
+            className="invisible absolute inset-0 z-30 overflow-x-hidden overflow-y-auto"
+          >
+            <div className="flex min-h-full items-center">
+              <DiscografiaContent />
+            </div>
+          </section>
+        )}
 
-        {/* HUB DE ESCOLHA (só dawn) — primeira fase do destino do Ato 2
-            (0.68-0.86), depois dá lugar à Ouvir dentro do mesmo palco. */}
+        {/* HUB DE ESCOLHA (só dawn) — destino final do palco do herói. */}
         {useChoiceHub && (
           <div data-choice-hub className="invisible absolute inset-0 z-40 overflow-y-auto opacity-0">
             <ChoiceHub />
           </div>
         )}
       </div>
+      </div>
+
+      {/* PALCO PRÓPRIO DA OUVIR (só dawn) — secção REAL no fluxo do
+          documento dentro do seu próprio sticky: a âncora #home-music
+          funciona nativamente e a pilha de planetas anima com o scroll
+          DESTE palco (timeline GSAP dedicada, scrub 1:1). */}
+      {useChoiceHub && (
+        <div
+          data-music-stage
+          className="relative h-[220svh]"
+        >
+          <div className="sticky top-0 h-[100lvh] overflow-hidden">
+            {/* Estrelas do palco — o fundo é transparente para as estrelas
+                globais (StarField) visíveis atrás, como no herói. */}
+            <div
+              aria-hidden="true"
+              className="star-layer star-layer--hero pointer-events-none absolute inset-0"
+            />
+            <section
+              id="home-music"
+              data-music
+              className="absolute inset-0 overflow-x-hidden overflow-y-auto"
+            >
+              <div className="flex min-h-full items-center">
+                <DiscografiaContent />
+              </div>
+            </section>
+          </div>
+        </div>
+      )}
     </div>
     </>
   );
