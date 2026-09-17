@@ -1,6 +1,19 @@
 import type { NextConfig } from "next";
 import path from "path";
 
+// Host EXATO do projeto Supabase (derivado da env — nada de wildcard
+// **.supabase.co, que abriria o otimizador a imagens de QUALQUER projeto
+// alheio; auditoria BAIXO 9). Avaliado em build/server start, quando o
+// .env.local está carregado.
+const supabaseHost = (() => {
+  try {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    return url ? new URL(url).hostname : null;
+  } catch {
+    return null;
+  }
+})();
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   // Fixa a raiz do workspace (evita aviso de lockfiles a montante)
@@ -53,12 +66,12 @@ const nextConfig: NextConfig = {
     ];
   },
   images: {
+    // Só hosts de confiança: o Supabase exato deste projeto (sem wildcard)
+    // e o CDN de capas do oEmbed do Spotify. Nota: o site hoje usa <img>
+    // direto (não <Image>), por que estes patterns servem de guard para
+    // o otimizador caso venha a ser usado.
     remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "**.supabase.co",
-      },
-      // Capas vindas do oEmbed do Spotify (cdn i.scdn.co)
+      ...(supabaseHost ? [{ protocol: "https" as const, hostname: supabaseHost }] : []),
       {
         protocol: "https",
         hostname: "i.scdn.co",
