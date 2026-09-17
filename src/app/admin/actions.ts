@@ -30,14 +30,54 @@ export type ActionResult = { ok: boolean; error?: string };
 
 /* ── Auth ─────────────────────────────────────────────────── */
 
+const LOGIN_WINDOW_MINUTES = 15;
+
+/** IP do pedido (atrás de proxy/CDN da Vercel) — só para hashear. */
+async function clientIp(): Promise<string> {
+  const { headers } = await import("next/headers");
+  const h = await headers();
+  const ip =
+    h.get("x-real-ip") ??
+    h.get("cf-connecting-ip") ??
+    h.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    "desconhecido";
+  return ip;
+}
+
 export async function signIn(formData: FormData): Promise<ActionResult> {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
 
   const supabase = await createSupabaseServerClient();
-  if (!supabase) return { ok: false, error: "Supabase não configurado." };
+  if (!supabase) return { ok: false, error: "Credenciais inválidas." };
+
+  // ── Rate limiting (5 falhas / 15 min, por email+IP) ──
+  // RPCs SECURITY DEFINER: a tabela login_attempts tem RLS total —
+  // ninguém a lê/escreve diretamente pela anon key.
+  const ip = await clientIp();
+  const { data: ipHash } = await supabase.rpc("hash_ip", { p_ip: ip });
+  const ipKey = typeof ipHash === "string" ? ipHash : ip; // fallback local (sem pgcrypto)
+
+  const { data: blocked, error: blockedErr } = await supabase.rpc("is_login_blocked", {
+    p_email: email,
+    p_ip_hash: ipKey,
+  });
+  if (!blockedErr && blocked === true) {
+    return {
+      ok: false,
+      error: `Demasiadas tentativas. Aguarde ${LOGIN_WINDOW_MINUTES} minutos antes de voltar a tentar.`,
+    };
+  }
 
   const { error } = await supabase.auth.signInWithPassword({ email, password });
+  // Registo de auditoria de autenticação (sucesso e falha) — a falha ao
+  // gravar o log NUNCA bloqueia o login.
+  await supabase.rpc("record_login_attempt", {
+    p_email: email || "(vazio)",
+    p_ip_hash: ipKey,
+    p_success: !error,
+  });
+
   if (error) return { ok: false, error: "Credenciais inválidas." };
   redirect("/admin");
 }
