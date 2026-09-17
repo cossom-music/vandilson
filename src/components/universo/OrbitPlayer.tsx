@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { PlayerTrack } from "@/content";
 
@@ -98,6 +98,70 @@ export default function OrbitPlayer({ playlist }: { playlist: PlaylistTrack[] })
   const autoPlayRef = useRef(false);
   /** Guarda anti-duplo-skip no fim de uma faixa Spotify. */
   const spotifyEndedRef = useRef(false);
+  /** Timers/RAF do fade de volume em curso (cancelados em cada nova troca). */
+  const fadeTimersRef = useRef<number[]>([]);
+
+  const clearFades = () => {
+    fadeTimersRef.current.forEach((t) => {
+      window.clearTimeout(t);
+      window.clearInterval(t);
+    });
+    fadeTimersRef.current = [];
+  };
+
+  /**
+   * FADE DE VOLUME entre faixas — trocas suaves, sem “corte”.
+   * MP3: volume real (0..1) em passos de interval, descida antes da troca
+   * e subida na faixa nova. Spotify: a IFrame API não expõe volume — o
+   * corte é imediato (como em todos os players de embed); só MP3 tem fade.
+   */
+  const fadeOutIn = useCallback(
+    (outEl: HTMLAudioElement | null, onSwitched: () => void) => {
+      clearFades();
+      const steps = 6;
+      const stepMs = 55; // ~330ms de descida + ~330ms de subida
+      const out = outEl && !outEl.paused ? outEl : null;
+      if (!out) {
+        onSwitched();
+        return;
+      }
+      const startVol = out.volume;
+      let s = 0;
+      const down = window.setInterval(() => {
+        s += 1;
+        try {
+          out.volume = Math.max(0, startVol * (1 - s / steps));
+        } catch {
+          /* volume lançado raramente — ignora */
+        }
+        if (s >= steps) {
+          window.clearInterval(down);
+          out.pause();
+          out.volume = startVol; // repõe para a próxima vez que tocar
+          onSwitched();
+          // Subida — MP3 entra suave; para Spotify é no-op (setPlaying já
+          // mentiu? não: o playback_update corrige o estado)
+          const inEl = audioRef.current;
+          let u = 0;
+          const up = window.setInterval(() => {
+            u += 1;
+            if (inEl && !inEl.paused) {
+              try {
+                inEl.volume = Math.min(1, (u / steps) * startVol);
+              } catch {
+                /* ignora */
+              }
+            }
+            if (u >= steps) window.clearInterval(up);
+          }, stepMs);
+          fadeTimersRef.current.push(up);
+          autoPlayRef.current = false;
+        }
+      }, stepMs);
+      fadeTimersRef.current.push(down);
+    },
+    [],
+  );
 
   useEffect(() => {
     if (restoredRef.current || playlist.length === 0) return;
@@ -131,6 +195,9 @@ export default function OrbitPlayer({ playlist }: { playlist: PlaylistTrack[] })
     }
     resumeRef.current = 0;
   }, [dur, idx, isSpotify]);
+
+  // Unmount: nenhum fade a meio da troca de página
+  useEffect(() => clearFades, []);
 
   // Rede de segurança do throttle: escreve o estado ao esconder/fechar o tab
   useEffect(() => {
@@ -323,12 +390,13 @@ export default function OrbitPlayer({ playlist }: { playlist: PlaylistTrack[] })
 
   const skip = (dir: 1 | -1) => {
     if (playlist.length === 0) return;
-    // Pára o motor atual ANTES de trocar e pede autoplay: o clique é um
-    // gesto do utilizador, por isso o play() imediato é permitido.
-    audioRef.current?.pause();
-    spotifyCtlRef.current?.pause();
-    autoPlayRef.current = true;
-    setIdx((i) => (i + dir + playlist.length) % playlist.length);
+    // FADE OUT do motor atual e só então troca — trocas suaves, sem corte.
+    // O autoPlayRef continua a autorizar o play imediato da faixa nova.
+    fadeOutIn(audioRef.current, () => {
+      spotifyCtlRef.current?.pause();
+      autoPlayRef.current = true;
+      setIdx((i) => (i + dir + playlist.length) % playlist.length);
+    });
   };
 
   const seekTo = (fraction: number) => {
