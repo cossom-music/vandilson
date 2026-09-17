@@ -350,7 +350,7 @@ export default function HomeIntro({
   return (
     <>
     {/* ESTRUTURA EM DOIS PALCOS STICKY (dawn):
-        1. Palco do herói (260svh): mergulho no globo → hub de escolha;
+        1. Palco do herói (340svh): mergulho no globo → hub de escolha;
         2. Palco da Ouvir (220svh): a secção é REAL no fluxo do documento —
            âncoras nativas (#home-music) funcionam e a pilha de planetas
            tem timeline GSAP própria (scrub do scroll deste palco). */}
@@ -359,7 +359,9 @@ export default function HomeIntro({
         data-hero-stage
         className={
           useChoiceHub
-            ? "relative h-[260svh]" // dawn: só herói + hub neste palco
+            ? "relative h-[340svh]" // dawn: só herói + hub neste palco —
+            // 240svh de scroll (260−100) faziam o mergulho completo fugir
+            // com pouco gesto; 340svh estica a MESMA coreografia 1.5×
             : "relative h-[460svh]" // restantes: herói + Ouvir no mesmo palco (como antes)
         }
       >
@@ -550,7 +552,9 @@ function HeroCountdown() {
 function ScrollCue() {
   const reduced = useReducedMotion();
   const { scrollY } = useScroll();
-  const drift = useSpring(useTransform(scrollY, [0, 640], [0, 96]), {
+  // 0→960px: acompanha o palco esticado (340svh) para o cue viver
+  // proporcionalmente tanto tempo como antes
+  const drift = useSpring(useTransform(scrollY, [0, 960], [0, 96]), {
     stiffness: 90,
     damping: 22,
     mass: 0.6,

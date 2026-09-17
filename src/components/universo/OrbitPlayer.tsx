@@ -35,7 +35,8 @@ const discBackground = (coverUrl: string | null) =>
  *    inferior direito; a girar enquanto a faixa toca;
  *  · EXPANDIDO: pílula completa (capa, título, progresso, transportes),
  *    também ancorada no canto inferior direito;
- *  · clicar no disco expande; o botão "–" minimiza de volta ao canto —
+ *  · no disco encolhido há um mini botão play/pause (é um player à primeira
+ *    vista) — clicar na capa expande; o botão "–" minimiza de volta ao canto —
  *    NÃO existe fechar: a música continua nos dois estados (o <audio>
  *    vive fora da troca de estados e nunca desmonta);
  *  · toca os MP3 reais do bucket "audio" (playlist curada no admin);
@@ -329,30 +330,55 @@ export default function OrbitPlayer({ playlist }: { playlist: PlaylistTrack[] })
         ) : (
           // ── ENCOLHIDO: disco no canto inferior direito (estado inicial) ──
           // Clicar expande. A girar enquanto a faixa toca (sinal de vida).
-          <motion.button
+          <motion.div
             key="collapsed"
-            type="button"
-            onClick={() => setExpanded(true)}
-            aria-label={playing ? "Player a tocar — abrir player" : "Abrir player"}
             initial={{ opacity: 0, scale: 0.4 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.4, transition: { duration: 0.16, ease: "easeIn" } }}
             transition={spring}
             whileHover={{ scale: 1.08 }}
-            whileTap={{ scale: 0.92 }}
             style={{ transformOrigin: "100% 100%" }}
-            className="pointer-events-auto absolute bottom-4 right-4 h-14 w-14 rounded-full shadow-[0_10px_30px_rgba(0,0,0,0.55)] ring-1 ring-white/15 md:bottom-6 md:right-6"
+            className="pointer-events-auto absolute bottom-4 right-4 h-14 w-14 md:bottom-6 md:right-6"
           >
-            <span
-              aria-hidden="true"
-              className={`absolute inset-0 overflow-hidden rounded-full ${playing ? "orbit-disc-spin" : ""}`}
-              style={{ background: discBackground(track.coverUrl) }}
+            {/* O disco abre o player — um clique em qualquer parte da capa */}
+            <button
+              type="button"
+              onClick={() => setExpanded(true)}
+              aria-label={playing ? "Player a tocar — abrir player" : "Abrir player"}
+              className="absolute inset-0 rounded-full shadow-[0_10px_30px_rgba(0,0,0,0.55)] ring-1 ring-white/15"
             >
-              {!track.coverUrl && (
-                <span className="absolute inset-[38%] rounded-full border border-white/25 bg-night-950" />
+              <span
+                aria-hidden="true"
+                className={`absolute inset-0 overflow-hidden rounded-full ${playing ? "orbit-disc-spin" : ""}`}
+                style={{ background: discBackground(track.coverUrl) }}
+              >
+                {!track.coverUrl && (
+                  <span className="absolute inset-[38%] rounded-full border border-white/25 bg-night-950" />
+                )}
+              </span>
+            </button>
+            {/* Play/pause — diz que é player sem o abrir: quem só quer
+                silenciar não precisa de expandir para pausar */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                void toggle();
+              }}
+              aria-label={playing ? "Pausar música" : "Tocar música"}
+              className="absolute -bottom-1 -right-1 z-10 flex h-5 w-5 items-center justify-center rounded-full border border-white/25 bg-night-950 text-silver-300 shadow-[0_4px_14px_rgba(0,0,0,0.6)] transition-colors hover:border-white/60 hover:text-white"
+            >
+              {playing ? (
+                <svg width="7" height="8" viewBox="0 0 10 12" aria-hidden="true">
+                  <path d="M1 0h2.6v12H1zM6.4 0H9v12H6.4z" fill="currentColor" />
+                </svg>
+              ) : (
+                <svg width="7" height="8" viewBox="0 0 10 12" aria-hidden="true">
+                  <path d="M1 0l8 6-8 6z" fill="currentColor" />
+                </svg>
               )}
-            </span>
-          </motion.button>
+            </button>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
