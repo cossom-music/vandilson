@@ -2,7 +2,7 @@
 
 import { startTransition, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { saveRelease, type ReleaseInput } from "../../actions";
+import { saveRelease, uploadAudioTrack, uploadCoverImage, type ReleaseInput } from "../../actions";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import type { AdminRelease } from "@/lib/admin-releases";
 import { Alert, Button, Field, Panel, Select, TextArea, TextInput } from "../../_ui";
@@ -73,34 +73,20 @@ export function ReleaseEditor({ release }: { release: AdminRelease | null }) {
     setDraft((d) => ({ ...d, coverPath: null }));
   };
 
-  const ext = (name: string) => {
-    const m = /\.(jpe?g|png|webp|avif)$/i.exec(name);
-    return m ? m[1].toLowerCase() : "jpg";
-  };
+  /* Extensões já não compõem nomes: a server action valida magic bytes e
+     gera o nome no servidor (auditoria MÉDIO 6). */
 
-  const audioExt = (name: string) => {
-    const m = /\.(mp3|m4a|aac|ogg|wav)$/i.exec(name);
-    return m ? m[1].toLowerCase() : "mp3";
-  };
-
-  /* ── áudio da faixa: upload imediato para o bucket "audio" ──
-     (o caminho fica no audioPath da faixa; o player Em Órbita usa-o) */
+  /* ── áudio da faixa: upload imediato via SERVER ACTION (valida magic
+     bytes, tamanho e gera o nome no servidor — auditoria MÉDIO 6) ── */
   const [audioBusy, setAudioBusy] = useState<number | null>(null);
   const pickAudio = async (i: number, file: File | null) => {
     if (!file) return;
-    if (!supabaseBrowser) {
-      setNotice({ kind: "err", text: "Supabase não configurado para o upload de áudio." });
-      return;
-    }
     setAudioBusy(i);
     setNotice(null);
     try {
-      const name = `t-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${audioExt(file.name)}`;
-      const { error: upErr } = await supabaseBrowser.storage
-        .from("audio")
-        .upload(name, file, { contentType: file.type || "audio/mpeg" });
-      if (upErr) throw new Error(upErr.message);
-      setTrack(i, { audioPath: name });
+      const res = await uploadAudioTrack(file);
+      if (!res.ok || !res.path) throw new Error(res.error ?? "Erro no upload do áudio.");
+      setTrack(i, { audioPath: res.path });
       setNotice({ kind: "ok", text: "Áudio carregado — guarda o lançamento para confirmar." });
     } catch (err) {
       setNotice({ kind: "err", text: err instanceof Error ? err.message : "Erro no upload do áudio." });
@@ -108,6 +94,7 @@ export function ReleaseEditor({ release }: { release: AdminRelease | null }) {
       setAudioBusy(null);
     }
   };
+  // (upload via uploadAudioTrack — server action em ../actions)
 
   const removeAudio = (i: number) => {
     const path = draft.tracklist[i]?.audioPath;
@@ -122,17 +109,13 @@ export function ReleaseEditor({ release }: { release: AdminRelease | null }) {
     setNotice(null);
     startTransition(async () => {
       try {
-        // 1 · enviar capa nova (se houver) — o nome fica pronto antes do save
+        // 1 · enviar capa nova (se houver) — via SERVER ACTION validada
         let finalPath = draft.coverPath;
         if (newFile) {
-          if (!supabaseBrowser) throw new Error("Supabase não configurado para o upload.");
-          const name = `r-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext(newFile.name)}`;
-          const { error: upErr } = await supabaseBrowser.storage
-            .from("covers")
-            .upload(name, newFile, { contentType: newFile.type });
-          if (upErr) throw new Error(upErr.message);
-          finalPath = name;
-          setDraft((d) => ({ ...d, coverPath: name }));
+          const up = await uploadCoverImage(newFile);
+          if (!up.ok || !up.path) throw new Error(up.error ?? "Erro no upload da capa.");
+          finalPath = up.path;
+          setDraft((d) => ({ ...d, coverPath: up.path! }));
           setNewFile(null);
         }
 

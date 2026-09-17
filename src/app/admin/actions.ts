@@ -295,3 +295,115 @@ export async function moveRelease(id: string, direction: "up" | "down"): Promise
   revalidateSiteContent();
   return { ok: true };
 }
+
+/* ── Uploads validados no servidor (auditoria MÉDIO 6) ──────
+   Antes: upload direto do browser com contentType do cliente e
+   sem limite de tamanho. Agora: server action revalida sessão,
+   magic bytes, extensão e tamanho; o NOME do objeto é gerado no
+   servidor — o nome do ficheiro do cliente nunca é confiado. */
+
+export type UploadResult = { ok: boolean; path?: string; error?: string };
+
+/** Assinaturas (magic bytes) dos formatos aceites. */
+const IMAGE_MIME: Record<string, string> = {
+  "image/jpeg": "jpeg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "image/avif": "avif",
+};
+const AUDIO_MIME: Record<string, string> = {
+  "audio/mpeg": "mp3",
+  "audio/mp4": "m4a",
+  "audio/aac": "aac",
+  "audio/ogg": "ogg",
+  "audio/wav": "wav",
+  "audio/x-wav": "wav",
+};
+const IMAGE_MAX = 5 * 1024 * 1024; // 5 MB
+const AUDIO_MAX = 20 * 1024 * 1024; // 20 MB
+
+/** Lê os primeiros bytes e identifica o tipo REAL do ficheiro. */
+function detectMime(buf: Uint8Array): string | null {
+  // JPEG: FF D8 FF
+  if (buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return "image/jpeg";
+  // PNG: 89 50 4E 47 0D 0A 1A 0A
+  if (
+    buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47 &&
+    buf[4] === 0x0d && buf[5] === 0x0a && buf[6] === 0x1a && buf[7] === 0x0a
+  ) return "image/png";
+  // WEBP: RIFF....WEBP
+  if (
+    buf[0] === 0x52 && buf[1] === 0x49 && buf[2] === 0x46 && buf[3] === 0x46 &&
+    buf.at(8) === 0x57 && buf.at(9) === 0x45 && buf.at(10) === 0x42 && buf.at(11) === 0x50
+  ) return "image/webp";
+  // AVIF: ....ftypavif
+  if (
+    buf.at(4) === 0x66 && buf.at(5) === 0x74 && buf.at(6) === 0x79 && buf.at(7) === 0x70 &&
+    (buf.at(8) === 0x61 || buf.at(9) === 0x61) // avif / avis
+  ) return "image/avif";
+  // MP3: ID3 ou frame sync 0xFFEx
+  if (buf[0] === 0x49 && buf[1] === 0x44 && buf[2] === 0x33) return "audio/mpeg";
+  if (buf[0] === 0xff && (buf[1] & 0xe0) === 0xe0) return "audio/mpeg";
+  // MP4/M4A: ....ftyp
+  if (
+    buf.at(4) === 0x66 && buf.at(5) === 0x74 && buf.at(6) === 0x79 && buf.at(7) === 0x70
+  ) return "audio/mp4";
+  // OGG: OggS
+  if (buf[0] === 0x4f && buf[1] === 0x67 && buf[2] === 0x67 && buf[3] === 0x53) return "audio/ogg";
+  // WAV: RIFF....WAVE
+  if (
+    buf[0] === 0x52 && buf[1] === 0x49 && buf[2] === 0x46 && buf[3] === 0x46 &&
+    buf.at(8) === 0x57 && buf.at(9) === 0x41 && buf.at(10) === 0x56 && buf.at(11) === 0x45
+  ) return "audio/wav";
+  return null;
+}
+
+function safeExt(mime: string): string {
+  return IMAGE_MIME[mime] ?? AUDIO_MIME[mime] ?? "bin";
+}
+
+/** Validação comum + upload para o bucket indicado. */
+async function validatedUpload(
+  file: File,
+  kind: "image" | "audio",
+  bucket: "covers" | "audio",
+  prefix: string,
+): Promise<UploadResult> {
+  const supabase = await requireAdmin();
+  if (!supabase) return { ok: false, error: "Sessão expirada. Entre novamente." };
+
+  const max = kind === "image" ? IMAGE_MAX : AUDIO_MAX;
+  if (file.size <= 0 || file.size > max) {
+    return {
+      ok: false,
+      error: `Ficheiro ${kind === "image" ? "demasiado grande (máx. 5 MB)" : "demasiado grande (máx. 20 MB)"}.`,
+    };
+  }
+
+  const buf = new Uint8Array(await file.arrayBuffer());
+  const mime = detectMime(buf);
+  if (!mime) return { ok: false, error: "Tipo de ficheiro não reconhecido." };
+  const allowed = kind === "image" ? IMAGE_MIME : AUDIO_MIME;
+  if (!(mime in allowed)) {
+    return { ok: false, error: `Conteúdo não é ${kind === "image" ? "uma imagem" : "áudio"} válido.` };
+  }
+
+  // Nome gerado NO SERVIDOR — extensão derivada do tipo REAL detectado
+  const name = `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${safeExt(mime)}`;
+  const { error } = await supabase.storage.from(bucket).upload(name, file, {
+    contentType: mime, // o MIME validado, nunca o do cliente
+    upsert: false,
+  });
+  if (error) return { ok: false, error: error.message };
+  return { ok: true, path: name };
+}
+
+/** Upload de capa/foto (bucket público "covers"). */
+export async function uploadCoverImage(file: File): Promise<UploadResult> {
+  return validatedUpload(file, "image", "covers", "r");
+}
+
+/** Upload de áudio de faixa (bucket público "audio"). */
+export async function uploadAudioTrack(file: File): Promise<UploadResult> {
+  return validatedUpload(file, "audio", "audio", "t");
+}

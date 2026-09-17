@@ -1,7 +1,7 @@
 "use client";
 
 import { startTransition, useRef, useState } from "react";
-import { updateSection } from "../../actions";
+import { updateSection, uploadCoverImage } from "../../actions";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import type { Artist, Contact, Social } from "@/content";
 import { Alert, Button, Field, Panel, TextArea, TextInput } from "../../_ui";
@@ -93,17 +93,14 @@ export function ArtistForm({ initial }: { initial: Artist }) {
     return m ? decodeURIComponent(m[1]) : null;
   }
 
-  /** Envia a foto nova (se houver) e devolve o URL público final. */
+  /** Envia a foto nova (se houver) e devolve o URL público final.
+   *  Upload via SERVER ACTION (magic bytes + tamanho + nome no servidor). */
   async function uploadPhoto(): Promise<string | null> {
     if (!photoFile) return draft.photo ?? null;
-    if (!supabaseBrowser) throw new Error("Supabase não configurado para o upload.");
-    const m = /\.(jpe?g|png|webp|avif)$/i.exec(photoFile.name);
-    const name = `artist-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${m ? m[1].toLowerCase() : "jpg"}`;
-    const { error } = await supabaseBrowser.storage
-      .from("covers")
-      .upload(name, photoFile, { contentType: photoFile.type });
-    if (error) throw new Error(error.message);
-    return supabaseBrowser.storage.from("covers").getPublicUrl(name).data.publicUrl;
+    const up = await uploadCoverImage(photoFile);
+    if (!up.ok || !up.path) throw new Error(up.error ?? "Erro no upload da foto.");
+    const { data } = await supabaseBrowser!.storage.from("covers").getPublicUrl(up.path);
+    return data.publicUrl;
   }
 
   return (
