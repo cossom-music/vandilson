@@ -1,61 +1,30 @@
 -- ============================================================
 -- 003 — Utilizador admin (acesso ao painel /admin)
 -- ============================================================
--- Cria a conta do gestor em auth.users + auth.identities (login
--- e-mail/password). A password fica em claro NESTE ficheiro:
--- depois de aplicar, altere-a no Dashboard
--- (Authentication → Users → o utilizador → Reset password / Update).
--- Idempotente: se o e-mail já existir, não faz nada.
+-- ⚠️  SEGURANÇA — LEIA ANTES DE APLICAR
+-- NUNCA guardar passwords em texto plano em migrations versionadas:
+-- ficam no histórico do git para sempre — qualquer leak do repo
+-- expõe o painel /admin.
+--
+-- CRIAÇÃO CORRETA DO ADMIN: Supabase Dashboard →
+--   Authentication → Users → "Add user" → "Create new user"
+--   (cria a conta com password provisória; o utilizador muda depois
+--   em Authentication → Users → … → "Send password recovery" ou
+--   "Update password").
+--
+-- A versão ORIGINAL deste ficheiro criava o admin via SQL com a
+-- password em claro. As credenciais foram REMOVIDAS e a password
+-- desse admin TEM de ser rodada no Dashboard (ver relatório de
+-- auditoria de segurança, CRÍTICO 1).
+--
+-- Este ficheiro mantém-se apenas como documentação do passo — não
+-- executa qualquer INSERT (idempotente por construção).
 -- ============================================================
 
-with new_user as (
-  insert into auth.users (
-    instance_id,
-    id,
-    aud,
-    role,
-    email,
-    encrypted_password,
-    email_confirmed_at,
-    raw_app_meta_data,
-    raw_user_meta_data,
-    created_at,
-    updated_at
-  )
-  select
-    '00000000-0000-0000-0000-000000000000',
-    gen_random_uuid(),
-    'authenticated',
-    'authenticated',
-    'baptistalimab@gmail.com',
-    extensions.crypt('tDCTRn9k!u3Tmx5?F!Wku5', extensions.gen_salt('bf')),
-    now(),
-    '{"provider":"email","providers":["email"]}',
-    '{}',
-    now(),
-    now()
-  where not exists (
-    select 1 from auth.users where email = 'baptistalimab@gmail.com'
-  )
-  returning id
-)
-insert into auth.identities (
-  id,
-  user_id,
-  provider_id,
-  identity_data,
-  provider,
-  last_sign_in_at,
-  created_at,
-  updated_at
-)
-select
-  gen_random_uuid(),
-  new_user.id,
-  new_user.id,
-  jsonb_build_object('sub', new_user.id::text, 'email', 'baptistalimab@gmail.com'),
-  'email',
-  now(),
-  now(),
-  now()
-from new_user;
+DO $$
+DECLARE
+  admin_email constant text := 'baptistalimab@gmail.com'; -- referência do gestor
+BEGIN
+  RAISE NOTICE 'Criação/gestão do admin é feita no Dashboard (Auth → Users).';
+  RAISE NOTICE 'E-mail de referência do gestor: %', admin_email;
+END $$;
