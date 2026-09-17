@@ -15,15 +15,20 @@ import ConstellationLines from "./ConstellationLines";
  *    baixo, vira para baixo só quando não cabe), segue-a no scroll e fecha
  *    com clique fora, no ✕ ou em ESC.
  *
- * Posições dos nós em %: alternadas esquerda/direita em duas alturas, com
- * ajuste fino por índice para nunca colidirem (2+ colaboradores por anel).
+ * Posições dos nós em %: ANEL à volta do centro — cada colaborador num
+ * ângulo próprio, equidistribuído pela sequência áurea. Não é preciso
+ * prever N: adiciona alguém no admin e a constelação cria a estrela nova
+ * no anel, com a inicial da pessoa. Dois raios alternados quebram a
+ * rigidez de um círculo perfeito; clamp mantém tudo dentro do mapa.
  */
 function nodePosition(i: number, n: number): { x: number; y: number } {
-  const left = i % 2 === 0;
-  const band = Math.floor(i / 2); // 0,1,2… por par
-  const x = left ? 20 - (band % 2) * 4 : 80 + (band % 2) * 4;
-  const y = 26 + band * 24 + (left ? 0 : 9);
-  return { x: Math.min(94, Math.max(6, x)), y: Math.min(92, Math.max(10, y)) };
+  const golden = 2.39996; // ~137.5° entre vizinhos: nunca 2 na mesma linha
+  const angle = golden * i - Math.PI / 4;
+  const radius = n > 4 ? 37 - (i % 2) * 5 : 37;
+  return {
+    x: Math.min(93, Math.max(7, 50 + Math.cos(angle) * radius * 1.25)),
+    y: Math.min(92, Math.max(10, 50 + Math.sin(angle) * radius)),
+  };
 }
 
 export default function Constelacao({ collaborators }: { collaborators: Collaborator[] }) {
