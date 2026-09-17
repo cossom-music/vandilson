@@ -7,7 +7,8 @@ import type { Era, Milestone } from "@/content";
  * TRAJETÓRIA (/universo) — modelo vertical (Variação A-Alt aprovada do
  * mockup _temp/design-demos/trajetoria-vertical-variacoes.html):
  *  · UMA LINHA VERTICAL CONTÍNUA é a rota (os anos sobem para baixo);
- *  · os blocos de era ALTERNAM entre a esquerda e a direita da linha;
+ *  · os blocos de era ALTERNAM à direita e à esquerda da linha
+ *    (1ª à direita, 2ª à esquerda, 3ª à direita…);
  *  · cada paragem é um PLANETA A GIRAR (anel orbital + lua), âmbar quando
  *    a era é a última (o presente), prata nas restantes;
  *  · os marcos do intervalo de anos da era listam-se como eventos.
@@ -109,7 +110,7 @@ export default function Trajetoria({
 
         {/* A rota — a LINHA VERTICAL contínua ao centro (desktop) / à esquerda
             (mobile). Cada paragem: planeta a girar na linha + bloco de texto
-            alternando esquerda/direita. */}
+            alternando direita/esquerda (1ª à direita). */}
         <div className="relative mt-14">
           {/* A linha contínua — o trilho da rota */}
           <span
@@ -120,7 +121,10 @@ export default function Trajetoria({
           <ol className="space-y-14">
             {columns.map((era, i) => {
               const isLast = i === columns.length - 1;
-              const left = i % 2 === 0; // desktop: alterna esquerda/direita
+              // desktop: 1ª era à direita da linha, 2ª à esquerda, alternando
+              // (colocação explícita — truques direction:rtl invertem a
+              // numeração das colunas do grid e põem tudo do mesmo lado)
+              const right = i % 2 === 0;
               return (
                 <li
                   key={`${era.from}-${era.title}`}
@@ -161,23 +165,18 @@ export default function Trajetoria({
 
                   {/* Bloco de texto — à direita da linha (mobile) e
                       alternando à esquerda/direita (desktop) */}
-                  <div
-                    className={`md:grid md:grid-cols-2 md:gap-16 ${
-                      left ? "" : "md:[direction:rtl]"
-                    }`}
-                  >
-                    {/* Célula vazia do lado oposto (desktop) */}
-                    <div className={left ? "md:col-start-2" : "md:col-start-1 md:[direction:ltr]"}>
+                  <div className="md:grid md:grid-cols-2 md:gap-16">
+                    {/* Célula do conteúdo — à direita da linha (1ª, 3ª…) ou
+                        à esquerda (2ª, 4ª…); a célula oposta fica vazia */}
+                    <div className={right ? "md:col-start-2" : "md:col-start-1"}>
                       <div
                         className={`max-w-md ${
-                          left
-                            ? "md:text-left"
-                            : "md:[direction:ltr] md:text-right"
+                          right ? "md:text-left" : "md:ml-auto md:text-right"
                         }`}
                       >
                         <div
                           className={`flex flex-wrap items-baseline gap-x-3 ${
-                            left ? "" : "md:justify-end"
+                            right ? "" : "md:justify-end"
                           }`}
                         >
                           <span className="font-mono text-[10px] uppercase tracking-[0.26em] text-amber-300">
@@ -203,7 +202,7 @@ export default function Trajetoria({
                         {/* Eventos da era — fileira vertical */}
                         <div
                           className={`mt-4 space-y-3.5 border-l border-white/10 pl-4 ${
-                            left ? "" : "md:ml-auto md:border-l-0 md:border-r md:pl-0 md:pr-4"
+                            right ? "" : "md:ml-auto md:border-l-0 md:border-r md:pl-0 md:pr-4"
                           }`}
                         >
                           {era.events.length === 0 && (
