@@ -41,10 +41,10 @@ export default function Constelacao({ collaborators }: { collaborators: Collabor
     if (!el || typeof window === "undefined") return;
     const r = el.getBoundingClientRect();
     // Acima por omissão; vira para BAIXO quando a estrela está tão perto do
-    // topo que o painel (~200px) sairia do ecrã.
-    const placeAbove = r.top > 230;
-    // Clampa o centro-x para o painel (26rem máx.) nunca sair do viewport.
-    const pw = Math.min(416, window.innerWidth - 32);
+    // topo que o painel (~280px, largura 17rem com quebras de linha) sairia.
+    const placeAbove = r.top > 280;
+    // Clampa o centro-x para o painel (17rem máx.) nunca sair do viewport.
+    const pw = Math.min(272, window.innerWidth - 32);
     const half = pw / 2 + 8;
     const x = Math.min(Math.max(r.left + r.width / 2, half), window.innerWidth - half);
     setAnchor({ x, y: placeAbove ? r.top : r.bottom, placeAbove });
@@ -183,7 +183,7 @@ export default function Constelacao({ collaborators }: { collaborators: Collabor
           data-cpanel
           role="dialog"
           aria-label={`${openNode.c.name} — detalhes`}
-          className="fixed z-50 w-[min(26rem,calc(100vw-2rem))] -translate-x-1/2 rounded-2xl border border-white/10 bg-night-950/95 p-5 shadow-[0_18px_60px_rgba(0,0,0,0.7)] backdrop-blur-md"
+          className="fixed z-50 w-[min(17rem,calc(100vw-3rem))] -translate-x-1/2 rounded-2xl border border-white/10 bg-night-950/95 p-4 shadow-[0_18px_60px_rgba(0,0,0,0.7)] backdrop-blur-md"
           style={
             anchor.placeAbove
               ? { left: anchor.x, bottom: `calc(100vh - ${anchor.y}px + 14px)` }

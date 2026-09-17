@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import type { PlayerTrack } from "@/content";
 
 type PlaylistTrack = PlayerTrack & { coverUrl: string | null; src: string };
@@ -19,9 +20,24 @@ function writeState(state: { trackKey: string; time: number }) {
   }
 }
 
+/** Mola da transição encolhido ⇄ expandido. */
+const spring = { type: "spring", stiffness: 380, damping: 30 } as const;
+
+/** Capa do disco: URL do lançamento ou planeta procedural. */
+const discBackground = (coverUrl: string | null) =>
+  coverUrl
+    ? `center/cover url(${coverUrl})`
+    : "radial-gradient(circle at 34% 28%, #2b3140 0%, #10131c 62%, #080a0f 100%)";
+
 /**
- * PLAYER "EM ÓRBITA" — modelo 1 (pílula flutuante) aprovado:
- *  · fixo no fundo do ecrã enquanto se navega a /universo;
+ * PLAYER "EM ÓRBITA" — dois estados com transição fluida (framer-motion):
+ *  · ENCOLHIDO (estado inicial ao entrar no site): disco no canto
+ *    inferior direito; a girar enquanto a faixa toca;
+ *  · EXPANDIDO: pílula completa (capa, título, progresso, transportes),
+ *    também ancorada no canto inferior direito;
+ *  · clicar no disco expande; o botão "–" minimiza de volta ao canto —
+ *    NÃO existe fechar: a música continua nos dois estados (o <audio>
+ *    vive fora da troca de estados e nunca desmonta);
  *  · toca os MP3 reais do bucket "audio" (playlist curada no admin);
  *  · sem playlist → não renderiza nada (o site fica limpo);
  *  · faixa sem URL resolvido → marcada como indisponível e saltada;
@@ -36,7 +52,7 @@ export default function OrbitPlayer({ playlist }: { playlist: PlaylistTrack[] })
   const [pos, setPos] = useState(0); // 0..1
   const [dur, setDur] = useState(0);
   const [error, setError] = useState(false);
-  const [closed, setClosed] = useState(false);
+  const [expanded, setExpanded] = useState(false); // false = disco encolhido no canto
 
   const track = playlist[idx];
 
@@ -119,13 +135,6 @@ export default function OrbitPlayer({ playlist }: { playlist: PlaylistTrack[] })
 
   if (!track) return null;
 
-  // Fechado pelo utilizador: para o áudio e não renderiza — por TAB
-  // (sessionStorage), por isso um refresh volta a mostrar o player.
-  if (closed) {
-    audioRef.current?.pause();
-    return null;
-  }
-
   const toggle = async () => {
     const el = audioRef.current;
     if (!el) return;
@@ -150,25 +159,11 @@ export default function OrbitPlayer({ playlist }: { playlist: PlaylistTrack[] })
   };
 
   return (
-    <div
-      className="pointer-events-auto fixed bottom-4 left-1/2 z-50 w-[min(560px,calc(100%-2rem))] -translate-x-1/2 rounded-full border border-white/10 bg-night-950/85 p-2.5 shadow-[0_18px_50px_rgba(0,0,0,0.65)] backdrop-blur-md md:bottom-6"
-      role="region"
-      aria-label="Player Em Órbita"
-    >
-      {/* Fechar — pequeno, no canto superior esquerdo: quem não quer
-          ouvir música dispensa o player por completo (por tab). */}
-      <button
-        type="button"
-        onClick={() => {
-          audioRef.current?.pause();
-          setClosed(true);
-        }}
-        aria-label="Fechar player"
-        className="absolute -left-1 -top-1 z-10 flex h-5 w-5 items-center justify-center rounded-full border border-white/20 bg-night-950 text-[10px] leading-none text-silver-400 transition-colors hover:border-white/50 hover:text-white"
-      >
-        ×
-      </button>
-      {/* Áudio real — o src vem do bucket "audio" (URL público) */}
+    // Contexto de posicionamento (altura 0): os dois estados são absolutos
+    // e ancorados no MESMO canto — o crossfade lê-se como um só morph.
+    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50">
+      {/* Áudio real — persistente nos dois estados, o src vem do bucket
+          "audio" (URL público). Sem controls: display none, nunca bloqueia. */}
       <audio
         ref={audioRef}
         src={track.src}
@@ -204,104 +199,162 @@ export default function OrbitPlayer({ playlist }: { playlist: PlaylistTrack[] })
         }}
       />
 
-      <div className="flex items-center gap-3.5">
-        {/* Disco/capa — a capa do lançamento ou planeta procedural */}
-        <div
-          className={`relative h-11 w-11 shrink-0 overflow-hidden rounded-full ring-1 ring-white/15 ${playing ? "orbit-disc-spin" : ""}`}
-          style={{
-            background: track.coverUrl
-              ? `center/cover url(${track.coverUrl})`
-              : "radial-gradient(circle at 34% 28%, #2b3140 0%, #10131c 62%, #080a0f 100%)",
-          }}
-          aria-hidden="true"
-        >
-          {!track.coverUrl && (
-            <span className="absolute inset-[38%] rounded-full border border-white/25 bg-night-950" />
-          )}
-        </div>
+      <AnimatePresence initial={false}>
+        {expanded ? (
+          // ── EXPANDIDO: a pílula completa ──
+          <motion.div
+            key="expanded"
+            initial={{ opacity: 0, scale: 0.45 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.45, transition: { duration: 0.16, ease: "easeIn" } }}
+            transition={spring}
+            style={{ transformOrigin: "100% 100%", borderRadius: 9999 }}
+            className="pointer-events-auto absolute bottom-4 right-4 w-[min(560px,calc(100vw-2.25rem))] border border-white/10 bg-night-950/85 p-2.5 shadow-[0_18px_50px_rgba(0,0,0,0.65)] backdrop-blur-md md:bottom-6 md:right-6"
+            role="region"
+            aria-label="Player Em Órbita"
+          >
+            {/* Minimizar — pequeno, no canto superior esquerdo: recolhe a
+                pílula para o disco no canto; a música NÃO pára. */}
+            <button
+              type="button"
+              onClick={() => setExpanded(false)}
+              aria-label="Minimizar player"
+              className="absolute -left-1 -top-1 z-10 flex h-5 w-5 items-center justify-center rounded-full border border-white/20 bg-night-950 text-silver-400 transition-colors hover:border-white/50 hover:text-white"
+            >
+              <svg width="8" height="8" viewBox="0 0 8 8" aria-hidden="true">
+                <path
+                  d="M1 4h6"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </button>
 
-        {/* Título + barra */}
-        <div className="min-w-0 flex-1">
-          <div className="flex items-baseline justify-between gap-3">
-            <p className="truncate text-[13px] font-medium text-white">
-              <span
+            <div className="flex items-center gap-3.5">
+              {/* Disco/capa — a capa do lançamento ou planeta procedural */}
+              <div
+                className={`relative h-11 w-11 shrink-0 overflow-hidden rounded-full ring-1 ring-white/15 ${playing ? "orbit-disc-spin" : ""}`}
+                style={{ background: discBackground(track.coverUrl) }}
                 aria-hidden="true"
-                className={`mr-2 inline-block h-1.5 w-1.5 rounded-full align-[1px] ${
-                  error ? "bg-red-400/70" : "bg-amber-300 shadow-[0_0_8px_rgba(255,182,94,0.8)]"
-                }`}
-              />
-              {track.title}
-            </p>
-            <p className="shrink-0 font-mono text-[9.5px] tabular-nums text-silver-600">
-              {fmt(pos * dur)} / {fmt(dur)}
-            </p>
-          </div>
-          <p className="mt-0.5 truncate text-[10px] uppercase tracking-[0.16em] text-mist/70">
-            {error ? "áudio indisponível — a seguir" : track.releaseTitle}
-          </p>
-          <div
-            className="mt-1.5 h-[3px] cursor-pointer rounded-full bg-white/10"
-            role="slider"
-            aria-label="Progresso da faixa"
-            aria-valuenow={Math.round(pos * 100)}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            onClick={(e) => {
-              const el = audioRef.current;
-              if (!el || !Number.isFinite(el.duration)) return;
-              const r = e.currentTarget.getBoundingClientRect();
-              el.currentTime = ((e.clientX - r.left) / r.width) * el.duration;
-            }}
+              >
+                {!track.coverUrl && (
+                  <span className="absolute inset-[38%] rounded-full border border-white/25 bg-night-950" />
+                )}
+              </div>
+
+              {/* Título + barra */}
+              <div className="min-w-0 flex-1">
+                <div className="flex items-baseline justify-between gap-3">
+                  <p className="truncate text-[13px] font-medium text-white">
+                    <span
+                      aria-hidden="true"
+                      className={`mr-2 inline-block h-1.5 w-1.5 rounded-full align-[1px] ${
+                        error ? "bg-red-400/70" : "bg-amber-300 shadow-[0_0_8px_rgba(255,182,94,0.8)]"
+                      }`}
+                    />
+                    {track.title}
+                  </p>
+                  <p className="shrink-0 font-mono text-[9.5px] tabular-nums text-silver-600">
+                    {fmt(pos * dur)} / {fmt(dur)}
+                  </p>
+                </div>
+                <p className="mt-0.5 truncate text-[10px] uppercase tracking-[0.16em] text-mist/70">
+                  {error ? "áudio indisponível — a seguir" : track.releaseTitle}
+                </p>
+                <div
+                  className="mt-1.5 h-[3px] cursor-pointer rounded-full bg-white/10"
+                  role="slider"
+                  aria-label="Progresso da faixa"
+                  aria-valuenow={Math.round(pos * 100)}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  onClick={(e) => {
+                    const el = audioRef.current;
+                    if (!el || !Number.isFinite(el.duration)) return;
+                    const r = e.currentTarget.getBoundingClientRect();
+                    el.currentTime = ((e.clientX - r.left) / r.width) * el.duration;
+                  }}
+                >
+                  <span
+                    className="block h-full rounded-full bg-gradient-to-r from-silver-300 to-white"
+                    style={{ width: `${Math.min(100, pos * 100)}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Transportes */}
+              {playlist.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => skip(-1)}
+                  aria-label="Faixa anterior"
+                  className="shrink-0 rounded-full border border-white/20 p-2 text-silver-300 transition-colors hover:border-white/45 hover:text-white"
+                >
+                  <svg width="11" height="11" viewBox="0 0 12 12" aria-hidden="true">
+                    <path d="M10 1 L3 6 L10 11 Z M2 1 v10" fill="currentColor" />
+                  </svg>
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={toggle}
+                aria-label={playing ? "Pausa" : "Tocar"}
+                className="shrink-0 rounded-full bg-white p-2.5 text-night-950 transition-transform hover:scale-105"
+              >
+                {playing ? (
+                  <svg width="11" height="12" viewBox="0 0 10 12" aria-hidden="true">
+                    <path d="M1 0h2.6v12H1zM6.4 0H9v12H6.4z" fill="currentColor" />
+                  </svg>
+                ) : (
+                  <svg width="11" height="12" viewBox="0 0 10 12" aria-hidden="true">
+                    <path d="M1 0l8 6-8 6z" fill="currentColor" />
+                  </svg>
+                )}
+              </button>
+              {playlist.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => skip(1)}
+                  aria-label="Faixa seguinte"
+                  className="shrink-0 rounded-full border border-white/20 p-2 text-silver-300 transition-colors hover:border-white/45 hover:text-white"
+                >
+                  <svg width="11" height="11" viewBox="0 0 12 12" aria-hidden="true">
+                    <path d="M2 1 L9 6 L2 11 Z M10 1 v10" fill="currentColor" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          </motion.div>
+        ) : (
+          // ── ENCOLHIDO: disco no canto inferior direito (estado inicial) ──
+          // Clicar expande. A girar enquanto a faixa toca (sinal de vida).
+          <motion.button
+            key="collapsed"
+            type="button"
+            onClick={() => setExpanded(true)}
+            aria-label={playing ? "Player a tocar — abrir player" : "Abrir player"}
+            initial={{ opacity: 0, scale: 0.4 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.4, transition: { duration: 0.16, ease: "easeIn" } }}
+            transition={spring}
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.92 }}
+            style={{ transformOrigin: "100% 100%" }}
+            className="pointer-events-auto absolute bottom-4 right-4 h-14 w-14 rounded-full shadow-[0_10px_30px_rgba(0,0,0,0.55)] ring-1 ring-white/15 md:bottom-6 md:right-6"
           >
             <span
-              className="block h-full rounded-full bg-gradient-to-r from-silver-300 to-white"
-              style={{ width: `${Math.min(100, pos * 100)}%` }}
-            />
-          </div>
-        </div>
-
-        {/* Transportes */}
-        {playlist.length > 1 && (
-          <button
-            type="button"
-            onClick={() => skip(-1)}
-            aria-label="Faixa anterior"
-            className="shrink-0 rounded-full border border-white/20 p-2 text-silver-300 transition-colors hover:border-white/45 hover:text-white"
-          >
-            <svg width="11" height="11" viewBox="0 0 12 12" aria-hidden="true">
-              <path d="M10 1 L3 6 L10 11 Z M2 1 v10" fill="currentColor" />
-            </svg>
-          </button>
+              aria-hidden="true"
+              className={`absolute inset-0 overflow-hidden rounded-full ${playing ? "orbit-disc-spin" : ""}`}
+              style={{ background: discBackground(track.coverUrl) }}
+            >
+              {!track.coverUrl && (
+                <span className="absolute inset-[38%] rounded-full border border-white/25 bg-night-950" />
+              )}
+            </span>
+          </motion.button>
         )}
-        <button
-          type="button"
-          onClick={toggle}
-          aria-label={playing ? "Pausa" : "Tocar"}
-          className="shrink-0 rounded-full bg-white p-2.5 text-night-950 transition-transform hover:scale-105"
-        >
-          {playing ? (
-            <svg width="11" height="12" viewBox="0 0 10 12" aria-hidden="true">
-              <path d="M1 0h2.6v12H1zM6.4 0H9v12H6.4z" fill="currentColor" />
-            </svg>
-          ) : (
-            <svg width="11" height="12" viewBox="0 0 10 12" aria-hidden="true">
-              <path d="M1 0l8 6-8 6z" fill="currentColor" />
-            </svg>
-          )}
-        </button>
-        {playlist.length > 1 && (
-          <button
-            type="button"
-            onClick={() => skip(1)}
-            aria-label="Faixa seguinte"
-            className="shrink-0 rounded-full border border-white/20 p-2 text-silver-300 transition-colors hover:border-white/45 hover:text-white"
-          >
-            <svg width="11" height="11" viewBox="0 0 12 12" aria-hidden="true">
-              <path d="M2 1 L9 6 L2 11 Z M10 1 v10" fill="currentColor" />
-            </svg>
-          </button>
-        )}
-      </div>
+      </AnimatePresence>
     </div>
   );
 }
