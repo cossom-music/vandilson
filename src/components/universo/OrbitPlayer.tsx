@@ -69,7 +69,9 @@ type SpotifyController = {
  *  · clicar na capa expande; o botão "–" minimiza — NÃO existe fechar:
  *    a música continua nos dois estados (nenhum motor de áudio desmonta);
  *  · sem playlist → não renderiza nada (o site fica limpo);
- *  · autoplay NUNCA (política dos browsers): o utilizador carrega no play;
+ *  · autoplay só por gesto: na entrada o play é manual; ±faixa e fim de
+ *    faixa (MP3 e Spotify) avançam JÁ A TOCAR — o gesto do clique cobre a
+ *    política de autoplay dos browsers;
  *  · faixa e posição persistem em sessionStorage — após um REFRESH retoma
  *    a faixa pausada no ponto onde estava (MP3 apenas; Spotify recomeça).
  */
@@ -92,6 +94,10 @@ export default function OrbitPlayer({ playlist }: { playlist: PlaylistTrack[] })
   const resumeRef = useRef(0); // segundos a aplicar quando a duração chegar
   const restoredRef = useRef(false);
   const lastSaveRef = useRef(0); // throttle da escrita no timeupdate
+  /** true → a faixa seguinte que ficar pronta toca DE IMEDIATO (±faixa/fim). */
+  const autoPlayRef = useRef(false);
+  /** Guarda anti-duplo-skip no fim de uma faixa Spotify. */
+  const spotifyEndedRef = useRef(false);
 
   useEffect(() => {
     if (restoredRef.current || playlist.length === 0) return;
@@ -146,12 +152,14 @@ export default function OrbitPlayer({ playlist }: { playlist: PlaylistTrack[] })
     }
   }, [playlist.length, idx]);
 
-  // Trocar de faixa → parar e repor (o play é sempre manual)
+  // Trocar de faixa → repor estado (o PLAY da nova faixa é decidido pelo
+  // autoPlayRef: ±faixa e fim de faixa tocam de imediato)
   useEffect(() => {
     setPlaying(false);
     setPos(0);
     setDur(0);
     setError(false);
+    spotifyEndedRef.current = false;
   }, [idx]);
 
   // ── IFrame API do Spotify — controller único, carregado a pedido ──
@@ -167,15 +175,34 @@ export default function OrbitPlayer({ playlist }: { playlist: PlaylistTrack[] })
         (ctl) => {
           if (cancelled) return;
           spotifyCtlRef.current = ctl;
-          ctl.addListener("ready", () => setSpotifyReady(true));
+          ctl.addListener("ready", () => {
+            setSpotifyReady(true);
+            // Skip/fim de faixa pediu autoplay → arranca no 1.º ready
+            if (autoPlayRef.current) {
+              autoPlayRef.current = false;
+              try {
+                ctl.play();
+                setPlaying(true);
+              } catch {
+                /* os retries do efeito de faixa cobrem */
+              }
+            }
+          });
           ctl.addListener("playback_update", (payload) => {
             const e = payload as { data?: { position?: number; duration?: number; isPaused?: boolean } };
             const d = e?.data;
             if (!d) return;
+            // Estado honesto: o embed confirma pausa/play por si só
+            if (typeof d.isPaused === "boolean") setPlaying(!d.isPaused);
             if (typeof d.duration === "number" && d.duration > 0) {
               const position = typeof d.position === "number" ? d.position : 0;
               setDur(d.duration / 1000);
               setPos(position > 0 ? position / d.duration : 0);
+              // Fim da faixa Spotify → avança a tocar, como o onEnded do MP3
+              if (position >= d.duration - 50 && !spotifyEndedRef.current) {
+                spotifyEndedRef.current = true;
+                skip(1);
+              }
             }
           });
           ctl.addListener("error", () => {
@@ -200,14 +227,59 @@ export default function OrbitPlayer({ playlist }: { playlist: PlaylistTrack[] })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSpotify]);
 
-  // Trocar para uma faixa Spotify → carregar o URI no controller
+  // Trocar para uma faixa Spotify → carregar o URI no controller.
+  // Com autoPlayRef ativo (±faixa clicada), tenta o play assim que o embed
+  // responde — o gesto do clique cobre a política de autoplay.
   useEffect(() => {
     const ctl = spotifyCtlRef.current;
     if (!isSpotify || !ctl || !track?.spotifyId) return;
     ctl.loadUri(`spotify:track:${track.spotifyId}`);
-    setSpotifyReady(false);
-    ctl.addListener("ready", () => setSpotifyReady(true));
+    if (!autoPlayRef.current) return;
+    const tryPlay = () => {
+      if (!autoPlayRef.current) return;
+      try {
+        ctl.play();
+        setPlaying(true);
+        autoPlayRef.current = false;
+      } catch {
+        /* o listener "ready" também consome o autoPlayRef */
+      }
+    };
+    const t1 = window.setTimeout(tryPlay, 350);
+    const t2 = window.setTimeout(tryPlay, 1000);
+    return () => {
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idx, isSpotify]);
+
+  // MP3: autoPlayRef → a faixa nova toca assim que o elemento aceitar
+  // (o src novo chega com o render; 80ms dá o tick do carregamento)
+  useEffect(() => {
+    if (isSpotify || !autoPlayRef.current) return;
+    const el = audioRef.current;
+    if (!el) return;
+    autoPlayRef.current = false;
+    let cancelled = false;
+    const start = () => {
+      if (cancelled) return;
+      el.play()
+        .then(() => {
+          if (!cancelled) setPlaying(true);
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setError(true);
+            setPlaying(false);
+          }
+        });
+    };
+    const t = window.setTimeout(start, 80);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(t);
+    };
   }, [idx, isSpotify]);
 
   const fmt = (s: number) => {
@@ -251,6 +323,11 @@ export default function OrbitPlayer({ playlist }: { playlist: PlaylistTrack[] })
 
   const skip = (dir: 1 | -1) => {
     if (playlist.length === 0) return;
+    // Pára o motor atual ANTES de trocar e pede autoplay: o clique é um
+    // gesto do utilizador, por isso o play() imediato é permitido.
+    audioRef.current?.pause();
+    spotifyCtlRef.current?.pause();
+    autoPlayRef.current = true;
     setIdx((i) => (i + dir + playlist.length) % playlist.length);
   };
 
