@@ -9,8 +9,8 @@ import type {
   PlayerTrack,
   Release,
 } from "@/content";
-import { playableTracks } from "@/lib/universo";
-import { Alert, Button, Field, Panel, TextInput } from "../../_ui";
+import { playableTracks, spotifyIdFromLink } from "@/lib/universo";
+import { Alert, Button, Panel, TextInput } from "../../_ui";
 
 /** Guarda uma secção do site_content e mostra o resultado. */
 function useSectionSave<T>(key: string, draft: T) {
@@ -66,10 +66,53 @@ function PlayerPlaylistForm({
   const [draft, setDraft] = useState<PlayerTrack[]>(curated);
   const { save, pending, notice } = useSectionSave("playerPlaylist", draft);
 
-  const key = (t: PlayerTrack) => `${t.releaseTitle}::${t.title}`;
+  const key = (t: { title: string; releaseTitle: string }) =>
+    `${t.releaseTitle}::${t.title}`;
   const selected = new Set(draft.map(key));
 
-  const toggle = (t: PlayerTrack) => {
+  // ── Adicionar faixa do SPOTIFY por link colado ──
+  // O link é validado localmente (spotifyIdFromLink) e os metadados vêm
+  // do oEmbed oficial via /api/spotify-meta (rota protegida por sessão).
+  const [spotifyLink, setSpotifyLink] = useState("");
+  const [spotifyBusy, setSpotifyBusy] = useState(false);
+  const [spotifyError, setSpotifyError] = useState<string | null>(null);
+
+  const addSpotify = async () => {
+    setSpotifyError(null);
+    const link = spotifyLink.trim();
+    const parsed = spotifyIdFromLink(link);
+    if (!parsed) {
+      setSpotifyError("Link inválido — cola um link de open.spotify.com (track, álbum ou playlist).");
+      return;
+    }
+    setSpotifyBusy(true);
+    try {
+      const res = await fetch(`/api/spotify-meta?link=${encodeURIComponent(link)}`);
+      const meta = (await res.json()) as { title?: string; coverUrl?: string | null; error?: string };
+      if (!res.ok) {
+        setSpotifyError(meta.error ?? "Não foi possível buscar os dados do Spotify.");
+        return;
+      }
+      const fullTitle = (meta.title ?? "").trim() || "Faixa do Spotify";
+      // «Título — Álbum» ou «Título - Álbum» → separa em título + lançamento
+      const [t, rel] = fullTitle.split(/\s+[-–—]\s+/, 2);
+      const title = (t || fullTitle).trim();
+      const releaseTitle = (rel ?? "Spotify").trim();
+      const k = `${releaseTitle}::${title}`;
+      setDraft((d) =>
+        d.some((x) => `${x.releaseTitle}::${x.title}` === k)
+          ? d
+          : [...d, { title, releaseTitle, spotifyId: parsed.id, coverUrl: meta.coverUrl ?? undefined }],
+      );
+      setSpotifyLink("");
+    } catch {
+      setSpotifyError("Falha de rede ao contactar o Spotify.");
+    } finally {
+      setSpotifyBusy(false);
+    }
+  };
+
+  const toggle = (t: { title: string; releaseTitle: string; audioPath?: string }) => {
     setDraft((d) =>
       selected.has(key(t))
         ? d.filter((x) => key(x) !== key(t))
@@ -95,6 +138,37 @@ function PlayerPlaylistForm({
         ordem em que se sucedem. Só aparecem aqui as faixas que têm áudio carregado
         (no editor de <b>Lançamentos</b>, botão “Carregar áudio…” junto a cada faixa).
       </p>
+
+      {/* Adicionar faixa do SPOTIFY por link */}
+      <div className="mt-5 rounded-xl border border-white/10 bg-night-950/40 p-4">
+        <span className="mb-2 block text-[11px] font-medium uppercase tracking-[0.14em] text-silver-500">
+          Adicionar do Spotify
+        </span>
+        <div className="flex flex-wrap items-center gap-2">
+          <TextInput
+            value={spotifyLink}
+            onChange={(e) => {
+              setSpotifyLink(e.target.value);
+              setSpotifyError(null);
+            }}
+            placeholder="https://open.spotify.com/track/…"
+            className="min-w-0 flex-1"
+          />
+          <Button type="button" variant="ghost" onClick={addSpotify} disabled={spotifyBusy}>
+            {spotifyBusy ? "A buscar…" : "+ Adicionar"}
+          	</Button>
+        </div>
+        {spotifyError ? (
+          <p className="mt-2 text-xs text-red-400">{spotifyError}</p>
+        ) : (
+          <p className="mt-2 text-[11px] leading-relaxed text-mist/60">
+            Funciona com links de faixas, álbuns e playlists. No site, a faixa
+            toca pelo player do Spotify: prévia de 30s para visitantes sem
+            Spotify logado, faixa completa com sessão. As faixas MP3 carregadas
+            tocam completas para todos.
+          </p>
+        )}
+      </div>
 
       {available.length === 0 ? (
         <p className="mt-5 rounded-xl border border-white/10 bg-night-950/40 p-4 text-sm text-mist/70">
@@ -156,7 +230,14 @@ function PlayerPlaylistForm({
                       {String(i + 1).padStart(2, "0")}
                     </span>
                     <span className="min-w-0">
-                      <span className="block truncate text-sm text-cream">{t.title}</span>
+                      <span className="block truncate text-sm text-cream">
+                        {t.title}
+                        {t.spotifyId ? (
+                          <span className="ml-2 rounded bg-[#1DB954]/15 px-1.5 py-0.5 align-[1px] text-[9px] font-semibold uppercase tracking-[0.1em] text-[#1DB954]">
+                            Spotify
+                          </span>
+                        ) : null}
+                      </span>
                       <span className="block truncate text-[11px] text-mist/60">{t.releaseTitle}</span>
                     </span>
                     <span className="flex items-center gap-1">

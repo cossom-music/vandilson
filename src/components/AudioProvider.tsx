@@ -3,7 +3,10 @@
 import OrbitPlayer from "@/components/universo/OrbitPlayer";
 import type { PlayerTrack } from "@/content";
 
-export type AudioTrack = PlayerTrack & { coverUrl: string | null; src: string };
+export type AudioTrack = Omit<PlayerTrack, "coverUrl"> & {
+  coverUrl: string | null;
+  src: string;
+};
 
 /**
  * ÁUDIO CONTÍNUO ENTRE PÁGINAS

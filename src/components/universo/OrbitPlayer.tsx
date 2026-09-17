@@ -4,7 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { PlayerTrack } from "@/content";
 
-type PlaylistTrack = PlayerTrack & { coverUrl: string | null; src: string };
+type PlaylistTrack = Omit<PlayerTrack, "coverUrl"> & {
+  coverUrl: string | null;
+  src: string;
+};
 
 /** Estado persistido entre refreshes — por TAB (sessionStorage). */
 const STORAGE_KEY = "orbit-player:v1";
@@ -23,31 +26,58 @@ function writeState(state: { trackKey: string; time: number }) {
 /** Mola da transição encolhido ⇄ expandido. */
 const spring = { type: "spring", stiffness: 380, damping: 30 } as const;
 
-/** Capa do disco: URL do lançamento ou planeta procedural. */
+/** Capa do disco: URL do lançamento/Spotify ou planeta procedural. */
 const discBackground = (coverUrl: string | null) =>
   coverUrl
     ? `center/cover url(${coverUrl})`
     : "radial-gradient(circle at 34% 28%, #2b3140 0%, #10131c 62%, #080a0f 100%)";
 
+/** O carregador oficial cria window.onSpotifyIframeApiReady exatamente uma vez. */
+declare global {
+  interface Window {
+    onSpotifyIframeApiReady?: (api: SpotifyIframeApi) => void;
+    SpotifyIframeApi?: SpotifyIframeApi;
+  }
+}
+type SpotifyIframeApi = {
+  createController: (
+    el: HTMLElement,
+    opts: { uri?: string },
+    cb: (c: SpotifyController) => void,
+  ) => void;
+};
+type SpotifyController = {
+  addListener: (ev: string, cb: (payload: unknown) => void) => void;
+  loadUri: (uri: string) => void;
+  play: () => void;
+  pause: () => void;
+  seek: (seconds: number) => void;
+};
+
 /**
  * PLAYER "EM ÓRBITA" — dois estados com transição fluida (framer-motion):
  *  · ENCOLHIDO (estado inicial ao entrar no site): disco no canto
- *    inferior direito; a girar enquanto a faixa toca;
+ *    inferior direito, com mini botão play/pause; a girar enquanto toca;
  *  · EXPANDIDO: pílula completa (capa, título, progresso, transportes),
  *    também ancorada no canto inferior direito;
- *  · no disco encolhido há um mini botão play/pause (é um player à primeira
- *    vista) — clicar na capa expande; o botão "–" minimiza de volta ao canto —
- *    NÃO existe fechar: a música continua nos dois estados (o <audio>
- *    vive fora da troca de estados e nunca desmonta);
- *  · toca os MP3 reais do bucket "audio" (playlist curada no admin);
+ *  · REPRODUÇÃO HÍBRIDA:
+ *      - MP3 (bucket "audio") → <audio> nativo — faixa completa;
+ *      - SPOTIFY (spotifyId) → embed oficial via IFrame API — prévia de
+ *        30s para visitantes sem Spotify logado, faixa completa com
+ *        sessão; os mesmos controlos (play/pause/seek/±faixa) comandam
+ *        o controller do embed.
+ *  · clicar na capa expande; o botão "–" minimiza — NÃO existe fechar:
+ *    a música continua nos dois estados (nenhum motor de áudio desmonta);
  *  · sem playlist → não renderiza nada (o site fica limpo);
- *  · faixa sem URL resolvido → marcada como indisponível e saltada;
  *  · autoplay NUNCA (política dos browsers): o utilizador carrega no play;
  *  · faixa e posição persistem em sessionStorage — após um REFRESH retoma
- *    a faixa pausada no ponto onde estava (o play continua manual).
+ *    a faixa pausada no ponto onde estava (MP3 apenas; Spotify recomeça).
  */
 export default function OrbitPlayer({ playlist }: { playlist: PlaylistTrack[] }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const spotifyHostRef = useRef<HTMLDivElement | null>(null);
+  const spotifyCtlRef = useRef<SpotifyController | null>(null);
+  const [spotifyReady, setSpotifyReady] = useState(false);
   const [idx, setIdx] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [pos, setPos] = useState(0); // 0..1
@@ -56,10 +86,9 @@ export default function OrbitPlayer({ playlist }: { playlist: PlaylistTrack[] })
   const [expanded, setExpanded] = useState(false); // false = disco encolhido no canto
 
   const track = playlist[idx];
+  const isSpotify = !!track?.spotifyId;
 
-  // ── Retomar após refresh (sessionStorage) ──
-  // O browser bloqueia autoplay, por isso retomamos a FAIXA e a POSIÇÃO
-  // (pausada): o utilizador carrega no play e continua onde estava.
+  // ── Retomar após refresh (sessionStorage) — MP3 apenas ──
   const resumeRef = useRef(0); // segundos a aplicar quando a duração chegar
   const restoredRef = useRef(false);
   const lastSaveRef = useRef(0); // throttle da escrita no timeupdate
@@ -72,20 +101,18 @@ export default function OrbitPlayer({ playlist }: { playlist: PlaylistTrack[] })
       if (!raw) return;
       const saved = JSON.parse(raw) as { trackKey?: string; time?: number };
       if (!saved || typeof saved.time !== "number" || saved.time <= 0) return;
-      // Por IDENTIDADE da faixa (não índice): a playlist pode ter mudado
-      // desde o último refresh (admin guardou, faixas reordenadas…).
       const i = playlist.findIndex((t) => trackKey(t) === saved.trackKey);
       if (i < 0) return;
       setIdx(i);
-      resumeRef.current = saved.time;
+      if (!playlist[i]?.spotifyId) resumeRef.current = saved.time;
     } catch {
       /* storage indisponível — ignora */
     }
   }, [playlist]);
 
-  // Aplica a posição guardada quando a duração da faixa é conhecida
-  // (onDurationChange dispara com o preload="metadata")
+  // Aplica a posição guardada quando a duração da faixa MP3 é conhecida
   useEffect(() => {
+    if (isSpotify) return;
     if (!Number.isFinite(dur) || dur <= 0 || resumeRef.current <= 0) return;
     const el = audioRef.current;
     if (el) {
@@ -97,7 +124,7 @@ export default function OrbitPlayer({ playlist }: { playlist: PlaylistTrack[] })
       }
     }
     resumeRef.current = 0;
-  }, [dur, idx]);
+  }, [dur, idx, isSpotify]);
 
   // Rede de segurança do throttle: escreve o estado ao esconder/fechar o tab
   useEffect(() => {
@@ -127,6 +154,62 @@ export default function OrbitPlayer({ playlist }: { playlist: PlaylistTrack[] })
     setError(false);
   }, [idx]);
 
+  // ── IFrame API do Spotify — controller único, carregado a pedido ──
+  useEffect(() => {
+    if (!isSpotify || spotifyCtlRef.current || !spotifyHostRef.current) return;
+    let cancelled = false;
+    const boot = (api: SpotifyIframeApi) => {
+      if (cancelled || !spotifyHostRef.current) return;
+      window.SpotifyIframeApi = api;
+      api.createController(
+        spotifyHostRef.current,
+        { uri: `spotify:track:${track?.spotifyId ?? ""}` },
+        (ctl) => {
+          if (cancelled) return;
+          spotifyCtlRef.current = ctl;
+          ctl.addListener("ready", () => setSpotifyReady(true));
+          ctl.addListener("playback_update", (payload) => {
+            const e = payload as { data?: { position?: number; duration?: number; isPaused?: boolean } };
+            const d = e?.data;
+            if (!d) return;
+            if (typeof d.duration === "number" && d.duration > 0) {
+              const position = typeof d.position === "number" ? d.position : 0;
+              setDur(d.duration / 1000);
+              setPos(position > 0 ? position / d.duration : 0);
+            }
+          });
+          ctl.addListener("error", () => {
+            setError(true);
+            setPlaying(false);
+          });
+        },
+      );
+    };
+    if (window.SpotifyIframeApi) boot(window.SpotifyIframeApi);
+    else {
+      window.onSpotifyIframeApiReady = boot;
+      const s = document.createElement("script");
+      s.src = "https://open.spotify.com/embed/iframe-api/v1";
+      s.async = true;
+      document.head.appendChild(s);
+    }
+    return () => {
+      cancelled = true;
+    };
+    // Controller criado UMA vez — trocas de faixa vão por loadUri
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSpotify]);
+
+  // Trocar para uma faixa Spotify → carregar o URI no controller
+  useEffect(() => {
+    const ctl = spotifyCtlRef.current;
+    if (!isSpotify || !ctl || !track?.spotifyId) return;
+    ctl.loadUri(`spotify:track:${track.spotifyId}`);
+    setSpotifyReady(false);
+    ctl.addListener("ready", () => setSpotifyReady(true));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idx, isSpotify]);
+
   const fmt = (s: number) => {
     if (!Number.isFinite(s) || s <= 0) return "0:00";
     const m = Math.floor(s / 60);
@@ -137,6 +220,19 @@ export default function OrbitPlayer({ playlist }: { playlist: PlaylistTrack[] })
   if (!track) return null;
 
   const toggle = async () => {
+    setError(false);
+    if (isSpotify) {
+      const ctl = spotifyCtlRef.current;
+      if (!ctl || !spotifyReady) return;
+      if (playing) {
+        ctl.pause();
+        setPlaying(false);
+      } else {
+        ctl.play();
+        setPlaying(true);
+      }
+      return;
+    }
     const el = audioRef.current;
     if (!el) return;
     try {
@@ -144,7 +240,6 @@ export default function OrbitPlayer({ playlist }: { playlist: PlaylistTrack[] })
         el.pause();
         setPlaying(false);
       } else {
-        setError(false);
         await el.play();
         setPlaying(true);
       }
@@ -159,21 +254,32 @@ export default function OrbitPlayer({ playlist }: { playlist: PlaylistTrack[] })
     setIdx((i) => (i + dir + playlist.length) % playlist.length);
   };
 
+  const seekTo = (fraction: number) => {
+    const f = Math.min(1, Math.max(0, fraction));
+    if (isSpotify) {
+      const ctl = spotifyCtlRef.current;
+      if (ctl && dur > 0) ctl.seek(f * dur);
+      return;
+    }
+    const el = audioRef.current;
+    if (el && Number.isFinite(el.duration)) el.currentTime = f * el.duration;
+  };
+
   return (
     // Contexto de posicionamento (altura 0): os dois estados são absolutos
     // e ancorados no MESMO canto — o crossfade lê-se como um só morph.
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50">
-      {/* Áudio real — persistente nos dois estados, o src vem do bucket
-          "audio" (URL público). Sem controls: display none, nunca bloqueia. */}
+      {/* ── Motores de áudio (persistentes nos dois estados) ──
+          MP3: <audio> sem controls, nunca visível.
+          SPOTIFY: host do embed a 1px sob a pílula — tem de estar "no
+          ecrã" para os browsers permitirem play(); opacidade 0.01. */}
       <audio
         ref={audioRef}
-        src={track.src}
+        src={isSpotify ? undefined : track.src}
         preload="metadata"
         onTimeUpdate={(e) => {
           const el = e.currentTarget;
           setPos(el.duration > 0 ? el.currentTime / el.duration : 0);
-          // Persistência throttled (~1×/3s): suficiente para retomar depois
-          // de um refresh sem escrever no storage 4×/segundo.
           const now = Date.now();
           if (now - lastSaveRef.current > 3000) {
             lastSaveRef.current = now;
@@ -181,9 +287,6 @@ export default function OrbitPlayer({ playlist }: { playlist: PlaylistTrack[] })
           }
         }}
         onPause={(e) => {
-          // Pausa manual → guarda o ponto exato (o throttle podia estar a 3s).
-          // el.ended: a faixa terminou — guardar a posição total faria o
-          // próximo refresh retomar no fim da faixa, sem sentido.
           const el = e.currentTarget;
           if (el.currentTime > 0 && !el.ended) {
             writeState({ trackKey: trackKey(track), time: el.currentTime });
@@ -195,10 +298,13 @@ export default function OrbitPlayer({ playlist }: { playlist: PlaylistTrack[] })
           else setPlaying(false);
         }}
         onError={() => {
-          setError(true);
-          setPlaying(false);
+          if (!isSpotify) {
+            setError(true);
+            setPlaying(false);
+          }
         }}
       />
+      <div ref={spotifyHostRef} aria-hidden="true" className="h-px w-px overflow-hidden opacity-[0.01]" />
 
       <AnimatePresence initial={false}>
         {expanded ? (
@@ -233,7 +339,7 @@ export default function OrbitPlayer({ playlist }: { playlist: PlaylistTrack[] })
             </button>
 
             <div className="flex items-center gap-3.5">
-              {/* Disco/capa — a capa do lançamento ou planeta procedural */}
+              {/* Disco/capa — capa do lançamento, Spotify ou planeta */}
               <div
                 className={`relative h-11 w-11 shrink-0 overflow-hidden rounded-full ring-1 ring-white/15 ${playing ? "orbit-disc-spin" : ""}`}
                 style={{ background: discBackground(track.coverUrl) }}
@@ -261,7 +367,11 @@ export default function OrbitPlayer({ playlist }: { playlist: PlaylistTrack[] })
                   </p>
                 </div>
                 <p className="mt-0.5 truncate text-[10px] uppercase tracking-[0.16em] text-mist/70">
-                  {error ? "áudio indisponível — a seguir" : track.releaseTitle}
+                  {error
+                    ? "áudio indisponível — a seguir"
+                    : isSpotify
+                      ? `${track.releaseTitle} · Spotify`
+                      : track.releaseTitle}
                 </p>
                 <div
                   className="mt-1.5 h-[3px] cursor-pointer rounded-full bg-white/10"
@@ -271,10 +381,8 @@ export default function OrbitPlayer({ playlist }: { playlist: PlaylistTrack[] })
                   aria-valuemin={0}
                   aria-valuemax={100}
                   onClick={(e) => {
-                    const el = audioRef.current;
-                    if (!el || !Number.isFinite(el.duration)) return;
                     const r = e.currentTarget.getBoundingClientRect();
-                    el.currentTime = ((e.clientX - r.left) / r.width) * el.duration;
+                    seekTo((e.clientX - r.left) / r.width);
                   }}
                 >
                   <span
@@ -329,7 +437,8 @@ export default function OrbitPlayer({ playlist }: { playlist: PlaylistTrack[] })
           </motion.div>
         ) : (
           // ── ENCOLHIDO: disco no canto inferior direito (estado inicial) ──
-          // Clicar expande. A girar enquanto a faixa toca (sinal de vida).
+          // Clicar na capa expande; o mini botão play/pause controla a
+          // música sem abrir — diz "sou um player" à primeira vista.
           <motion.div
             key="collapsed"
             initial={{ opacity: 0, scale: 0.4 }}

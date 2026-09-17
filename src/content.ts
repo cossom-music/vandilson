@@ -63,7 +63,11 @@ export type PlayerTrack = {
   /** Lançamento a que pertence (para a etiqueta do player). */
   releaseTitle: string;
   /** Caminho do MP3 no bucket "audio" do Storage. */
-  audioPath: string;
+  audioPath?: string;
+  /** Faixa do SPOTIFY — ID de open.spotify.com/track/{id} (reproduzida via embed). */
+  spotifyId?: string;
+  /** Capa externa (Spotify/oEmbed) — só faixas Spotify; MP3 usam a capa do lançamento. */
+  coverUrl?: string;
 };
 
 export type Release = {
