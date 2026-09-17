@@ -3,6 +3,7 @@
 import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { getMfaStatus } from "@/lib/mfa-server";
 
 /** Chaves de secção editáveis no site_content. */
 const SECTION_KEYS = new Set([
@@ -79,7 +80,108 @@ export async function signIn(formData: FormData): Promise<ActionResult> {
   });
 
   if (error) return { ok: false, error: "Credenciais inválidas." };
+  // ── 2FA (MFA nativo): sessão AAL1 + fator verificado → desafio TOTP ──
+  const mfa = await getMfaStatus(supabase);
+  if (mfa.needsChallenge) redirect("/admin/mfa");
+  redirect("/admin");
+}
+
+/* ── 2FA TOTP (MFA nativo do Supabase) ───────────────────── */
+
+/** Estado 2FA para a página /admin/seguranca. */
+export async function getMfaState(): Promise<
+  { ok: true; hasVerified: boolean; aal: string } | { ok: false; error: string }
+> {
+  const supabase = await requireAdmin();
+  if (!supabase) return { ok: false, error: "Sessão expirada. Entre novamente." };
+  const mfa = await getMfaStatus(supabase);
+  return { ok: true, hasVerified: mfa.hasVerified, aal: mfa.aal };
+}
+
+/** Inicia o enroll TOTP: cria fator não-verificado e devolve segredo+QR. */
+export async function enrollTotp(): Promise<
+  | { ok: true; factorId: string; qr: string; secret: string }
+  | { ok: false; error: string }
+> {
+  const supabase = await requireAdmin();
+  if (!supabase) return { ok: false, error: "Sessão expirada. Entre novamente." };
+  // Já tem 2FA ativa → não repetir enroll
+  const mfa = await getMfaStatus(supabase);
+  if (mfa.hasVerified) {
+    return { ok: false, error: "A 2FA já está ativa." };
+  }
+  const { data, error } = await supabase.auth.mfa.enroll({
+    factorType: "totp",
+    friendlyName: "Painel Vandilson",
+  });
+  if (error || !data) return { ok: false, error: error?.message ?? "Falha ao iniciar 2FA." };
+  return {
+    ok: true,
+    factorId: data.id,
+    qr: data.totp.qr_code,
+    secret: data.totp.secret,
+  };
+}
+
+/** Confirma o enroll com o código de 6 dígitos da app autenticadora. */
+export async function confirmTotp(factorId: string, code: string): Promise<ActionResult> {
+  const supabase = await requireAdmin();
+  if (!supabase) return { ok: false, error: "Sessão expirada. Entre novamente." };
+  const clean = code.replace(/\D/g, "");
+  if (clean.length !== 6) return { ok: false, error: "Código deve ter 6 dígitos." };
+  // Um challenge por confirmação; verify sobe a sessão para AAL2
+  const challenge = await supabase.auth.mfa.challenge({ factorId });
+  if (challenge.error || !challenge.data) {
+    return { ok: false, error: challenge.error?.message ?? "Falha ao iniciar verificação." };
+  }
+  const verify = await supabase.auth.mfa.verify({
+    factorId,
+    challengeId: challenge.data.id,
+    code: clean,
+  });
+  if (verify.error) return { ok: false, error: "Código inválido. Tenta novamente." };
+  return { ok: true };
+}
+
+/** Desafio TOTP no login (página /admin/mfa) — sobe a sessão para AAL2. */
+export async function verifyTotpLogin(code: string): Promise<ActionResult> {
+  const supabase = await requireAdmin();
+  if (!supabase) return { ok: false, error: "Sessão expirada. Entre novamente." };
+  const clean = code.replace(/\D/g, "");
+  if (clean.length !== 6) return { ok: false, error: "Código deve ter 6 dígitos." };
+  const mfa = await getMfaStatus(supabase);
+  if (!mfa.needsChallenge) redirect("/admin");
+  const { data: factors } = await supabase.auth.mfa.listFactors();
+  const factor = (factors?.totp ?? []).find((f) => f.status === "verified");
+  if (!factor) return { ok: false, error: "Nenhum fator 2FA ativo." };
+  const challenge = await supabase.auth.mfa.challenge({ factorId: factor.id });
+  if (challenge.error || !challenge.data) {
+    return { ok: false, error: challenge.error?.message ?? "Falha ao iniciar verificação." };
+  }
+  const verify = await supabase.auth.mfa.verify({
+    factorId: factor.id,
+    challengeId: challenge.data.id,
+    code: clean,
+  });
+  if (verify.error) return { ok: false, error: "Código inválido. Tenta novamente." };
   redirect("/admin");
+}
+
+/** Desativa o fator TOTP verificado (exige sessão AAL2). */
+export async function disableTotp(): Promise<ActionResult> {
+  const supabase = await requireAdmin();
+  if (!supabase) return { ok: false, error: "Sessão expirada. Entre novamente." };
+  const mfa = await getMfaStatus(supabase);
+  if (!mfa.hasVerified) return { ok: false, error: "A 2FA não está ativa." };
+  if (mfa.aal !== "aal2") {
+    return { ok: false, error: "Confirma um código 2FA antes de desativar." };
+  }
+  const { data: factors } = await supabase.auth.mfa.listFactors();
+  const factor = (factors?.totp ?? []).find((f) => f.status === "verified");
+  if (!factor) return { ok: false, error: "Nenhum fator 2FA ativo." };
+  const { error } = await supabase.auth.mfa.unenroll({ factorId: factor.id });
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
 }
 
 export async function signOut() {

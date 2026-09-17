@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getAdminUser } from "@/lib/supabase-server";
+import { getAdminUser, createSupabaseServerClient } from "@/lib/supabase-server";
+import { getMfaStatus } from "@/lib/mfa-server";
 import { signOut } from "../actions";
 
 const NAV = [
@@ -10,6 +11,7 @@ const NAV = [
   { href: "/admin/lancamentos", label: "Lançamentos" },
   { href: "/admin/agenda", label: "Agenda" },
   { href: "/admin/universo", label: "Universo" },
+  { href: "/admin/seguranca", label: "Segurança" },
 ];
 
 export default async function AdminPanelLayout({
@@ -19,6 +21,15 @@ export default async function AdminPanelLayout({
 }) {
   const user = await getAdminUser();
   if (!user) redirect("/admin/login");
+
+  // ── Gate 2FA: 2FA ativa + sessão AAL1 → termina o login no desafio ──
+  // (defesa em profundidade: a RLS (007/008) é a última linha; esta
+  // camada evita ver o painel antes do código)
+  const supabase = await createSupabaseServerClient();
+  if (supabase) {
+    const mfa = await getMfaStatus(supabase);
+    if (mfa.needsChallenge) redirect("/admin/mfa");
+  }
 
   return (
     <div className="mx-auto w-full max-w-5xl px-6 pb-28 pt-24 md:pt-28">
