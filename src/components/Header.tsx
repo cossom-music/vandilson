@@ -28,6 +28,9 @@ export default function Header() {
   const { artist, contact } = useSiteContent();
   const [open, setOpen] = useState(false);
   const isHome = pathname === "/";
+  // Rotas do admin têm o seu próprio shell (AdminShell + topbar própria):
+  // o header público não se renderiza lá — evita dupla barra fixa.
+  const isAdmin = pathname.startsWith("/admin");
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -61,6 +64,7 @@ export default function Header() {
   // ScrollTrigger) — agora é só transform + opacity, custo zero.
   return (
     <>
+    {isAdmin ? null : (
     <motion.header
       initial={{ y: -72, opacity: 0 }}
       animate={visible ? { y: 0, opacity: 1 } : { y: -72, opacity: 0 }}
@@ -116,6 +120,7 @@ export default function Header() {
         </button>
       </div>
     </motion.header>
+    )}
 
     {/* ── Takeover "Órbita" — menu mobile de ecrã inteiro ──
         FORA do <header>: o header é animado com transform + backdrop-blur,

@@ -3,6 +3,7 @@
 import { animate } from "@/lib/anime";
 import { useSiteContent } from "@/components/SiteContentProvider";
 import { useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 
 /**
  * Rodapé monocromático — sem newsletter (a conversão do site é conhecer o
@@ -11,6 +12,8 @@ import { useEffect, useRef } from "react";
 export default function Footer() {
   const { artist, socials, contact } = useSiteContent();
   const emailRef = useRef<HTMLAnchorElement>(null);
+  // O admin tem o seu próprio shell (AdminShell) — sem rodapé público.
+  const isAdmin = usePathname().startsWith("/admin");
 
   // anime.js v4 — sublinhado do e-mail desenha-se ao entrar no ecrã
   useEffect(() => {
@@ -35,6 +38,8 @@ export default function Footer() {
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
+
+  if (isAdmin) return null;
 
   return (
     /* relative z-10: na homepage a Sintonia é pinada pelo GSAP (position:

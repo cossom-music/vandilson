@@ -54,6 +54,11 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   // Rota mudou (link tocado no drawer) → fecha.
   useEffect(() => setOpen(false), [pathname]);
 
+  // Secção ativa — alimenta o título da topbar.
+  const current = NAV.find((item) =>
+    item.href === "/admin" ? pathname === "/admin" : pathname.startsWith(item.href),
+  );
+
   const rail = (
     <div className="flex h-full flex-col bg-night-900">
       {/* Marca */}
@@ -130,32 +135,63 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
   return (
     <div className="min-h-screen">
-      {/* ══ DESKTOP (md+): rail fixed à TELA, conteúdo rola ao lado ══ */}
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 border-r border-white/[0.07] md:block">
-        {rail}
-      </aside>
+      {/* ══ TOPBAR — fixed, sempre visível, com o MESMO blur do header público
+          (bg-night-950/70 + backdrop-blur-md + border-b). Dá o título da
+          secção ativa, o acesso ao site e ao menu (mobile). O conteúdo
+          começa ABAIXO dela (md:pt-20) — nada fica escondido por baixo. ══ */}
+      <header className="fixed inset-x-0 top-0 z-40 border-b border-white/5 bg-night-950/70 backdrop-blur-md md:pl-64">
+        <div className="flex h-16 items-center justify-between gap-4 px-5 md:px-10">
+          <div className="flex items-center gap-3">
+            {/* Hamburger — só mobile; abre o drawer */}
+            <button
+              type="button"
+              aria-label={open ? "Fechar menu" : "Abrir menu"}
+              aria-expanded={open}
+              onClick={() => setOpen((v) => !v)}
+              className="flex h-10 w-10 flex-col items-center justify-center gap-1.5 rounded-lg border border-white/10 md:hidden"
+            >
+              <span
+                className={`h-px w-5 bg-cream transition-transform duration-300 ${
+                  open ? "translate-y-[3.5px] rotate-45" : ""
+                }`}
+              />
+              <span
+                className={`h-px w-5 bg-cream transition-transform duration-300 ${
+                  open ? "-translate-y-[3.5px] -rotate-45" : ""
+                }`}
+              />
+            </button>
+            <div>
+              <p className="font-mono text-[9px] uppercase tracking-[0.3em] text-silver-600">
+                Painel
+              </p>
+              <p className="font-display text-lg leading-tight text-cream">
+                {current?.label ?? "Conteúdo do site"}
+              </p>
+            </div>
+          </div>
 
-      {/* ══ MOBILE (< md): botão de menu + drawer ══ */}
-      {/* Botão hamburger — fixed, sempre acessível durante o scroll */}
-      <button
-        type="button"
-        aria-label={open ? "Fechar menu" : "Abrir menu"}
-        aria-expanded={open}
-        onClick={() => setOpen((v) => !v)}
-        className="fixed left-4 top-4 z-[60] flex h-11 w-11 flex-col items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-night-950/85 backdrop-blur-md md:hidden"
-      >
-        <span
-          className={`h-px w-5 bg-cream transition-transform duration-300 ${
-            open ? "translate-y-[3.5px] rotate-45" : ""
-          }`}
-        />
-        <span
-          className={`h-px w-5 bg-cream transition-transform duration-300 ${
-            open ? "-translate-y-[3.5px] -rotate-45" : ""
-          }`}
-        />
-      </button>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/"
+              target="_blank"
+              className="rounded-lg border border-white/15 px-3 py-1.5 text-sm text-mist transition-colors hover:border-white/30 hover:text-cream"
+            >
+              Ver site ↗
+            </Link>
+            <form action={signOut}>
+              <button
+                type="submit"
+                className="rounded-lg border border-white/15 px-3 py-1.5 text-sm text-mist transition-colors hover:border-white/30 hover:text-cream"
+              >
+                Sair
+              </button>
+            </form>
+          </div>
+        </div>
+      </header>
 
+      {/* ══ MOBILE (< md): drawer alimentado pelo hamburger da topbar ══ */}
       {/* Overlay + drawer — sempre montado, animado por transform/opacity */}
       <div
         aria-hidden={!open}
@@ -172,9 +208,10 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         {rail}
       </aside>
 
-      {/* ══ CONTEÚDO — deslocado pelo rail no desktop; é ele que rola ══ */}
+      {/* ══ CONTEÚDO — deslocado pelo rail no desktop; é ele que rola.
+          pt de 24 (96px) > h-16 da topbar: nada começa por baixo dela. ══ */}
       <div className="md:pl-64">
-        <main className="mx-auto w-full max-w-4xl px-5 pb-28 pt-20 md:px-10 md:pt-10">
+        <main className="mx-auto w-full max-w-4xl px-5 pb-28 pt-24 md:px-10 md:pt-24">
           {children}
         </main>
       </div>
