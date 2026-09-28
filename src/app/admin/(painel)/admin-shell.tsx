@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { signOut } from "../actions";
+import type { SectionStatus } from "@/lib/admin-status";
 
 /**
  * SHELL DO PAINEL — modelo «Bancada» (aprovado em _temp/design-demos/
@@ -31,9 +32,30 @@ const NAV = [
   { href: "/admin/seguranca", label: "Segurança", n: "07" },
 ];
 
-export default function AdminShell({ children }: { children: React.ReactNode }) {
+export default function AdminShell({
+  children,
+  statuses,
+}: {
+  children: React.ReactNode;
+  /** Estado por secção (contagens + última edição) — badges do rail. */
+  statuses: Map<string, SectionStatus>;
+}) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+
+  /* Relative time — «há 5 min» / «há 2 h» / «há 3 dias». Determinístico
+     entre SSR e hidratação: arredonda a MINUTOS e só troca a unidade a
+     partir de limites redondos, por isso o HTML do servidor e o primeiro
+     render do cliente coincidem (evita mismatch de hidratação). */
+  const rel = (d: Date | undefined | null) => {
+    if (!d) return null;
+    const mins = Math.max(1, Math.floor((Date.now() - d.getTime()) / 60_000));
+    if (mins < 60) return `há ${mins} min`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 48) return `há ${hours} h`;
+    const days = Math.floor(hours / 24);
+    return `há ${days} dias`;
+  };
 
   // ESC fecha o drawer e trava o scroll da página enquanto está aberto —
   // mesmo padrão do menu mobile do site (Header.tsx).
@@ -75,11 +97,16 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         </span>
       </Link>
 
-      {/* Navegação numerada — a ativa acende com barra âmbar */}
+      {/* Navegação numerada — a ativa acende com barra âmbar;
+          cada secção leva um BADGE de estado: contagem do conteúdo +
+          «editado» (âmbar) se houver edição recente, ou «seed» (cinza)
+          se a secção nunca foi guardada no admin. */}
       <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-3">
         {NAV.map((item) => {
           const active =
             item.href === "/admin" ? pathname === "/admin" : pathname.startsWith(item.href);
+          const st = statuses.get(item.href);
+          const edited = Boolean(st?.updatedAt);
           return (
             <Link
               key={item.href}
@@ -105,7 +132,24 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
               >
                 {item.n}
               </span>
-              {item.label}
+              <span className="flex-1 truncate">{item.label}</span>
+              {/* Badge de estado — só em secções com conteúdo gerível */}
+              {item.href !== "/admin" && item.href !== "/admin/seguranca" ? (
+                <span
+                  title={
+                    edited && st?.updatedAt
+                      ? `Última edição ${rel(st.updatedAt)}`
+                      : "Ainda guardado apenas na seed"
+                  }
+                  className={`shrink-0 rounded-full border px-2 py-0.5 font-mono text-[9px] tracking-[0.08em] transition-colors ${
+                    edited
+                      ? "border-amber-300/40 bg-amber-300/10 text-amber-300"
+                      : "border-white/10 text-silver-700"
+                  }`}
+                >
+                  {edited ? "editado" : st?.meta ? st.meta : "seed"}
+                </span>
+              ) : null}
             </Link>
           );
         })}
