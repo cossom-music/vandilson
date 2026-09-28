@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { signOut } from "../actions";
-import type { SectionStatus } from "@/lib/admin-status";
+import type { SectionStatusDTO } from "@/lib/admin-status";
 
 /**
  * SHELL DO PAINEL — modelo «Bancada» (aprovado em _temp/design-demos/
@@ -37,18 +37,21 @@ export default function AdminShell({
   statuses,
 }: {
   children: React.ReactNode;
-  /** Estado por secção (contagens + última edição) — badges do rail. */
-  statuses: Map<string, SectionStatus>;
+  /** Estado por secção (contagens + última edição) — badges do rail.
+   *  Objeto PLANO serializável (ISO strings) — sem Map/Date na fronteira
+   *  servidor→cliente. */
+  statuses: Record<string, SectionStatusDTO>;
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
-  /* Relative time — «há 5 min» / «há 2 h» / «há 3 dias». Determinístico
-     entre SSR e hidratação: arredonda a MINUTOS e só troca a unidade a
-     partir de limites redondos, por isso o HTML do servidor e o primeiro
-     render do cliente coincidem (evita mismatch de hidratação). */
-  const rel = (d: Date | undefined | null) => {
-    if (!d) return null;
+  /* Relative time — «há 5 min» / «há 2 h» / «há 3 dias». A partir de ISO
+     string; arredondamento a minutos/limites redondos para o SSR e o
+     primeiro render do cliente coincidirem (sem mismatch). */
+  const rel = (iso: string | undefined | null) => {
+    if (!iso) return null;
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return null;
     const mins = Math.max(1, Math.floor((Date.now() - d.getTime()) / 60_000));
     if (mins < 60) return `há ${mins} min`;
     const hours = Math.floor(mins / 60);
@@ -105,8 +108,8 @@ export default function AdminShell({
         {NAV.map((item) => {
           const active =
             item.href === "/admin" ? pathname === "/admin" : pathname.startsWith(item.href);
-          const st = statuses.get(item.href);
-          const edited = Boolean(st?.updatedAt);
+          const st = statuses[item.href];
+          const edited = Boolean(st?.updatedAtIso);
           return (
             <Link
               key={item.href}
@@ -137,8 +140,8 @@ export default function AdminShell({
               {item.href !== "/admin" && item.href !== "/admin/seguranca" ? (
                 <span
                   title={
-                    edited && st?.updatedAt
-                      ? `Última edição ${rel(st.updatedAt)}`
+                    edited && st?.updatedAtIso
+                      ? `Última edição ${rel(st.updatedAtIso)}`
                       : "Ainda guardado apenas na seed"
                   }
                   className={`shrink-0 rounded-full border px-2 py-0.5 font-mono text-[9px] tracking-[0.08em] transition-colors ${

@@ -7,17 +7,20 @@ import { createSupabaseServerClient } from "@/lib/supabase-server";
  *
  * Fontes:
  *  · site_content.updated_at — secções JSONB (perfil, textos, socials…);
- *  · releases.shows.updated_at — tabelas com updated_at próprio.
+ *  · releases.updated_at — tabela com updated_at próprio.
  *
- * O badge mostra TAMBÉM uma contagem útil (ex.: «3 lançamentos») — os
- * dados vêm da mesma leitura, sem queries extra.
+ * IMPORTANTE (serialização): o resultado atravessa a fronteira
+ * servidor→cliente (props do AdminShell). Por isso:
+ *  · NADA de Map/Date — devolve um objeto plano com ISO strings;
+ *  · NADA de imports de "server-only" no TIPO exportado — o tipo fica
+ *    aqui definido e o AdminShell importa só o tipo.
  */
 
-export type SectionStatus = {
-  /** Contagem curta para o badge (ex.: "3 lançamentos"). */
+export type SectionStatusDTO = {
+  /** Contagem curta para o badge (ex.: "3 lançamentos"). Vazio = sem contagem. */
   meta: string;
-  /** Última edição desta secção (a mais recente das fontes). */
-  updatedAt: Date | null;
+  /** Última edição em ISO 8601, ou null se nunca editada. */
+  updatedAtIso: string | null;
 };
 
 /** Chaves de site_content que cada secção do admin consulta. */
@@ -27,13 +30,25 @@ const SECTION_SOURCES: Record<string, string[]> = {
   "/admin/universo": ["milestones", "eras", "collaborators", "playerPlaylist"],
 };
 
-export async function getSectionStatuses(): Promise<Map<string, SectionStatus>> {
-  const map = new Map<string, SectionStatus>();
+const EMPTY: Record<string, SectionStatusDTO> = Object.fromEntries(
+  [
+    "/admin",
+    "/admin/perfil",
+    "/admin/textos",
+    "/admin/lancamentos",
+    "/admin/agenda",
+    "/admin/universo",
+    "/admin/seguranca",
+  ].map((k) => [k, { meta: "", updatedAtIso: null }]),
+);
+
+export async function getSectionStatuses(): Promise<Record<string, SectionStatusDTO>> {
+  const out: Record<string, SectionStatusDTO> = { ...EMPTY };
   const supabase = await createSupabaseServerClient();
 
   // Sem Supabase → estado neutro (o admin mostra aviso nas páginas; o
   // rail continua a funcionar com contagens de seed quando existirem).
-  if (!supabase) return map;
+  if (!supabase) return out;
 
   try {
     // 1 · updated_at das secções JSONB
@@ -80,7 +95,6 @@ export async function getSectionStatuses(): Promise<Map<string, SectionStatus>> 
     const fmt = (n: number, one: string, many: string) =>
       `${n} ${n === 1 ? one : many}`;
 
-    // ── Montar o estado por rota ──
     const latestOf = (keys: string[]): Date | null => {
       let acc: Date | null = null;
       for (const k of keys) {
@@ -90,31 +104,31 @@ export async function getSectionStatuses(): Promise<Map<string, SectionStatus>> 
       return acc;
     };
 
-    map.set("/admin/perfil", {
+    const iso = (d: Date | null) => (d ? d.toISOString() : null);
+
+    out["/admin/perfil"] = {
       meta: "",
-      updatedAt: latestOf(SECTION_SOURCES["/admin/perfil"]),
-    });
-    map.set("/admin/textos", {
+      updatedAtIso: iso(latestOf(SECTION_SOURCES["/admin/perfil"])),
+    };
+    out["/admin/textos"] = {
       meta: "",
-      updatedAt: latestOf(SECTION_SOURCES["/admin/textos"]),
-    });
-    map.set("/admin/lancamentos", {
+      updatedAtIso: iso(latestOf(SECTION_SOURCES["/admin/textos"])),
+    };
+    out["/admin/lancamentos"] = {
       meta: visibleReleases.length > 0 ? fmt(visibleReleases.length, "lançamento", "lançamentos") : "",
-      updatedAt: latestReleaseEdit,
-    });
-    map.set("/admin/agenda", {
+      updatedAtIso: iso(latestReleaseEdit),
+    };
+    out["/admin/agenda"] = {
       meta: showCount !== null ? fmt(showCount, "show", "shows") : "",
-      updatedAt: showsEdit,
-    });
-    map.set("/admin/universo", {
+      updatedAtIso: iso(showsEdit),
+    };
+    out["/admin/universo"] = {
       meta: "",
-      updatedAt: latestOf(SECTION_SOURCES["/admin/universo"]),
-    });
-    map.set("/admin/seguranca", { meta: "", updatedAt: null });
-    map.set("/admin", { meta: "", updatedAt: null });
+      updatedAtIso: iso(latestOf(SECTION_SOURCES["/admin/universo"])),
+    };
   } catch {
-    // Tabelas ainda não criadas → estado neutro, sem partir o rail.
+    // Tabelas ainda não criadas, rede… → estado neutro, sem partir o rail.
   }
 
-  return map;
+  return out;
 }
