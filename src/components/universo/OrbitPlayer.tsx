@@ -69,9 +69,10 @@ type SpotifyController = {
  *  · clicar na capa expande; o botão "–" minimiza — NÃO existe fechar:
  *    a música continua nos dois estados (nenhum motor de áudio desmonta);
  *  · sem playlist → não renderiza nada (o site fica limpo);
- *  · autoplay só por gesto: na entrada o play é manual; ±faixa e fim de
- *    faixa (MP3 e Spotify) avançam JÁ A TOCAR — o gesto do clique cobre a
- *    política de autoplay dos browsers;
+ *  · AUTOSTART best effort: tenta tocar logo na entrada; browsers que
+ *    bloqueiam autoplay sem gesto ficam com o play armado no 1.º
+ *    clique/toque/tecla em QUALQUER parte do site. ±faixa e fim de faixa
+ *    (MP3 e Spotify) avançam já a tocar;
  *  · faixa e posição persistem em sessionStorage — após um REFRESH retoma
  *    a faixa pausada no ponto onde estava (MP3 apenas; Spotify recomeça).
  */
@@ -100,6 +101,15 @@ export default function OrbitPlayer({ playlist }: { playlist: PlaylistTrack[] })
   const spotifyEndedRef = useRef(false);
   /** Timers/RAF do fade de volume em curso (cancelados em cada nova troca). */
   const fadeTimersRef = useRef<number[]>([]);
+  /**
+   * AUTOSTART «best effort» (pedido do artista): tenta tocar logo na entrada.
+   * Browsers sem histórico de interação bloqueiam o play() sem gesto —
+   * nesses casos o listener de 1.º gesto (abaixo) arranca no instante em
+   * que o visitante clica/toca/pressiona qualquer tecla, sem ter de
+   * procurar o botão do player.
+   */
+  const autoStartTriedRef = useRef(false);
+  const startOnFirstGesture = useRef<(() => void) | null>(null);
 
   const clearFades = () => {
     fadeTimersRef.current.forEach((t) => {
@@ -195,6 +205,96 @@ export default function OrbitPlayer({ playlist }: { playlist: PlaylistTrack[] })
     }
     resumeRef.current = 0;
   }, [dur, idx, isSpotify]);
+
+  // ── AUTOSTART — tenta tocar logo na entrada; se o browser bloquear
+  // (política de autoplay sem gesto), arma o play no 1.º gesto do visitante.
+  // Corre UMA vez, após o restauro do sessionStorage (para o índice já
+  // estar na faixa certa).
+  useEffect(() => {
+    if (autoStartTriedRef.current || playlist.length === 0) return;
+    autoStartTriedRef.current = true;
+
+    const attempt = (): boolean => {
+      if (isSpotify) {
+        const ctl = spotifyCtlRef.current;
+        if (ctl && spotifyReady) {
+          try {
+            ctl.play();
+            setPlaying(true);
+            return true;
+          } catch {
+            return false;
+          }
+        }
+        return false; // embed ainda a carregar — retry agendado abaixo
+      }
+      const el = audioRef.current;
+      if (!el) return false;
+      el.play()
+        .then(() => setPlaying(true))
+        .catch(() => {
+          // bloqueado → fica para o 1.º gesto (não marca erro: não é falha)
+        });
+      // o play() de MP3 devolve promise — considere-se lançado; o resultado
+      // real (playing/error) chega pelos handlers do <audio>
+      return true;
+    };
+
+    // Spotify: o embed precisa de "ready" — tenta quando ficar pronto.
+    if (isSpotify) {
+      const t1 = window.setInterval(() => {
+        if (spotifyCtlRef.current && spotifyReady) {
+          window.clearInterval(t1);
+          if (!attempt()) armGesture();
+        }
+      }, 400);
+      window.setTimeout(() => window.clearInterval(t1), 10_000);
+      return () => window.clearInterval(t1);
+    }
+
+    // MP3: pequeno atraso para o src assentar, depois tenta.
+    const t = window.setTimeout(() => {
+      if (!attempt()) armGesture();
+    }, 120);
+    return () => window.clearTimeout(t);
+
+    function armGesture() {
+      if (startOnFirstGesture.current) return;
+      const fire = () => {
+        window.removeEventListener("pointerdown", fire);
+        window.removeEventListener("keydown", fire);
+        window.removeEventListener("touchstart", fire);
+        startOnFirstGesture.current = null;
+        // novo gesto → políticas satisfeitas; tenta de novo com autoPlayRef
+        autoPlayRef.current = true;
+        const ctl = spotifyCtlRef.current;
+        if (isSpotify) {
+          if (ctl && spotifyReady) {
+            try {
+              ctl.play();
+              setPlaying(true);
+            } catch {
+              /* desiste silenciosamente */
+            }
+          }
+          return;
+        }
+        const el = audioRef.current;
+        if (!el) return;
+        el.play()
+          .then(() => setPlaying(true))
+          .catch(() => {
+            setError(true);
+            setPlaying(false);
+          });
+      };
+      startOnFirstGesture.current = fire;
+      window.addEventListener("pointerdown", fire, { once: true });
+      window.addEventListener("keydown", fire, { once: true });
+      window.addEventListener("touchstart", fire, { once: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [playlist]);
 
   // Unmount: nenhum fade a meio da troca de página
   useEffect(() => clearFades, []);
