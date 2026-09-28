@@ -3,7 +3,7 @@
 import { startTransition, useState } from "react";
 import { updateSection } from "../../actions";
 import type { HomeHighlights, HomeSections } from "@/content";
-import { Alert, Button, Field, Panel, TextArea, TextInput } from "../../_ui";
+import { Button, Field, Panel, SaveBar, TextArea, TextInput } from "../../_ui";
 
 function useSectionSave(key: string) {
   const [pending, setPending] = useState(false);
@@ -26,24 +26,7 @@ function useSectionSave(key: string) {
   return { save, pending, notice };
 }
 
-function SaveBar({
-  pending,
-  notice,
-  onSave,
-}: {
-  pending: boolean;
-  notice: { kind: "ok" | "err"; text: string } | null;
-  onSave: () => void;
-}) {
-  return (
-    <div className="flex flex-wrap items-center gap-3">
-      <Button type="button" onClick={onSave} disabled={pending}>
-        {pending ? "A guardar…" : "Guardar alterações"}
-      </Button>
-      {notice ? <Alert kind={notice.kind}>{notice.text}</Alert> : null}
-    </div>
-  );
-}
+/* SaveBar vem de ../../_ui (modelo B) */
 
 export function HomeSectionsForm({ initial }: { initial: HomeSections }) {
   const [draft, setDraft] = useState<HomeSections>(initial);

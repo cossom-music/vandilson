@@ -4,7 +4,7 @@ import { startTransition, useRef, useState } from "react";
 import { updateSection, uploadCoverImage } from "../../actions";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import type { Artist, Contact, Social } from "@/content";
-import { Alert, Button, Field, Panel, TextArea, TextInput } from "../../_ui";
+import { Alert, Button, Field, Panel, SaveBar, TextArea, TextInput } from "../../_ui";
 
 /* ── Save com estado ──────────────────────────────────────── */
 
@@ -29,24 +29,7 @@ function useSectionSave(key: string) {
   return { save, pending, notice };
 }
 
-function SaveBar({
-  pending,
-  notice,
-  onSave,
-}: {
-  pending: boolean;
-  notice: { kind: "ok" | "err"; text: string } | null;
-  onSave: () => void;
-}) {
-  return (
-    <div className="flex flex-wrap items-center gap-3">
-      <Button type="button" onClick={onSave} disabled={pending}>
-        {pending ? "A guardar…" : "Guardar alterações"}
-      </Button>
-      {notice ? <Alert kind={notice.kind}>{notice.text}</Alert> : null}
-    </div>
-  );
-}
+/* SaveBar agora vem de ../../_ui (modelo B: fixa no fundo, flash âmbar) */
 
 /* ── Artista ──────────────────────────────────────────────── */
 

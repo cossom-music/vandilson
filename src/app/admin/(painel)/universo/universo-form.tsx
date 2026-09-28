@@ -10,7 +10,7 @@ import type {
   Release,
 } from "@/content";
 import { playableTracks, spotifyIdFromLink } from "@/lib/universo";
-import { Alert, Button, Panel, TextInput } from "../../_ui";
+import { SaveBar, Alert, Button, Panel, TextInput } from "../../_ui";
 
 /** Guarda uma secção do site_content e mostra o resultado. */
 function useSectionSave<T>(key: string, draft: T) {
@@ -34,24 +34,7 @@ function useSectionSave<T>(key: string, draft: T) {
   return { save, pending, notice };
 }
 
-function SaveBar({
-  pending,
-  notice,
-  onSave,
-}: {
-  pending: boolean;
-  notice: { kind: "ok" | "err"; text: string } | null;
-  onSave: () => void;
-}) {
-  return (
-    <div className="flex flex-wrap items-center gap-3">
-      <Button type="button" onClick={onSave} disabled={pending}>
-        {pending ? "A guardar…" : "Guardar alterações"}
-      </Button>
-      {notice ? <Alert kind={notice.kind}>{notice.text}</Alert> : null}
-    </div>
-  );
-}
+/* SaveBar vem de ../../_ui (modelo B) */
 
 /* ════════════════ PLAYER EM ÓRBITA — playlist curada ════════════════ */
 
