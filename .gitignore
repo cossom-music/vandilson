@@ -27,6 +27,7 @@ credentials.txt
 model-videos/
 _temp/
 _tempo/
+o-sentinela/
 tmp_ref*.jpg
 tmp_ref*.png
 shot-*.png

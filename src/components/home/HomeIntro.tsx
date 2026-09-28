@@ -394,7 +394,7 @@ export default function HomeIntro({
             duas bibliotecas nunca escreverem no mesmo elemento. */}
         <div
           data-indicator
-          className="absolute bottom-3 left-1/2 z-20 -translate-x-1/2"
+          className="absolute bottom-3 left-1/2 z-20 -translate-x-1/2 max-md:bottom-16"
           aria-hidden="true"
         >
           <ScrollCue />

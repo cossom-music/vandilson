@@ -37,7 +37,12 @@ export default function Footer() {
   }, []);
 
   return (
-    <footer className="border-t border-white/5 bg-night-950">
+    /* relative z-10: na homepage a Sintonia é pinada pelo GSAP (position:
+       fixed) e, com a Agenda removida da secção Sobre, o pin já não chega
+       a soltar antes do fim da página — sem isto, a Sintonia fixa pintava
+       POR CIMA do footer estático. Sobre (z-10) e footer (z-10) cobrem-na
+       como as restantes secções sólidas. */
+    <footer className="relative z-10 border-t border-white/5 bg-night-950">
       {/* pb extra: o player "Em Órbita" é global (layout) e vive fixo no fundo —
           o respiro impede que tape o e-mail/copyright no fim da página. */}
       <div className="mx-auto grid max-w-6xl gap-12 px-6 pb-28 pt-16 md:grid-cols-[1.2fr_1fr]">
