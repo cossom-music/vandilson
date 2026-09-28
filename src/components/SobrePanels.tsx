@@ -188,25 +188,39 @@ export default function SobrePanels() {
               ))}
             </div>
 
-            {/* Coordenadas — origem / base / órbita, do CMS, como dados de carta celeste */}
-            <div className="mt-10 flex flex-wrap gap-8 font-mono text-[11px] tracking-[0.14em] text-silver-600">
-              {([
-                ["Origem", artist.origin ?? "Moçambique"],
-                ["Base", artist.base ?? "Lisboa"],
-                ["Órbita", artist.orbit ?? "Mundo"],
-              ] as const).map(([label, value]) => (
-                <div key={label}>
-                  <b className="mb-1 block text-[10px] font-normal uppercase tracking-[0.2em] text-silver-400">
-                    {label}
-                  </b>
-                  {value}
+            {/* Coordenadas — origem / base / órbita, do CMS. Só entram na
+                carta as coordenadas COM texto — vazias ficam de fora. */}
+            {(() => {
+              const rawCoords = [
+                ["Origem", artist.origin],
+                ["Base", artist.base],
+                ["Órbita", artist.orbit],
+              ] as const;
+              const coords: [string, string][] = rawCoords.flatMap(([label, value]) =>
+                value && value.trim() ? [[label, value] as [string, string]] : [],
+              );
+              if (coords.length === 0) return null;
+              return (
+                <div className="mt-10 flex flex-wrap gap-8 font-mono text-[11px] tracking-[0.14em] text-silver-600">
+                  {coords.map(([label, value]) => (
+                    <div key={label}>
+                      <b className="mb-1 block text-[10px] font-normal uppercase tracking-[0.2em] text-silver-400">
+                        {label}
+                      </b>
+                      {value}
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              );
+            })()}
 
-            <p className="mt-8 font-display text-[15px] italic text-silver-500">
-              — «cada disco é uma viagem, e o mundo é o mapa»
-            </p>
+            {/* Citação do CMS — editável e ocultável no admin (perfil do
+                artista). Sem texto, ou com o interruptor off, não renderiza. */}
+            {artist.bioQuoteVisible !== false && artist.bioQuote?.trim() ? (
+              <p className="mt-8 font-display text-[15px] italic text-silver-500">
+                {artist.bioQuote}
+              </p>
+            ) : null}
 
             {/* CTA — liquid glass, igual ao da secção Ouvir: leva ao diário
                 de bordo (/universo), a rota completa da biografia. */}
@@ -219,14 +233,9 @@ export default function SobrePanels() {
         </section>
       </Reveal>
 
-      {/* ===== Agenda — tabela de trânsitos =====
-          id próprio: o planeta "Agenda" do hub de escolha aponta para cá
-          (#home-agenda), a depositar NO painel da agenda e não no topo da
-          secção Sobre (que abre na biografia). scroll-margin-top deixa o
-          card RESPIRAR no topo do ecrã (o título não fica colado à borda).
-          HIGHLIGHT: chegado via planeta, o card acorda com um GLOW âmbar
-          suave (a cor do planeta) que respira 2x e desvanece. */}
-      <AgendaCard shows={shows} />
+      {/* ===== Agenda — REMOVIDA da homepage a pedido.
+          O componente do card fica em baixo (AgendaCard) — para repor,
+          basta voltar a renderizar <AgendaCard shows={shows} /> aqui. */}
     </>
   );
 }

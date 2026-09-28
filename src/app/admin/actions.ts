@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { getMfaStatus } from "@/lib/mfa-server";
@@ -21,7 +21,7 @@ const SECTION_KEYS = new Set([
 
 /** Limpa o cache do conteúdo do site público. */
 function revalidateSiteContent() {
-  revalidateTag("site-content");
+  // Next 15: expiração de cache via revalidatePath (as páginas afetadas usam getSiteContent)
   revalidatePath("/");
   revalidatePath("/discografia");
   revalidatePath("/universo");

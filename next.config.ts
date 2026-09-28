@@ -18,6 +18,14 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   // Fixa a raiz do workspace (evita aviso de lockfiles a montante)
   outputFileTracingRoot: path.join(process.cwd()),
+  // Uploads via Server Actions (áudio MP3 no editor de lançamentos):
+  // o limite default de 1MB parte qualquer faixa. 60MB dá folga face
+  // ao máximo de 50MB aceite pelo bucket `audio` no Supabase.
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "60mb",
+    },
+  },
   // Security headers (auditoria MÉDIO 5). Sem CSP de script-src rígida:
   // o embed oficial do Spotify (IFrame API) injeta scripts próprios no
   // runtime e quebraria com nonce — frame-ancestors + frame-src cobrem o

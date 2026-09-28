@@ -112,10 +112,14 @@ export type Artist = {
   photoAlt: string;
   /** URL público da fotografia (Supabase Storage, bucket covers). Sem foto → eclipse. */
   photo?: string | null;
-  /** Coordenadas mostradas na biografia (dados de carta celeste). */
+  /** Coordenadas mostradas na biografia (dados de carta celeste). Vazio/ausente = bloco oculto no site. */
   origin?: string;
   base?: string;
   orbit?: string;
+  /** Citação em itálico no fim da biografia. Ausente/vazio = escondida. */
+  bioQuote?: string;
+  /** Interruptor da citação — false esconde mesmo com texto. Ausente = visível. */
+  bioQuoteVisible?: boolean;
 };
 
 export type Social = {
@@ -174,6 +178,8 @@ export const seedContent: SiteContent = {
     origin: "Moçambique",
     base: "Lisboa",
     orbit: "Mundo",
+    bioQuote: "— «cada disco é uma viagem, e o mundo é o mapa»",
+    bioQuoteVisible: true,
   },
 
   socials: [

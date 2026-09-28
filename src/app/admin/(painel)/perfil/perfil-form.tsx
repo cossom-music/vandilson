@@ -206,27 +206,50 @@ export function ArtistForm({ initial }: { initial: Artist }) {
 
       {/* ── Coordenadas (carta celeste) ── */}
       <div className="mt-6 grid gap-5 sm:grid-cols-3">
-        <Field label="Origem" hint="Coordenada na bio.">
+        <Field label="Origem" hint="Vazio = oculta no site.">
           <TextInput
             value={draft.origin ?? ""}
             onChange={(e) => set("origin", e.target.value)}
             placeholder="Moçambique"
           />
         </Field>
-        <Field label="Base" hint="Coordenada na bio.">
+        <Field label="Base" hint="Vazio = oculta no site.">
           <TextInput
             value={draft.base ?? ""}
             onChange={(e) => set("base", e.target.value)}
             placeholder="Lisboa"
           />
         </Field>
-        <Field label="Órbita" hint="Coordenada na bio.">
+        <Field label="Órbita" hint="Vazio = oculta no site.">
           <TextInput
             value={draft.orbit ?? ""}
             onChange={(e) => set("orbit", e.target.value)}
             placeholder="Mundo"
           />
         </Field>
+      </div>
+
+      {/* ── Citação da biografia — editável e ocultável ── */}
+      <div className="mt-5">
+        <Field
+          label="Citação da biografia"
+          hint="Aparece em itálico no fim da biografia. Vazio = oculta."
+        >
+          <TextInput
+            value={draft.bioQuote ?? ""}
+            onChange={(e) => set("bioQuote", e.target.value)}
+            placeholder="— «cada disco é uma viagem, e o mundo é o mapa»"
+          />
+        </Field>
+        <label className="mt-3 flex w-fit cursor-pointer items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-xs text-mist/80 select-none">
+          <input
+            type="checkbox"
+            checked={draft.bioQuoteVisible !== false}
+            onChange={(e) => set("bioQuoteVisible", e.target.checked)}
+            className="h-4 w-4 accent-mist"
+          />
+          {draft.bioQuoteVisible !== false ? "Citação visível" : "Citação oculta"}
+        </label>
       </div>
 
       <div className="mt-6 border-t border-white/10 pt-5">

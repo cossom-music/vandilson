@@ -73,8 +73,11 @@ export default function HomeIntro({
   variant?: GlobeVariant;
 }) {
   const [reduced, setReduced] = useState(false);
-  // Variante dawn termina no HUB DE ESCOLHA em vez da Discografia.
-  const useChoiceHub = variant === "dawn";
+  // HUB DE ESCOLHA (Carta de Trajetória) removido a pedido — a dawn desagua
+  // agora na secção Ouvir como as restantes variantes (palco único 460svh).
+  // Toda a infraestrutura da carta (ChoiceHub, palco dividido, timeline do
+  // hub) continua no ficheiro: para reativar, repor `variant === "dawn"`.
+  const useChoiceHub = false;
 
   useEffect(() => {
     setReduced(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
@@ -628,15 +631,17 @@ function HeroSignatures({ glow }: { glow?: string }) {
             {artist.firstName}
           </span>
         </span>
-        <span className="block overflow-hidden">
-          <span
-            data-reveal-word
-            className="inline-block will-change-transform"
-            style={{ opacity: 0, transform: "translateY(1.1em)" }}
-          >
-            {artist.lastName}
+        {artist.lastName?.trim() ? (
+          <span className="block overflow-hidden">
+            <span
+              data-reveal-word
+              className="inline-block will-change-transform"
+              style={{ opacity: 0, transform: "translateY(1.1em)" }}
+            >
+              {artist.lastName}
+            </span>
           </span>
-        </span>
+        ) : null}
       </h1>
 
       {/* Frase — também palavra a palavra, mais rápida e discreta */}
