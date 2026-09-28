@@ -238,6 +238,12 @@ export default function AdminShell({
         </div>
       </header>
 
+      {/* ══ DESKTOP (md+): rail fixed à TELA, conteúdo rola ao lado ══
+          Este é o sidebar do desktop — colado à tela, altura total. */}
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 border-r border-white/[0.07] md:block">
+        {rail}
+      </aside>
+
       {/* ══ MOBILE (< md): drawer alimentado pelo hamburger da topbar ══ */}
       {/* Overlay + drawer — sempre montado, animado por transform/opacity */}
       <div
