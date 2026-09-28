@@ -1,0 +1,183 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { signOut } from "../actions";
+
+/**
+ * SHELL DO PAINEL — modelo «Bancada» (aprovado em _temp/design-demos/
+ * admin-modelos.html) com dois ajustes pedidos:
+ *
+ * 1. SIDEBAR COLADA À TELA — o rail é fixed à altura do viewport e o
+ *    CONTEÚDO é que faz scroll ao lado. O logo e a navegação nunca saem
+ *    do ecrã (antes, as pílulas de navegação rolavam com a página).
+ *
+ * 2. DRAWER NO MOBILE — < md: o rail esconde-se e um botão de menu
+ *    (hamburger → ✕) abre um drawer de ecrã inteiro com ESC/overlay/tap
+ *    fora para fechar, no mesmo padrão do menu "Órbita" do site.
+ *
+ * Estados visíveis por secção: a ativa acende com barra âmbar à esquerda
+ * (assinatura «Bancada»), "Ver site ↗" e "Sair" vivem no fundo do rail.
+ */
+
+const NAV = [
+  { href: "/admin", label: "Visão geral", n: "01" },
+  { href: "/admin/perfil", label: "Perfil & Redes", n: "02" },
+  { href: "/admin/textos", label: "Textos da home", n: "03" },
+  { href: "/admin/lancamentos", label: "Lançamentos", n: "04" },
+  { href: "/admin/agenda", label: "Agenda", n: "05" },
+  { href: "/admin/universo", label: "Universo", n: "06" },
+  { href: "/admin/seguranca", label: "Segurança", n: "07" },
+];
+
+export default function AdminShell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+
+  // ESC fecha o drawer e trava o scroll da página enquanto está aberto —
+  // mesmo padrão do menu mobile do site (Header.tsx).
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
+  // Rota mudou (link tocado no drawer) → fecha.
+  useEffect(() => setOpen(false), [pathname]);
+
+  const rail = (
+    <div className="flex h-full flex-col bg-night-900">
+      {/* Marca */}
+      <Link
+        href="/admin"
+        className="block border-b border-white/[0.06] px-6 py-6"
+        onClick={() => setOpen(false)}
+      >
+        <span className="block font-mono text-[10px] uppercase tracking-[0.3em] text-silver-600">
+          Painel
+        </span>
+        <span className="mt-1.5 block font-display text-xl leading-tight text-cream">
+          Conteúdo do site
+        </span>
+      </Link>
+
+      {/* Navegação numerada — a ativa acende com barra âmbar */}
+      <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-3">
+        {NAV.map((item) => {
+          const active =
+            item.href === "/admin" ? pathname === "/admin" : pathname.startsWith(item.href);
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={() => setOpen(false)}
+              className={`group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors ${
+                active
+                  ? "bg-night-600 text-cream"
+                  : "text-silver-600 hover:bg-white/[0.04] hover:text-cream"
+              }`}
+            >
+              {/* barra âmbar da secção ativa (assinatura do modelo B) */}
+              <span
+                aria-hidden="true"
+                className={`absolute left-0 top-1/2 h-6 w-0.5 -translate-y-1/2 rounded-full transition-all ${
+                  active ? "bg-amber-400 opacity-100" : "opacity-0"
+                }`}
+              />
+              <span
+                className={`font-mono text-[10px] tracking-widest ${
+                  active ? "text-amber-400" : "text-silver-700 group-hover:text-silver-500"
+                }`}
+              >
+                {item.n}
+              </span>
+              {item.label}
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* Rodapé do rail — ações globais */}
+      <div className="border-t border-white/[0.06] p-4">
+        <Link
+          href="/"
+          target="_blank"
+          className="mb-1 flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-mist transition-colors hover:bg-white/[0.04] hover:text-cream"
+          onClick={() => setOpen(false)}
+        >
+          Ver site ↗
+        </Link>
+        <form action={signOut}>
+          <button
+            type="submit"
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-mist transition-colors hover:bg-white/[0.04] hover:text-cream"
+          >
+            Sair
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen">
+      {/* ══ DESKTOP (md+): rail fixed à TELA, conteúdo rola ao lado ══ */}
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 border-r border-white/[0.07] md:block">
+        {rail}
+      </aside>
+
+      {/* ══ MOBILE (< md): botão de menu + drawer ══ */}
+      {/* Botão hamburger — fixed, sempre acessível durante o scroll */}
+      <button
+        type="button"
+        aria-label={open ? "Fechar menu" : "Abrir menu"}
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+        className="fixed left-4 top-4 z-[60] flex h-11 w-11 flex-col items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-night-950/85 backdrop-blur-md md:hidden"
+      >
+        <span
+          className={`h-px w-5 bg-cream transition-transform duration-300 ${
+            open ? "translate-y-[3.5px] rotate-45" : ""
+          }`}
+        />
+        <span
+          className={`h-px w-5 bg-cream transition-transform duration-300 ${
+            open ? "-translate-y-[3.5px] -rotate-45" : ""
+          }`}
+        />
+      </button>
+
+      {/* Overlay + drawer — sempre montado, animado por transform/opacity */}
+      <div
+        aria-hidden={!open}
+        onClick={() => setOpen(false)}
+        className={`fixed inset-0 z-50 bg-night-950/70 backdrop-blur-sm transition-opacity duration-300 md:hidden ${
+          open ? "opacity-100" : "pointer-events-none opacity-0"
+        }`}
+      />
+      <aside
+        className={`fixed inset-y-0 left-0 z-[55] w-72 max-w-[85vw] border-r border-white/[0.08] shadow-2xl transition-transform duration-300 ease-[cubic-bezier(.22,1,.36,1)] md:hidden ${
+          open ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        {rail}
+      </aside>
+
+      {/* ══ CONTEÚDO — deslocado pelo rail no desktop; é ele que rola ══ */}
+      <div className="md:pl-64">
+        <main className="mx-auto w-full max-w-4xl px-5 pb-28 pt-20 md:px-10 md:pt-10">
+          {children}
+        </main>
+      </div>
+    </div>
+  );
+}
