@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { signOut } from "../actions";
-import type { SectionStatusDTO } from "@/lib/admin-status";
 
 /**
  * SHELL DO PAINEL — modelo «Bancada» (aprovado em _temp/design-demos/
@@ -18,8 +17,8 @@ import type { SectionStatusDTO } from "@/lib/admin-status";
  *    (hamburger → ✕) abre um drawer de ecrã inteiro com ESC/overlay/tap
  *    fora para fechar, no mesmo padrão do menu "Órbita" do site.
  *
- * Estados visíveis por secção: a ativa acende com barra âmbar à esquerda
- * (assinatura «Bancada»), "Ver site ↗" e "Sair" vivem no fundo do rail.
+ * A secção ativa acende com barra âmbar à esquerda (assinatura «Bancada»);
+ * "Ver site ↗" e "Sair" vivem no fundo do rail e também na topbar.
  */
 
 const NAV = [
@@ -32,33 +31,9 @@ const NAV = [
   { href: "/admin/seguranca", label: "Segurança", n: "07" },
 ];
 
-export default function AdminShell({
-  children,
-  statuses,
-}: {
-  children: React.ReactNode;
-  /** Estado por secção (contagens + última edição) — badges do rail.
-   *  Objeto PLANO serializável (ISO strings) — sem Map/Date na fronteira
-   *  servidor→cliente. */
-  statuses: Record<string, SectionStatusDTO>;
-}) {
+export default function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-
-  /* Relative time — «há 5 min» / «há 2 h» / «há 3 dias». A partir de ISO
-     string; arredondamento a minutos/limites redondos para o SSR e o
-     primeiro render do cliente coincidirem (sem mismatch). */
-  const rel = (iso: string | undefined | null) => {
-    if (!iso) return null;
-    const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return null;
-    const mins = Math.max(1, Math.floor((Date.now() - d.getTime()) / 60_000));
-    if (mins < 60) return `há ${mins} min`;
-    const hours = Math.floor(mins / 60);
-    if (hours < 48) return `há ${hours} h`;
-    const days = Math.floor(hours / 24);
-    return `há ${days} dias`;
-  };
 
   // ESC fecha o drawer e trava o scroll da página enquanto está aberto —
   // mesmo padrão do menu mobile do site (Header.tsx).
@@ -100,16 +75,11 @@ export default function AdminShell({
         </span>
       </Link>
 
-      {/* Navegação numerada — a ativa acende com barra âmbar;
-          cada secção leva um BADGE de estado: contagem do conteúdo +
-          «editado» (âmbar) se houver edição recente, ou «seed» (cinza)
-          se a secção nunca foi guardada no admin. */}
+      {/* Navegação numerada — a ativa acende com barra âmbar */}
       <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-3">
         {NAV.map((item) => {
           const active =
             item.href === "/admin" ? pathname === "/admin" : pathname.startsWith(item.href);
-          const st = statuses[item.href];
-          const edited = Boolean(st?.updatedAtIso);
           return (
             <Link
               key={item.href}
@@ -136,23 +106,6 @@ export default function AdminShell({
                 {item.n}
               </span>
               <span className="flex-1 truncate">{item.label}</span>
-              {/* Badge de estado — só em secções com conteúdo gerível */}
-              {item.href !== "/admin" && item.href !== "/admin/seguranca" ? (
-                <span
-                  title={
-                    edited && st?.updatedAtIso
-                      ? `Última edição ${rel(st.updatedAtIso)}`
-                      : "Ainda guardado apenas na seed"
-                  }
-                  className={`shrink-0 rounded-full border px-2 py-0.5 font-mono text-[9px] tracking-[0.08em] transition-colors ${
-                    edited
-                      ? "border-amber-300/40 bg-amber-300/10 text-amber-300"
-                      : "border-white/10 text-silver-700"
-                  }`}
-                >
-                  {edited ? "editado" : st?.meta ? st.meta : "seed"}
-                </span>
-              ) : null}
             </Link>
           );
         })}

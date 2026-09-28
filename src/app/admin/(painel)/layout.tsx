@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { getAdminUser, createSupabaseServerClient } from "@/lib/supabase-server";
 import { getMfaStatus } from "@/lib/mfa-server";
-import { getSectionStatuses } from "@/lib/admin-status";
 import AdminShell from "./admin-shell";
 
 /**
@@ -28,9 +27,5 @@ export default async function AdminPanelLayout({
     if (mfa.needsChallenge) redirect("/admin/mfa");
   }
 
-  // Estado por secção (contagens + última edição) — badges do rail.
-  // Falha suave: sem BD o Map vem vazio e os badges mostram "seed".
-  const statuses = await getSectionStatuses();
-
-  return <AdminShell statuses={statuses}>{children}</AdminShell>;
+  return <AdminShell>{children}</AdminShell>;
 }
