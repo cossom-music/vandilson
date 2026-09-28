@@ -3,9 +3,16 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
-import { deleteRelease, reorderReleases, toggleFeatured } from "../../actions";
+import { deleteRelease, reorderHomeReleases, reorderReleases, toggleFeatured } from "../../actions";
 import type { AdminRelease } from "@/lib/admin-releases";
 import { Alert, Button } from "../../_ui";
+
+/**
+ * DUAS ORDENS INDEPENDENTES (migration 009):
+ *  · a lista principal ordena `position` → manda em /discografia;
+ *  · «Ordem na homepage» ordena `home_position` → manda na secção
+ *    Ouvir da homepage. Arrastar numa não mexe na outra.
+ */
 
 export function ReleaseList({ rows }: { rows: AdminRelease[] }) {
   const router = useRouter();
@@ -90,8 +97,62 @@ export function ReleaseList({ rows }: { rows: AdminRelease[] }) {
     await run(row.id, () => deleteRelease(row.id));
   };
 
+  /* ── Ordem na HOMEPAGE (home_position) — drag-and-drop dedicado ── */
+  const [homeOrder, setHomeOrder] = useState<AdminRelease[]>(rows);
+  const [homeDragId, setHomeDragId] = useState<string | null>(null);
+  const [homeOverId, setHomeOverId] = useState<string | null>(null);
+  const homeDragIndex = useRef<number>(-1);
+  const [homeSaved, setHomeSaved] = useState(false);
+  if (serverRows !== rows) {
+    setHomeOrder(rows);
+  }
+
+  const commitHomeOrder = async (next: AdminRelease[]) => {
+    setHomeOrder(next);
+    setHomeSaved(false);
+    const res = await reorderHomeReleases(next.map((r) => r.id));
+    if (!res.ok) {
+      setError(res.error ?? "Erro ao guardar a ordem da homepage.");
+      setHomeOrder(rows);
+      return;
+    }
+    setHomeSaved(true);
+    setTimeout(() => setHomeSaved(false), 2200);
+    router.refresh();
+  };
+
+  const onHomeDragStart = (i: number, id: string) => (e: React.DragEvent) => {
+    homeDragIndex.current = i;
+    setHomeDragId(id);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", id);
+  };
+  const onHomeDragOver = (id: string) => (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (id !== homeOverId) setHomeOverId(id);
+  };
+  const onHomeDrop = (id: string) => (e: React.DragEvent) => {
+    e.preventDefault();
+    const from = homeDragIndex.current;
+    const target = homeOrder.findIndex((r) => r.id === id);
+    setHomeDragId(null);
+    setHomeOverId(null);
+    homeDragIndex.current = -1;
+    if (from < 0 || target < 0 || from === target) return;
+    const next = [...homeOrder];
+    const [moved] = next.splice(from, 1);
+    next.splice(target, 0, moved);
+    void commitHomeOrder(next);
+  };
+  const onHomeDragEnd = () => {
+    setHomeDragId(null);
+    setHomeOverId(null);
+    homeDragIndex.current = -1;
+  };
+
   return (
-    <div className="space-y-3">
+    <div className="space-y-10">
       {error ? <Alert kind="err">{error}</Alert> : null}
 
       {order.length === 0 ? (
@@ -105,7 +166,13 @@ export function ReleaseList({ rows }: { rows: AdminRelease[] }) {
           </span>
         </p>
       ) : (
-        order.map((row, i) => {
+        <>
+        {/* ══ Lista principal — ordem global (/discografia) ══ */}
+        <section>
+          <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-silver-600">
+            Ordem global — 01 /discografia
+          </p>
+          {order.map((row, i) => {
           const isDragging = dragId === row.id;
           const isOver = overId === row.id && dragId !== null && dragId !== row.id;
           return (
@@ -184,7 +251,77 @@ export function ReleaseList({ rows }: { rows: AdminRelease[] }) {
               </div>
             </div>
           );
-        })
+        })}
+        </section>
+
+        {/* ══ Ordem na HOMEPAGE — secção Ouvir (curadoria própria) ══ */}
+        <section>
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-silver-600">
+              02 / Ordem na homepage — secção Ouvir
+            </p>
+            {homeSaved ? (
+              <span className="font-mono text-[10px] tracking-[0.14em] text-emerald-300/80">
+                ✓ ordem guardada
+              </span>
+            ) : (
+              <span className="font-mono text-[10px] tracking-[0.14em] text-silver-700">
+                arraste para reordenar
+              </span>
+            )}
+          </div>
+          <div className="space-y-3">
+            {homeOrder.map((row, i) => {
+              const isDragging = homeDragId === row.id;
+              const isOver = homeOverId === row.id && homeDragId !== null && homeDragId !== row.id;
+              return (
+                <div
+                  key={`home-${row.id}`}
+                  draggable
+                  onDragStart={onHomeDragStart(i, row.id)}
+                  onDragOver={onHomeDragOver(row.id)}
+                  onDragLeave={() => setHomeOverId((cur) => (cur === row.id ? null : cur))}
+                  onDrop={onHomeDrop(row.id)}
+                  onDragEnd={onHomeDragEnd}
+                  className={`flex cursor-grab items-center gap-4 rounded-2xl border border-white/10 bg-night-900/40 p-4 transition-opacity active:cursor-grabbing ${
+                    isDragging ? "opacity-40" : ""
+                  } ${isOver ? "border-amber-300/60 border-dashed" : ""}`}
+                  title="Arraste — esta é a ordem em que os lançamentos aparecem na secção Ouvir da homepage"
+                >
+                  <span
+                    aria-hidden="true"
+                    className="select-none px-1 font-mono text-xs text-silver-700"
+                  >
+                    {i + 1}
+                  </span>
+                  <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full border border-white/10 bg-night-950">
+                    {row.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element -- miniatura do CMS
+                      <img src={row.imageUrl} alt="" className="h-full w-full object-cover" draggable={false} />
+                    ) : (
+                      <span className="flex h-full w-full items-center justify-center text-[9px] text-silver-700">
+                        {row.type}
+                      </span>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-display text-base text-cream">{row.title}</p>
+                    <p className="text-[11px] uppercase tracking-[0.14em] text-silver-600">
+                      {row.type} · {row.year}
+                      {row.featured ? " · na homepage" : " · fora da homepage (invisível no Ouvir)"}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <p className="mt-3 text-xs leading-relaxed text-mist/60">
+            A ordem aqui é independente de /discografia. Os lançamentos marcados
+            «Na homepage» aparecem no Ouvir por esta ordem; os «Fora» ficam
+            escondidos da secção (mas continuam em /discografia).
+          </p>
+        </section>
+        </>
       )}
     </div>
   );

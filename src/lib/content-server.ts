@@ -34,6 +34,7 @@ function rowToRelease(row: {
   description: string | null;
   cover_path: string | null;
   featured: boolean | null;
+  home_position: number | null;
   tracklist: unknown;
   curiosities: unknown;
   facts: unknown;
@@ -48,6 +49,7 @@ function rowToRelease(row: {
     description: row.description ?? undefined,
     image: publicCoverUrl(row.cover_path),
     featured: row.featured ?? false,
+    homeOrder: row.home_position ?? undefined,
     tracklist: Array.isArray(row.tracklist) ? (row.tracklist as Release["tracklist"]) : undefined,
     curiosities: Array.isArray(row.curiosities)
       ? row.curiosities.map((c) => String(c))
@@ -94,9 +96,12 @@ async function fetchSiteContent(): Promise<SiteContent> {
 
     // Lançamentos — se a tabela tiver linhas, são a fonte de verdade;
     // vazia (schema ainda não corrido) → seed.
+    // Ordenação: position global (usa em /discografia); a ordem da
+    // secção Ouvir (homeOrder) é resolvida no cliente a partir de
+    // home_position — ver DiscografiaContent.
     const { data: releaseRows, error: releasesError } = await supabase
       .from("releases")
-      .select("id, title, year, type, description, cover_path, featured, tracklist, curiosities, facts")
+      .select("id, title, year, type, description, cover_path, featured, home_position, tracklist, curiosities, facts")
       .order("position", { ascending: true });
 
     if (releasesError) {

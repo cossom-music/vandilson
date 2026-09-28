@@ -362,6 +362,59 @@ export async function reorderReleases(ids: string[]): Promise<ActionResult> {
   return { ok: true };
 }
 
+/**
+ * Ordem da secção «Ouvir» na homepage (migration 009): grava
+ * `home_position = índice + 1` para a lista curada. Os lançamentos
+ * FORA da lista ficam com home_position NULL e caem para a ordem
+ * global depois dos curados (leitura em content-server).
+ */
+export async function reorderHomeReleases(ids: string[]): Promise<ActionResult> {
+  const supabase = await requireAdmin();
+  if (!supabase) return { ok: false, error: "Sessão expirada. Entre novamente." };
+  if (!Array.isArray(ids)) return { ok: false, error: "Lista de ordem vazia." };
+  if (new Set(ids).size !== ids.length) {
+    return { ok: false, error: "Ordem inválida (ids repetidos)." };
+  }
+
+  const { data: existing, error: listError } = await supabase
+    .from("releases")
+    .select("id");
+  if (listError) return { ok: false, error: listError.message };
+  const existingIds = new Set((existing ?? []).map((r) => r.id));
+  if (ids.some((id) => !existingIds.has(id))) {
+    return { ok: false, error: "A lista mudou — recarregue a página." };
+  }
+
+  // 1 · limpa a curadoria anterior (os fora-da-lista voltam à ordem global)
+  const { error: clearError } = await supabase
+    .from("releases")
+    .update({ home_position: null })
+    .not("id", "in", `(${ids.join(",")})`);
+  // Lista vazia → o .not() com () falha no PostgREST; tratar à parte
+  if (ids.length === 0) {
+    const { error } = await supabase
+      .from("releases")
+      .update({ home_position: null });
+    if (error) return { ok: false, error: error.message };
+  } else if (clearError) {
+    return { ok: false, error: clearError.message };
+  }
+
+  // 2 · grava a nova ordem da lista curada
+  let homePosition = 0;
+  for (const id of ids) {
+    homePosition += 1;
+    const { error } = await supabase
+      .from("releases")
+      .update({ home_position: homePosition })
+      .eq("id", id);
+    if (error) return { ok: false, error: error.message };
+  }
+
+  revalidateSiteContent();
+  return { ok: true };
+}
+
 /** Move um lançamento para cima/baixo (troca a position com o vizinho). */
 export async function moveRelease(id: string, direction: "up" | "down"): Promise<ActionResult> {
   const supabase = await requireAdmin();

@@ -81,6 +81,11 @@ export type Release = {
   image?: string | null;
   /** Aparece na secção "Ouvir" da homepage (escolha no admin). */
   featured?: boolean;
+  /**
+   * Posição na curadoria da secção Ouvir (migration 009). Ausente =
+   * fora da lista curada → cai para a ordem global, depois dos curados.
+   */
+  homeOrder?: number;
   tracklist?: TracklistItem[];
   curiosities?: string[];
   facts?: { label: string; value: string }[];

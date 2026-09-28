@@ -675,10 +675,15 @@ function HeroSignatures({ glow }: { glow?: string }) {
 /** Conteúdo da secção Discografia — compacto para caber num ecrã (100svh). */
 function DiscografiaContent() {
   const { homeSections, homeHighlights, releases: allReleases } = useSiteContent();
-  // Só os marcados como destacados no admin; sem nenhum marcado → todos
-  // (a secção nunca fica vazia, mesmo antes de a migração 004 ser aplicada)
-  const featured = allReleases.filter((r) => r.featured);
-  const releases = featured.length > 0 ? featured : allReleases;
+  // ORDENação DA SECÇÃO OUVIR (migration 009): a curadoria do admin tem
+  // uma ordem própria (homeOrder = home_position). Os curados vêm primeiro
+  // pela sua ordem; os não-curados completam pela ordem global — a secção
+  // nunca fica vazia nem muda de comportamento enquanto não houver cura.
+  const byHome = [...allReleases].sort(
+    (a, b) => (a.homeOrder ?? Infinity) - (b.homeOrder ?? Infinity),
+  );
+  const featured = byHome.filter((r) => r.featured);
+  const releases = featured.length > 0 ? featured : byHome;
   return (
     <div className="mx-auto w-full max-w-6xl px-6 py-8 md:py-10">
       <p className="text-xs uppercase tracking-[0.35em] text-mist">
