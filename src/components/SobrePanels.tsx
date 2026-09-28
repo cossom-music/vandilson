@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Reveal from "@/components/Reveal";
-// LiquidGlassLink removido com o CTA /universo — repor se a página voltar
+import { LiquidGlassLink } from "@/components/ui/LiquidGlass";
 import { useSiteContent } from "@/components/SiteContentProvider";
 import type { Show } from "@/content";
 
@@ -102,7 +102,7 @@ const GLOW_SHADOW =
   "0 0 0 1px rgba(255,182,94,0.35), 0 0 44px rgba(255,182,94,0.16), inset 0 0 30px rgba(255,182,94,0.05)";
 
 export default function SobrePanels() {
-  const { artist, shows: allShows } = useSiteContent();
+  const { artist, shows: allShows, siteVisibility } = useSiteContent();
   /**
    * Shows com `eventDate` no passado saem da agenda automaticamente —
    * sem precisar editar o CMS. Avaliado a cada render de cliente; no
@@ -231,9 +231,15 @@ export default function SobrePanels() {
               </p>
             ) : null}
 
-            {/* CTA — REMOVIDO (pedido): /universo está oculta do público.
-                Para repor: renderizar <LiquidGlassLink href="/universo">
-                {artist.bioCta}</LiquidGlassLink> aqui. */}
+            {/* CTA — leva a /universo, mas SÓ quando a página está visível
+                (interruptor «universoVisible» no admin) e o texto existe. */}
+            {siteVisibility.universoVisible && artist.bioCta?.trim() ? (
+              <div className="mt-10">
+                <LiquidGlassLink filterId="glass-universo-cta" href="/universo">
+                  {artist.bioCta}
+                </LiquidGlassLink>
+              </div>
+            ) : null}
           </div>
         </section>
       </Reveal>

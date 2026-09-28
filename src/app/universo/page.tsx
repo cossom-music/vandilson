@@ -1,21 +1,23 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { getSiteContent } from "@/lib/content-server";
 import Trajetoria from "@/components/universo/Trajetoria";
 import Constelacao from "@/components/universo/Constelacao";
 
 export const metadata: Metadata = {
   title: "Universo — Vandilson Neto",
-  robots: { index: false, follow: false }, // oculta de motores de busca
+  robots: { index: false, follow: false }, // nunca em motores de busca
 };
 
 /**
- * /universo — OCULTA do público (pedido): não está em menus, não tem
- * CTAs a apontar para ela e os motores de busca são instruídos a não a
- * indexar nem seguir links dela. Continua acessível por URL direto —
- * útil para o artista a partilhar seletivamente; o admin de gestão
- * (/admin/universo) e o player Em Órbita (global) não são afetados.
+ * /universo — VISIBILIDADE controlada pelo admin (secção siteVisibility,
+ * interruptor no painel /admin/universo):
+ *  · universoVisible=false (default) → redirect imediato para /;
+ *  · universoVisible=true → página acessível por URL (continua fora de
+ *    motores de busca — o menu/CTA públicos também só aparecem quando
+ *    o interruptor está ligado; ver Header.tsx e SobrePanels.tsx).
  *
- * Estrutura (se voltar a ser publicada, basta restaurar o menu/CTA):
+ * Estrutura (quando visível):
  *   1. TRAJETÓRIA (modelo 2) — as eras do diário em colunas;
  *   2. CONSTELAÇÃO (modelo 1) — colaboradores ligados ao centro, painel
  *      de detalhes ao clicar numa estrela;
@@ -24,6 +26,9 @@ export const metadata: Metadata = {
  */
 export default async function UniversoPage() {
   const content = await getSiteContent();
+  if (!content.siteVisibility.universoVisible) {
+    redirect("/"); // oculta — quem adivinhar o URL cai na homepage
+  }
 
   return (
     <>

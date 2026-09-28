@@ -171,6 +171,18 @@ export type SiteContent = {
   eras: Era[];
   collaborators: Collaborator[];
   playerPlaylist: PlayerTrack[];
+  /** Interruptores de visibilidade de páginas (admin, sem tocar em código). */
+  siteVisibility: SiteVisibility;
+};
+
+/**
+ * Interruptores de páginas públicas (migration implícita: secção JSONB
+ * "siteVisibility" em site_content). false = a página responde com
+ * redirect para a homepage e os links/CTAs públicos desaparecem.
+ */
+export type SiteVisibility = {
+  /** /universo visível no menu e acessível por URL. Default: false (oculta). */
+  universoVisible: boolean;
 };
 
 export const seedContent: SiteContent = {
@@ -342,6 +354,12 @@ export const seedContent: SiteContent = {
   /* ─── /universo — Player Em Órbita (vazio por defeito: a playlist é
         curada no admin a partir das faixas COM audioPath carregado) ─── */
   playerPlaylist: [],
+
+  /* ─── Visibilidade de páginas — /universo oculta por defeito (pedido).
+        Ligar/desligar em /admin/universo sem tocar em código. ─── */
+  siteVisibility: {
+    universoVisible: false,
+  },
 };
 
 /* Re-exports das secções — conveniência para quem precisa de uma parte.

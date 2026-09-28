@@ -17,6 +17,7 @@ const SECTION_KEYS = [
   "eras",
   "collaborators",
   "playerPlaylist",
+  "siteVisibility",
 ] as const;
 
 type SectionKey = (typeof SECTION_KEYS)[number];
@@ -90,6 +91,7 @@ async function fetchSiteContent(): Promise<SiteContent> {
           if (key === "eras") merged.eras = row.value as SiteContent["eras"];
           if (key === "collaborators") merged.collaborators = row.value as SiteContent["collaborators"];
           if (key === "playerPlaylist") merged.playerPlaylist = row.value as SiteContent["playerPlaylist"];
+          // siteVisibility é objeto (não array) — tratado no ramo else abaixo
         } else {
           (merged as unknown as Record<string, unknown>)[key] = row.value;
         }

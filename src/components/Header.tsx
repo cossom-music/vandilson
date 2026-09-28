@@ -6,10 +6,11 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSiteContent } from "@/components/SiteContentProvider";
 
-const links = [
+// Rotas base do menu. /universo entra DINAMICAMENTE quando o interruptor
+// «universoVisible» está ligado no admin (SiteContentProvider).
+const baseLinks = [
   { href: "/", label: "Início" },
   { href: "/discografia", label: "Discografia" },
-  // /universo oculta do público (pedido) — removida do menu e do menu Órbita
 ];
 
 const EASE = [0.16, 1, 0.3, 1] as const;
@@ -25,9 +26,13 @@ const EASE = [0.16, 1, 0.3, 1] as const;
  */
 export default function Header() {
   const pathname = usePathname();
-  const { artist, contact } = useSiteContent();
+  const { artist, contact, siteVisibility } = useSiteContent();
   const [open, setOpen] = useState(false);
   const isHome = pathname === "/";
+  // /universo visível? — o admin decide (siteVisibility.universoVisible)
+  const links = siteVisibility.universoVisible
+    ? [...baseLinks, { href: "/universo", label: "Universo" }]
+    : baseLinks;
   // Rotas do admin têm o seu próprio shell (AdminShell + topbar própria):
   // o header público não se renderiza lá — evita dupla barra fixa.
   const isAdmin = pathname.startsWith("/admin");

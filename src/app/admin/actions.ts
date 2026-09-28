@@ -17,6 +17,7 @@ const SECTION_KEYS = new Set([
   "eras",
   "collaborators",
   "playerPlaylist",
+  "siteVisibility",
 ]);
 
 /** Limpa o cache do conteúdo do site público. */

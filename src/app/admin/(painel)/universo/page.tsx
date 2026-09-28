@@ -12,6 +12,7 @@ export default async function AdminUniversoPage() {
       eras={content.eras}
       collaborators={content.collaborators}
       playerPlaylist={content.playerPlaylist}
+      siteVisibility={content.siteVisibility}
     />
   );
 }

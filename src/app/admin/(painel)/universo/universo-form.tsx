@@ -8,6 +8,7 @@ import type {
   Milestone,
   PlayerTrack,
   Release,
+  SiteVisibility,
 } from "@/content";
 import { playableTracks, spotifyIdFromLink } from "@/lib/universo";
 import { SaveBar, Alert, Button, Panel, TextInput } from "../../_ui";
@@ -424,6 +425,46 @@ function ErasForm({ initial }: { initial: Era[] }) {
   );
 }
 
+/* ════════════════ VISIBILIDADE DA PÁGINA ════════════════ */
+
+function VisibilityForm({ initial }: { initial: SiteVisibility }) {
+  const [draft, setDraft] = useState<SiteVisibility>(initial);
+  const { save, pending, notice } = useSectionSave("siteVisibility", draft);
+
+  return (
+    <Panel title="Página /universo — visibilidade">
+      <p className="text-sm text-mist">
+        Controla se a página Universo existe para o público — sem mexer em código.
+      </p>
+      <div className="mt-5">
+        <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/[0.07] bg-night-950/40 p-4">
+          <input
+            type="checkbox"
+            checked={draft.universoVisible}
+            onChange={(e) => setDraft((d) => ({ ...d, universoVisible: e.target.checked }))}
+            className="mt-0.5 h-4 w-4 accent-amber-400"
+          />
+          <span>
+            <span className="block text-sm font-medium text-cream">
+              Página visível no site
+            </span>
+            <span className="mt-1 block text-xs text-mist/60">
+              Ligado: /universo abre por URL direto e o menu/CTA da biografia
+              mostram o caminho. Desligado: quem abrir /universo é levado à
+              homepage e nenhum link público aparece. Os motores de busca não
+              a indexam em nenhum dos casos. O player Em Órbita (pílula fixa)
+              toca sempre, independente deste interruptor.
+            </span>
+          </span>
+        </label>
+      </div>
+      <div className="mt-5">
+        <SaveBar pending={pending} notice={notice} onSave={save} />
+      </div>
+    </Panel>
+  );
+}
+
 /* ════════════════ página ════════════════ */
 
 export default function UniversoForms({
@@ -432,15 +473,18 @@ export default function UniversoForms({
   eras,
   collaborators,
   playerPlaylist,
+  siteVisibility,
 }: {
   releases: Release[];
   milestones: Milestone[];
   eras: Era[];
   collaborators: Collaborator[];
   playerPlaylist: PlayerTrack[];
+  siteVisibility: SiteVisibility;
 }) {
   return (
     <div className="space-y-8">
+      <VisibilityForm initial={siteVisibility} />
       <PlayerPlaylistForm curated={playerPlaylist} releases={releases} />
       <ErasForm initial={eras} />
       <MilestonesForm initial={milestones} />
