@@ -229,6 +229,43 @@ export function ArtistForm({ initial }: { initial: Artist }) {
         </Field>
       </div>
 
+      {/* ── Título da biografia — editável e ocultável ── */}
+      <div className="mt-5">
+        <Field
+          label="Título da biografia"
+          hint="Marcação: *texto* vira itálico prateado. Vazio = oculto no site."
+        >
+          <TextInput
+            value={draft.bioTitle ?? ""}
+            onChange={(e) => set("bioTitle", e.target.value)}
+            placeholder="Entre o íntimo *e o infinito*"
+          />
+        </Field>
+        <label className="mt-3 flex w-fit cursor-pointer items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-xs text-mist/80 select-none">
+          <input
+            type="checkbox"
+            checked={draft.bioTitleVisible !== false}
+            onChange={(e) => set("bioTitleVisible", e.target.checked)}
+            className="h-4 w-4 accent-mist"
+          />
+          {draft.bioTitleVisible !== false ? "Título visível" : "Título oculto"}
+        </label>
+      </div>
+
+      {/* ── CTA da biografia — editável e ocultável ── */}
+      <div className="mt-5">
+        <Field
+          label="Botão da biografia (CTA)"
+          hint="Leva a /universo. Vazio = botão escondido no site."
+        >
+          <TextInput
+            value={draft.bioCta ?? ""}
+            onChange={(e) => set("bioCta", e.target.value)}
+            placeholder="Ver a trajetória completa"
+          />
+        </Field>
+      </div>
+
       {/* ── Citação da biografia — editável e ocultável ── */}
       <div className="mt-5">
         <Field

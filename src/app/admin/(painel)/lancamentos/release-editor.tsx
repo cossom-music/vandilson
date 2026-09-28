@@ -2,7 +2,8 @@
 
 import { startTransition, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { saveRelease, uploadAudioTrack, uploadCoverImage, type ReleaseInput } from "../../actions";
+import { saveRelease, uploadCoverImage, type ReleaseInput } from "../../actions";
+import { uploadAudioDirect } from "@/lib/audio-upload";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import type { AdminRelease } from "@/lib/admin-releases";
 import { Alert, Button, Field, Panel, Select, TextArea, TextInput } from "../../_ui";
@@ -76,16 +77,18 @@ export function ReleaseEditor({ release }: { release: AdminRelease | null }) {
   /* Extensões já não compõem nomes: a server action valida magic bytes e
      gera o nome no servidor (auditoria MÉDIO 6). */
 
-  /* ── áudio da faixa: upload imediato via SERVER ACTION (valida magic
-     bytes, tamanho e gera o nome no servidor — auditoria MÉDIO 6) ── */
+  /* ── áudio da faixa: UPLOAD DIRETO browser → Storage (lib/audio-upload).
+     Server Action rebentava em serverless com FUNCTION_PAYLOAD_TOO_LARGE
+     (limite ~4.5MB da plataforma, não configurável). A validação de magic
+     bytes/tamanho/sessão continua — agora no browser (lib partilhada). ── */
   const [audioBusy, setAudioBusy] = useState<number | null>(null);
   const pickAudio = async (i: number, file: File | null) => {
     if (!file) return;
     setAudioBusy(i);
     setNotice(null);
     try {
-      const res = await uploadAudioTrack(file);
-      if (!res.ok || !res.path) throw new Error(res.error ?? "Erro no upload do áudio.");
+      const res = await uploadAudioDirect(file);
+      if (!res.ok) throw new Error(res.error ?? "Erro no upload do áudio.");
       setTrack(i, { audioPath: res.path });
       setNotice({ kind: "ok", text: "Áudio carregado — guarda o lançamento para confirmar." });
     } catch (err) {
@@ -94,7 +97,7 @@ export function ReleaseEditor({ release }: { release: AdminRelease | null }) {
       setAudioBusy(null);
     }
   };
-  // (upload via uploadAudioTrack — server action em ../actions)
+  // (upload direto via uploadAudioDirect — lib/audio-upload.ts)
 
   const removeAudio = (i: number) => {
     const path = draft.tracklist[i]?.audioPath;

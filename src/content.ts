@@ -120,6 +120,12 @@ export type Artist = {
   bioQuote?: string;
   /** Interruptor da citação — false esconde mesmo com texto. Ausente = visível. */
   bioQuoteVisible?: boolean;
+  /** Título da biografia (o <h2>), com marcação: *texto* vira itálico. Ausente = escondido. */
+  bioTitle?: string;
+  /** Interruptor do título da biografia — false esconde mesmo com texto. Ausente = visível. */
+  bioTitleVisible?: boolean;
+  /** Texto do CTA "Ver a trajetória completa" (leva a /universo). Ausente/vazio = CTA escondido. */
+  bioCta?: string;
 };
 
 export type Social = {
@@ -180,6 +186,9 @@ export const seedContent: SiteContent = {
     orbit: "Mundo",
     bioQuote: "— «cada disco é uma viagem, e o mundo é o mapa»",
     bioQuoteVisible: true,
+    bioTitle: "Entre o íntimo *e o infinito*",
+    bioTitleVisible: true,
+    bioCta: "Ver a trajetória completa",
   },
 
   socials: [

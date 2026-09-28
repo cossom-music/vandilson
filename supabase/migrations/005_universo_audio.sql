@@ -16,12 +16,16 @@ values (
 )
 on conflict (id) do nothing;
 
--- Leitura pública das faixas (o player do site lê com a anon key)
+-- Leitura das faixas: o player do site lê os MP3 pelo URL PÚBLICO do
+-- bucket (/storage/v1/object/public/audio/...) — um bucket público serve
+-- ficheiros sem precisar de policies SELECT de anon. A policy SELECT fica
+-- restrita a authenticated (gestor): evita o warning "broad SELECT policy"
+-- do Supabase (anon a poder LISTAR todo o bucket), sem partir nada no site.
 drop policy if exists "ler audio" on storage.objects;
 create policy "ler audio"
   on storage.objects
   for select
-  to anon, authenticated
+  to authenticated
   using (bucket_id = 'audio');
 
 -- Upload/apagar: só o gestor autenticado

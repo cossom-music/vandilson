@@ -176,10 +176,19 @@ export default function SobrePanels() {
             <p className="text-[11px] uppercase tracking-[0.45em] text-silver-600">
               Biografia
             </p>
-            <h2 className="mt-5 font-display text-4xl leading-[1.15] text-white md:text-[44px]">
-              Entre o íntimo{" "}
-              <em className="italic text-silver-400">e o infinito</em>
-            </h2>
+            {/* Título da biografia — do CMS, com marcação: *texto* vira
+                itálico prateado. Vazio, ou interruptor off, não renderiza. */}
+            {artist.bioTitleVisible !== false && artist.bioTitle?.trim() ? (
+              <h2 className="mt-5 font-display text-4xl leading-[1.15] text-white md:text-[44px]">
+                {artist.bioTitle.split(/\*([^*]+)\*/g).map((part, i) =>
+                  i % 2 === 1 ? (
+                    <em key={i} className="italic text-silver-400">{part}</em>
+                  ) : (
+                    <span key={i}>{part}</span>
+                  ),
+                )}
+              </h2>
+            ) : null}
             <div className="mt-6 max-w-[46ch] space-y-4">
               {artist.longBio.map((p, i) => (
                 <p key={i} className="text-[15px] leading-[1.8] text-mist">
@@ -223,12 +232,14 @@ export default function SobrePanels() {
             ) : null}
 
             {/* CTA — liquid glass, igual ao da secção Ouvir: leva ao diário
-                de bordo (/universo), a rota completa da biografia. */}
-            <div className="mt-10">
-              <LiquidGlassLink filterId="glass-universo-cta" href="/universo">
-                Ver a trajetória completa
-              </LiquidGlassLink>
-            </div>
+                de bordo (/universo). Texto do CMS; vazio = CTA escondido. */}
+            {artist.bioCta?.trim() ? (
+              <div className="mt-10">
+                <LiquidGlassLink filterId="glass-universo-cta" href="/universo">
+                  {artist.bioCta}
+                </LiquidGlassLink>
+              </div>
+            ) : null}
           </div>
         </section>
       </Reveal>
