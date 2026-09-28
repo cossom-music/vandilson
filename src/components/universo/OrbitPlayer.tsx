@@ -207,36 +207,40 @@ export default function OrbitPlayer({ playlist }: { playlist: PlaylistTrack[] })
   }, [dur, idx, isSpotify]);
 
   // ── AUTOSTART — tenta tocar logo na entrada; se o browser bloquear
-  // (política de autoplay sem gesto), arma o play no 1.º gesto do visitante.
-  // Corre UMA vez, após o restauro do sessionStorage (para o índice já
-  // estar na faixa certa).
+  // (política de autoplay sem gesto — SEMPRE no iOS/Android em 1.ª visita),
+  // arma o play no 1.º gesto do visitante. Corre UMA vez.
   useEffect(() => {
     if (autoStartTriedRef.current || playlist.length === 0) return;
     autoStartTriedRef.current = true;
 
+    /** true = a música arrancou; false = bloqueado/not-ready → armar gesto. */
     const attempt = (): boolean => {
       if (isSpotify) {
         const ctl = spotifyCtlRef.current;
-        if (ctl && spotifyReady) {
-          try {
-            ctl.play();
-            setPlaying(true);
-            return true;
-          } catch {
-            return false;
-          }
+        if (!ctl || !spotifyReady) return false; // embed ainda a carregar
+        try {
+          // A API do Spotify devolve promise — apanha o bloqueio dela
+          Promise.resolve(ctl.play())
+            .then(() => setPlaying(true))
+            .catch(() => armGesture()); // bloqueado → 1.º gesto
+          setPlaying(true);
+          return true;
+        } catch {
+          return false;
         }
-        return false; // embed ainda a carregar — retry agendado abaixo
       }
       const el = audioRef.current;
       if (!el) return false;
+      // iOS/Android: play() devolve promise e REJEITA sem gesto. O catch
+      // é quem arma o 1.º gesto — sem isto o telemóvel nunca tocava.
       el.play()
-        .then(() => setPlaying(true))
+        .then(() => {
+          setPlaying(true);
+        })
         .catch(() => {
-          // bloqueado → fica para o 1.º gesto (não marca erro: não é falha)
+          setPlaying(false);
+          armGesture(); // bloqueado → arranca no 1.º toque/tecla
         });
-      // o play() de MP3 devolve promise — considere-se lançado; o resultado
-      // real (playing/error) chega pelos handlers do <audio>
       return true;
     };
 
@@ -271,8 +275,9 @@ export default function OrbitPlayer({ playlist }: { playlist: PlaylistTrack[] })
         if (isSpotify) {
           if (ctl && spotifyReady) {
             try {
-              ctl.play();
-              setPlaying(true);
+              Promise.resolve(ctl.play())
+                .then(() => setPlaying(true))
+                .catch(() => setPlaying(false));
             } catch {
               /* desiste silenciosamente */
             }
@@ -289,6 +294,7 @@ export default function OrbitPlayer({ playlist }: { playlist: PlaylistTrack[] })
           });
       };
       startOnFirstGesture.current = fire;
+      // pointerdown cobre o toque no Android/desktop; touchstart cobre iOS
       window.addEventListener("pointerdown", fire, { once: true });
       window.addEventListener("keydown", fire, { once: true });
       window.addEventListener("touchstart", fire, { once: true });
