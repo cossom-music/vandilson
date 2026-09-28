@@ -86,6 +86,8 @@ export type Release = {
    * fora da lista curada → cai para a ordem global, depois dos curados.
    */
   homeOrder?: number;
+  /** Oculto (migration 010): não aparece em NENHUMA página pública. */
+  hidden?: boolean;
   tracklist?: TracklistItem[];
   curiosities?: string[];
   facts?: { label: string; value: string }[];

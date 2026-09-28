@@ -231,6 +231,7 @@ export type ReleaseInput = {
   description: string;
   coverPath: string | null;
   featured: boolean;
+  hidden?: boolean;
   tracklist: { title: string; duration?: string; audioPath?: string }[];
   curiosities: string[];
   facts: { label: string; value: string }[];
@@ -255,6 +256,7 @@ function cleanRelease(input: ReleaseInput) {
     description: input.description.trim() || null,
     cover_path: input.coverPath || null,
     featured: input.featured,
+    hidden: input.hidden ?? false,
     tracklist,
     curiosities,
     facts,
@@ -316,6 +318,22 @@ export async function toggleFeatured(id: string, featured: boolean): Promise<Act
   if (!supabase) return { ok: false, error: "Sessão expirada. Entre novamente." };
 
   const { error } = await supabase.from("releases").update({ featured }).eq("id", id);
+  if (error) return { ok: false, error: error.message };
+  revalidateSiteContent();
+  return { ok: true };
+}
+
+/**
+ * Oculta/mostra um lançamento (migration 010). Oculto = invisível em
+ * TODO o site público (discografia, Ouvir, player) mas o registo e os
+ * ficheiros continuam — reversível sem perder nada, ao contrário do
+ * apagar.
+ */
+export async function toggleHidden(id: string, hidden: boolean): Promise<ActionResult> {
+  const supabase = await requireAdmin();
+  if (!supabase) return { ok: false, error: "Sessão expirada. Entre novamente." };
+
+  const { error } = await supabase.from("releases").update({ hidden }).eq("id", id);
   if (error) return { ok: false, error: error.message };
   revalidateSiteContent();
   return { ok: true };

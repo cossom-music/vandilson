@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
-import { deleteRelease, reorderHomeReleases, reorderReleases, toggleFeatured } from "../../actions";
+import { deleteRelease, reorderHomeReleases, reorderReleases, toggleFeatured, toggleHidden } from "../../actions";
 import type { AdminRelease } from "@/lib/admin-releases";
 import { Alert, Button } from "../../_ui";
 
@@ -190,7 +190,7 @@ export function ReleaseList({ rows }: { rows: AdminRelease[] }) {
               title="Arraste para reordenar — a ordem aqui é a ordem em /discografia"
             >
               {/* Capa/planeta em miniatura */}
-              <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full border border-white/10 bg-night-950">
+              <div className={`h-14 w-14 shrink-0 overflow-hidden rounded-full border bg-night-950 ${row.hidden ? "border-white/5 opacity-40" : "border-white/10"}`}>
                 {row.imageUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element -- miniatura do CMS
                   <img src={row.imageUrl} alt="" className="h-full w-full object-cover" draggable={false} />
@@ -202,11 +202,19 @@ export function ReleaseList({ rows }: { rows: AdminRelease[] }) {
               </div>
 
               <div className="min-w-0 flex-1">
-                <p className="truncate font-display text-lg text-cream">{row.title}</p>
+                <p className={`truncate font-display text-lg ${row.hidden ? "text-mist/60 line-through decoration-white/20" : "text-cream"}`}>
+                  {row.title}
+                </p>
                 <p className="text-xs uppercase tracking-[0.14em] text-silver-600">
                   {row.type} · {row.year}
                   {row.tracklist.length > 0 ? ` · ${row.tracklist.length} faixas` : ""}
                 </p>
+                {row.hidden ? (
+                  <span className="mt-1 inline-flex items-center gap-1.5 rounded-full border border-amber-300/40 px-2.5 py-0.5 text-[10px] uppercase tracking-[0.14em] text-amber-300">
+                    <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-amber-300" />
+                    Oculto do site
+                  </span>
+                ) : null}
                 <button
                   type="button"
                   disabled={busyId === row.id}
@@ -234,6 +242,15 @@ export function ReleaseList({ rows }: { rows: AdminRelease[] }) {
                 >
                   {i + 1}
                 </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  disabled={busyId === row.id}
+                  onClick={() => run(row.id, () => toggleHidden(row.id, !row.hidden))}
+                  title={row.hidden ? "Voltar a mostrar em /discografia, no Ouvir e no player" : "Esconde de TODO o site público — nada é apagado, reversível a qualquer momento"}
+                >
+                  {row.hidden ? "Mostrar" : "Ocultar"}
+                </Button>
                 <Link
                   href={`/admin/lancamentos/${row.id}`}
                   className="rounded-lg border border-white/15 px-3 py-2 text-sm text-mist transition-colors hover:border-silver-500/40 hover:text-cream"

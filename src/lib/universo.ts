@@ -26,6 +26,7 @@ export type PlayableTrack = Omit<PlayerTrack, "coverUrl"> & {
 export function playableTracks(releases: Release[]): PlayableTrack[] {
   const out: PlayableTrack[] = [];
   for (const r of releases) {
+    if (r.hidden) continue; // ocultos (010) também saem do player
     if (!r.tracklist) continue;
     for (const t of r.tracklist) {
       if (!t.audioPath) continue;

@@ -674,7 +674,9 @@ function HeroSignatures({ glow }: { glow?: string }) {
 
 /** Conteúdo da secção Discografia — compacto para caber num ecrã (100svh). */
 function DiscografiaContent() {
-  const { homeSections, homeHighlights, releases: allReleases } = useSiteContent();
+  const { homeSections, homeHighlights, releases: rawReleases } = useSiteContent();
+  // Ocultos (migration 010) ficam de fora de qualquer página pública.
+  const allReleases = rawReleases.filter((r) => !r.hidden);
   // ORDENação DA SECÇÃO OUVIR (migration 009): a curadoria do admin tem
   // uma ordem própria (homeOrder = home_position). Os curados vêm primeiro
   // pela sua ordem; os não-curados completam pela ordem global — a secção

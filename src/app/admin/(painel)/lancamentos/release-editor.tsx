@@ -21,6 +21,7 @@ export function ReleaseEditor({ release }: { release: AdminRelease | null }) {
     description: "",
     coverPath: null,
     featured: false,
+    hidden: false,
     tracklist: [{ title: "", duration: "" }],
     curiosities: [""],
     facts: [{ label: "", value: "" }],
@@ -33,6 +34,7 @@ export function ReleaseEditor({ release }: { release: AdminRelease | null }) {
     description: r.description,
     coverPath: r.coverPath,
     featured: r.featured,
+    hidden: r.hidden,
     tracklist: r.tracklist,
     curiosities: r.curiosities,
     facts: r.facts,
@@ -228,6 +230,28 @@ export function ReleaseEditor({ release }: { release: AdminRelease | null }) {
             <span className="mt-1 block text-xs text-mist/60">
               Os lançamentos marcados aparecem no grid de planetas da homepage.
               Se nenhum estiver marcado, a homepage mostra todos.
+            </span>
+          </span>
+        </label>
+      </div>
+
+      {/* ── Visibilidade (migration 010) ── */}
+      <div className="mt-4">
+        <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/[0.07] bg-night-950/40 p-4">
+          <input
+            type="checkbox"
+            checked={draft.hidden ?? false}
+            onChange={(e) => set("hidden", e.target.checked)}
+            className="mt-0.5 h-4 w-4 accent-amber-400"
+          />
+          <span>
+            <span className="block text-sm font-medium text-cream">
+              Ocultar do site
+            </span>
+            <span className="mt-1 block text-xs text-mist/60">
+              Esconde este lançamento de /discografia, do Ouvir e do player Em
+              Órbita — mas não apaga nada. Reversível a qualquer momento; no
+              admin ele continua visível, marcado «Oculto do site».
             </span>
           </span>
         </label>

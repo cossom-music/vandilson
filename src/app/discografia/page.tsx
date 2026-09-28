@@ -11,7 +11,9 @@ export const metadata: Metadata = {
 };
 
 export default async function DiscografiaPage() {
-  const { releases } = await getSiteContent();
+  const { releases: allReleases } = await getSiteContent();
+  // Ocultos (migration 010) não aparecem em nenhuma página pública.
+  const releases = allReleases.filter((r) => !r.hidden);
 
   // overflow-x-clip: o anel do 1.º planeta (150% da largura) sangra para
   // fora do viewport em mobile e criava overflow horizontal — clipamos na
