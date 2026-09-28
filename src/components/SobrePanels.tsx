@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Reveal from "@/components/Reveal";
-import { LiquidGlassLink } from "@/components/ui/LiquidGlass";
+// LiquidGlassLink removido com o CTA /universo — repor se a página voltar
 import { useSiteContent } from "@/components/SiteContentProvider";
 import type { Show } from "@/content";
 
@@ -231,15 +231,9 @@ export default function SobrePanels() {
               </p>
             ) : null}
 
-            {/* CTA — liquid glass, igual ao da secção Ouvir: leva ao diário
-                de bordo (/universo). Texto do CMS; vazio = CTA escondido. */}
-            {artist.bioCta?.trim() ? (
-              <div className="mt-10">
-                <LiquidGlassLink filterId="glass-universo-cta" href="/universo">
-                  {artist.bioCta}
-                </LiquidGlassLink>
-              </div>
-            ) : null}
+            {/* CTA — REMOVIDO (pedido): /universo está oculta do público.
+                Para repor: renderizar <LiquidGlassLink href="/universo">
+                {artist.bioCta}</LiquidGlassLink> aqui. */}
           </div>
         </section>
       </Reveal>

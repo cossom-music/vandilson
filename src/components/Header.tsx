@@ -9,7 +9,7 @@ import { useSiteContent } from "@/components/SiteContentProvider";
 const links = [
   { href: "/", label: "Início" },
   { href: "/discografia", label: "Discografia" },
-  { href: "/universo", label: "Universo" },
+  // /universo oculta do público (pedido) — removida do menu e do menu Órbita
 ];
 
 const EASE = [0.16, 1, 0.3, 1] as const;
