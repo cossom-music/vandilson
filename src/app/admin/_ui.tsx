@@ -96,12 +96,37 @@ export function Alert({ kind = "ok", children }: { kind?: "ok" | "err"; children
 
 export function Panel({ title, children }: { title?: string; children: ReactNode }) {
   return (
-    <section className="rounded-2xl border border-white/10 bg-night-900/40 p-6">
-      {title ? (
-        <h2 className="mb-5 font-display text-xl text-cream">{title}</h2>
-      ) : null}
-      {children}
+    <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-night-900/40 p-6">
+      {/* grão de pontos — a textura da carta do site, dentro do admin */}
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 opacity-30"
+        style={{
+          backgroundImage:
+            "radial-gradient(rgba(198,202,208,0.05) 1px, transparent 1px)",
+          backgroundSize: "5px 5px",
+        }}
+      />
+      <div className="relative">
+        {title ? <h2 className="mb-5 font-display text-xl text-cream">{title}</h2> : null}
+        {children}
+      </div>
     </section>
+  );
+}
+
+/**
+ * Rótulo de GRUPO do modelo B («Bancada»): separa o formulário por função
+ * (Identidade / Publicação / Ações…) com letter-spacing largo e filete —
+ * dá a cada troço do formulário um "endereço" visível.
+ */
+export function GroupHeader({ children }: { children: ReactNode }) {
+  return (
+    <span
+      className="mb-3 block border-b border-white/[0.06] pb-2 font-mono text-[10px] font-medium uppercase tracking-[0.2em] text-silver-700"
+    >
+      {children}
+    </span>
   );
 }
 

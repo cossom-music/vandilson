@@ -6,7 +6,7 @@ import { saveRelease, uploadCoverImage, type ReleaseInput } from "../../actions"
 import { uploadAudioDirect } from "@/lib/audio-upload";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import type { AdminRelease } from "@/lib/admin-releases";
-import { Alert, Button, Field, Panel, Select, TextArea, TextInput } from "../../_ui";
+import { Alert, Button, Field, GroupHeader, Panel, Select, TextArea, TextInput } from "../../_ui";
 
 type Draft = Omit<ReleaseInput, "coverPath"> & {
   coverPath: string | null;
@@ -150,6 +150,7 @@ export function ReleaseEditor({ release }: { release: AdminRelease | null }) {
 
   return (
     <Panel title={title}>
+      <GroupHeader>Identidade</GroupHeader>
       <div className="grid gap-5 sm:grid-cols-[1fr_140px_170px]">
         <Field label="Título *">
           <TextInput value={draft.title} onChange={(e) => set("title", e.target.value)} />
@@ -176,10 +177,8 @@ export function ReleaseEditor({ release }: { release: AdminRelease | null }) {
       </div>
 
       {/* ── Capa ── */}
-      <div className="mt-6">
-        <span className="mb-2 block text-[11px] font-medium uppercase tracking-[0.14em] text-silver-500">
-          Capa
-        </span>
+      <div className="mt-7">
+        <GroupHeader>Capa — vira a superfície do planeta</GroupHeader>
         <div className="flex flex-wrap items-center gap-5">
           <div className="relative h-28 w-28 overflow-hidden rounded-full border border-white/10 bg-night-950">
             {previewUrl ? (
@@ -215,7 +214,8 @@ export function ReleaseEditor({ release }: { release: AdminRelease | null }) {
       </div>
 
       {/* ── Destaque na homepage ── */}
-      <div className="mt-6">
+      <div className="mt-7">
+        <GroupHeader>Publicação</GroupHeader>
         <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/[0.07] bg-night-950/40 p-4">
           <input
             type="checkbox"
@@ -259,9 +259,7 @@ export function ReleaseEditor({ release }: { release: AdminRelease | null }) {
 
       {/* ── Tracklist ── */}
       <div className="mt-7">
-        <span className="mb-2 block text-[11px] font-medium uppercase tracking-[0.14em] text-silver-500">
-          Tracklist
-        </span>
+        <GroupHeader>Tracklist</GroupHeader>
         <div className="space-y-2">
           {draft.tracklist.map((track, i) => (
             <div
@@ -331,9 +329,7 @@ export function ReleaseEditor({ release }: { release: AdminRelease | null }) {
 
       {/* ── Curiosidades ── */}
       <div className="mt-7">
-        <span className="mb-2 block text-[11px] font-medium uppercase tracking-[0.14em] text-silver-500">
-          Curiosidades
-        </span>
+        <GroupHeader>Curiosidades</GroupHeader>
         <div className="space-y-2">
           {draft.curiosities.map((curio, i) => (
             <div key={i} className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
@@ -361,9 +357,7 @@ export function ReleaseEditor({ release }: { release: AdminRelease | null }) {
 
       {/* ── Ficha técnica ── */}
       <div className="mt-7">
-        <span className="mb-2 block text-[11px] font-medium uppercase tracking-[0.14em] text-silver-500">
-          Ficha técnica
-        </span>
+        <GroupHeader>Ficha técnica</GroupHeader>
         <div className="space-y-2">
           {draft.facts.map((fact, i) => (
             <div
