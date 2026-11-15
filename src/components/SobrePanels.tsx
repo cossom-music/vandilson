@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import Reveal from "@/components/Reveal";
 import { LiquidGlassLink } from "@/components/ui/LiquidGlass";
 import { useSiteContent } from "@/components/SiteContentProvider";
@@ -103,11 +104,15 @@ const GLOW_SHADOW =
 
 export default function SobrePanels() {
   const { artist, shows: allShows, siteVisibility } = useSiteContent();
+  /** Fotografia indisponível (Storage offline) → corpo escuro do eclipse. */
+  const [photoFailed, setPhotoFailed] = useState(false);
+  const showPhoto = Boolean(artist.photo) && !photoFailed;
   /**
    * Shows com `eventDate` no passado saem da agenda automaticamente —
    * sem precisar editar o CMS. Avaliado a cada render de cliente; no
-   * servidor, o conteúdo é cacheado por 60 s (revalidate), por isso o
-   * show pode permanecer até ~1 min depois do momento — aceitável.
+   * servidor, o conteúdo é cacheado pela tag `site-content` (invalidada ao
+   * guardar no admin), por isso o show pode permanecer até à próxima
+   * revalidação — aceitável.
    */
   const now = Date.now();
   /** Chegada via planeta Biografia → glow âmbar no painel do eclipse. */
@@ -154,11 +159,16 @@ export default function SobrePanels() {
             <div className="eclipse-disc relative aspect-square w-[58%] max-w-[240px]">
               {/* Limbo de luz — mesma luz do limbo do globo e do sol da Sintonia */}
               <div className="eclipse-rim absolute inset-0" />
-              {artist.photo ? (
-                // eslint-disable-next-line @next/next/no-img-element -- URL do Storage
-                <img
-                  src={artist.photo}
+              {showPhoto ? (
+                // next/image: variante otimizada em cache (o Storage só é
+                // pedido uma vez) — e, se falhar, cai no corpo escuro.
+                <Image
+                  src={artist.photo!}
                   alt={artist.photoAlt}
+                  width={320}
+                  height={320}
+                  sizes="240px"
+                  onError={() => setPhotoFailed(true)}
                   className="absolute inset-[6%] h-[88%] w-[88%] rounded-full object-cover"
                 />
               ) : (

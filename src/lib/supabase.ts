@@ -11,6 +11,14 @@ export const supabase =
   supabaseUrl && supabaseAnonKey
     ? createClient(supabaseUrl, supabaseAnonKey, {
         auth: { persistSession: false },
+        // Teto por pedido: sem isto, uma BD restringida/offline deixa a
+        // leitura pendurada e o site (ou o build) espera minutos em vez de
+        // cair imediatamente no snapshot de conteúdo. 8 s dá folga a estas
+        // consultas pequenas.
+        global: {
+          fetch: (input, init) =>
+            fetch(input, { ...init, signal: AbortSignal.timeout(8_000) }),
+        },
       })
     : null;
 

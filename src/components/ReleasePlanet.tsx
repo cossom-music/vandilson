@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import Image from "next/image";
 import { useSiteContent } from "@/components/SiteContentProvider";
 
 /**
@@ -38,6 +39,11 @@ export default function ReleasePlanet({
   size?: "md" | "lg";
   className?: string;
 }) {
+  /** Capa indisponível (Storage offline, egress restringido…) → volta ao
+   *  planeta procedural em vez de mostrar um ícone de imagem quebrada. */
+  const [imageFailed, setImageFailed] = useState(false);
+  const showImage = Boolean(image) && !imageFailed;
+
   // Distintividade determinística — cada planeta é único, mas o SSR e o
   // cliente geram exatamente os mesmos valores.
   const planet = useMemo(() => {
@@ -119,7 +125,7 @@ export default function ReleasePlanet({
         }}
       >
         {/* Continentes em dot-matrix — rotação lenta contínua (GPU) */}
-        {!image && (
+        {!showImage && (
           <svg
             aria-hidden="true"
             className={`planet-spots pointer-events-none absolute inset-0 h-full w-full ${planet.spinReverse ? "planet-spin-reverse" : "planet-spin"}`}
@@ -143,14 +149,18 @@ export default function ReleasePlanet({
           </svg>
         )}
 
-        {/* Capa real — enche o disco quando existe imagem */}
-        {image && (
-          // eslint-disable-next-line @next/next/no-img-element -- capas de utilizador no CMS; next/image exige domínios configurados
-          <img
-            src={image}
+        {/* Capa real — enche o disco quando existe imagem. next/image: a
+            variante otimizada fica em cache, por isso o Storage do Supabase
+            só é pedido uma vez por tamanho (egress). Sem capa acessível,
+            os continentes procedurais voltam a aparecer. */}
+        {showImage && (
+          <Image
+            src={image!}
             alt={`Capa de ${title}`}
-            className="pointer-events-none absolute inset-0 h-full w-full object-cover"
-            loading="lazy"
+            fill
+            sizes="(min-width: 768px) 22vw, 45vw"
+            onError={() => setImageFailed(true)}
+            className="pointer-events-none object-cover"
           />
         )}
 

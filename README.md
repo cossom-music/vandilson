@@ -58,6 +58,15 @@ conta criada acima consegue editar.
 3. Em **Environment Variables**, adicione as duas variáveis acima.
 4. **Deploy** — feito. 🚀
 
+### Fallback de conteúdo (BD offline)
+
+Quando o Supabase está inacessível (ex.: projeto restringido por excesso de
+egress), o site serve o último conteúdo real conhecido a partir de
+`src/generated/content-snapshot.json` — nunca a seed de placeholder. O
+snapshot é regenerado automaticamente no build em CI; para o atualizar à mão
+depois de o Supabase voltar, corra `npm run snapshot` e faça commit do
+ficheiro.
+
 ## Editar o conteúdo (CMS)
 
 O conteúdo do site vive agora no **Supabase** e edita-se em `/admin` (login

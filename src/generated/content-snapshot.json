@@ -1,0 +1,386 @@
+{
+  "generatedAt": "2026-09-16T16:10:56.999Z",
+  "content": {
+    "artist": {
+      "name": "Vandilson Neto",
+      "firstName": "Vandilson",
+      "lastName": "Tha Greather",
+      "tagline": "Bem-vindo ao meu universo",
+      "shortBio": "Vandilson Neto é um artista que transforma histórias em canções — entre o íntimo e o infinito, a sua música viaja do acústico ao eletrónico com uma honestidade rara.",
+      "longBio": [
+        "Vandilson Neto começou a escrever canções como quem escreve cartas — com urgência, verdade e a certeza de que alguém, algures, as precisa de ouvir. O seu som vive entre o popular e o experimental, com letras que falam de saudade, cidade, amor e partida.",
+        "Dos palcos pequenos aos festivais, a sua carreira tem sido construída canção a canção, sempre com o pé na terra e os olhos no horizonte. Cada disco é uma viagem — e o mundo, como o globo que gira no site, é o mapa.",
+        ""
+      ],
+      "photoAlt": "",
+      "photo": "https://filwbrejdoojtpwjptsp.supabase.co/storage/v1/object/public/covers/artist-1788869448399-zc6ker.png",
+      "origin": "Angola",
+      "base": "Porto",
+      "orbit": "Mundo"
+    },
+    "socials": [
+      {
+        "url": "https://instagram.com/vandilsonofficial",
+        "label": "Instagram",
+        "handle": "@vandilsonofficial"
+      },
+      {
+        "url": "https://youtube.com/@vandilsonofficial",
+        "label": "YouTube",
+        "handle": "@vandilsonofficial"
+      },
+      {
+        "url": "",
+        "label": "TikTok",
+        "handle": "vandilson",
+        "visible": true
+      },
+      {
+        "url": "https://music.apple.com/artist/vandilsonneto",
+        "label": "Apple Music",
+        "handle": "Vandilson Neto",
+        "visible": true
+      },
+      {
+        "url": "https://www.facebook.com/VandilsonOficial",
+        "label": "Facebook",
+        "handle": "@VandilsonOficial",
+        "visible": true
+      },
+      {
+        "url": "https://open.spotify.com/artist/vandilsonneto",
+        "label": "Spotify",
+        "handle": "Vandilson Neto"
+      },
+      {
+        "url": "",
+        "label": "X",
+        "handle": "",
+        "visible": false
+      },
+      {
+        "url": "",
+        "label": "Threads",
+        "handle": "",
+        "visible": false
+      },
+      {
+        "url": "",
+        "label": "SoundCloud",
+        "handle": "",
+        "visible": false
+      }
+    ],
+    "contact": {
+      "email": "booking@vandilsonneto.com"
+    },
+    "releases": [
+      {
+        "id": "eed6a0d7-5e12-4ca9-8f4a-b79b3ddc6d4c",
+        "title": "Me.",
+        "year": "2023",
+        "type": "Álbum",
+        "description": "O novo single já está disponível em todas as plataformas. Ouça, partilhe e deixe-se levar pelo horizonte.",
+        "image": "https://filwbrejdoojtpwjptsp.supabase.co/storage/v1/object/public/covers/r-1788865719777-vfkk59.jpg",
+        "featured": true,
+        "tracklist": [
+          {
+            "title": "10.05",
+            "duration": "3:40",
+            "audioPath": "t-1789571651701-nwswfo.mp3"
+          },
+          {
+            "title": "Prblms",
+            "duration": "3:44",
+            "audioPath": "t-1789571671800-ghqfnc.mp3"
+          },
+          {
+            "title": "streets x toilet",
+            "duration": "3:33"
+          },
+          {
+            "title": "se o tempo escrevesse",
+            "duration": "3:59",
+            "audioPath": "t-1789571682564-x767mw.mp3"
+          },
+          {
+            "title": "nós fomos pra sempre",
+            "duration": "2:55"
+          },
+          {
+            "title": "camarim",
+            "duration": "3:03",
+            "audioPath": "t-1789571695565-m1gn0g.mp3"
+          },
+          {
+            "title": "se não houver palavras",
+            "duration": "3:54"
+          },
+          {
+            "title": "quando morrer não vou ao céu, o céu vem pra terra",
+            "duration": "0:50"
+          },
+          {
+            "title": "MTV",
+            "duration": "3:44"
+          }
+        ],
+        "curiosities": [
+          "Gravado numa só tarde, entre a maré baixa e o primeiro comboio.",
+          "O título nasceu de um mapa antigo comprado num mercado de pulgas em Lisboa."
+        ],
+        "facts": [
+          {
+            "label": "Lançamento",
+            "value": "2023 · Albúm"
+          },
+          {
+            "label": "Faixas",
+            "value": "9"
+          },
+          {
+            "label": "Duração",
+            "value": "29:00"
+          },
+          {
+            "label": "Produção",
+            "value": "Vandilson"
+          }
+        ]
+      },
+      {
+        "id": "84f71a8a-688c-45ec-ab20-54e3a6c1aea6",
+        "title": "Melhor RnB em Português",
+        "year": "2024",
+        "type": "Álbum",
+        "description": "Este projecto propõe trazer músicas originais e uma experiência autentica de versões re-interpretadas de músicas de outrs artistas do cenário RnB contemporâneo português.",
+        "image": "https://filwbrejdoojtpwjptsp.supabase.co/storage/v1/object/public/covers/r-1788867517197-amc3it.png",
+        "featured": true,
+        "tracklist": [
+          {
+            "title": "Foste Embora feat Meggy"
+          },
+          {
+            "title": "Mensagens Apagadas feat Biab"
+          },
+          {
+            "title": "Poucas Palavras feat Wavy"
+          }
+        ],
+        "curiosities": [],
+        "facts": [
+          {
+            "label": "Lançamento",
+            "value": "2024 · Álbum"
+          },
+          {
+            "label": "Faixas",
+            "value": "3"
+          }
+        ]
+      },
+      {
+        "id": "51c27c4f-02f4-45d9-ac59-8bff7337eeb2",
+        "title": "Por que tão tarde?",
+        "year": "2021",
+        "type": "EP",
+        "description": "Cinco canções-carta, escritas para sítios onde o artista nunca esteve — mas sentiu.",
+        "image": "https://filwbrejdoojtpwjptsp.supabase.co/storage/v1/object/public/covers/r-1788868597363-fz8ow5.png",
+        "featured": true,
+        "tracklist": [
+          {
+            "title": "Núpcias",
+            "duration": "3:23"
+          },
+          {
+            "title": "Eu quis comprar flores mas o whiskey custou menos",
+            "duration": "1:12"
+          }
+        ],
+        "curiosities": [],
+        "facts": [
+          {
+            "label": "Lançamento",
+            "value": "2021 · EP"
+          },
+          {
+            "label": "Faixas",
+            "value": "2"
+          },
+          {
+            "label": "Produção",
+            "value": "Vandilson"
+          }
+        ]
+      },
+      {
+        "id": "47aae658-8069-4ee6-9a31-a7365923654c",
+        "title": "Desculpa",
+        "year": "2018",
+        "type": "Single",
+        "description": "O primeiro singe de Vandillson",
+        "image": null,
+        "featured": true,
+        "tracklist": [],
+        "curiosities": [],
+        "facts": [
+          {
+            "label": "Lançamento",
+            "value": "2018 · Single"
+          },
+          {
+            "label": "Faixas",
+            "value": "1"
+          },
+          {
+            "label": "Produção",
+            "value": "Vandilson"
+          },
+          {
+            "label": "Letra",
+            "value": "Vandison"
+          }
+        ]
+      }
+    ],
+    "shows": [
+      {
+        "city": "Lisboa",
+        "date": "12 OUT 2026",
+        "venue": "Grande Sala",
+        "status": "À venda",
+        "eventDate": "2026-10-12",
+        "eventTime": "21:00"
+      },
+      {
+        "city": "Porto",
+        "date": "25 OUT 2026",
+        "venue": "Teatro",
+        "status": "Em breve"
+      },
+      {
+        "city": "São Paulo",
+        "date": "08 NOV 2026",
+        "venue": "Casa de shows",
+        "status": "Em breve"
+      }
+    ],
+    "homeSections": {
+      "music": {
+        "cta": "Explorar toda a discografia",
+        "title": "Discografia",
+        "eyebrow": "Ouvir"
+      },
+      "contact": {
+        "title": "Onde a música vive",
+        "eyebrow": "Sintonia"
+      }
+    },
+    "homeHighlights": {
+      "latest": {
+        "label": "Último lançamento",
+        "title": "Horizonte Infinito",
+        "description": "Descobre, ouça, partilhe e deixe-se levar pelas artes criadas pelo Vandilson"
+      },
+      "bioTeaser": "Vandilson Neto é um artista que transforma histórias em canções — entre o íntimo e o infinito, a sua música viaja do acústico ao eletrónico com uma honestidade rara.",
+      "listenCta": "Ouvir agora"
+    },
+    "milestones": [
+      {
+        "note": "Gravação caseira — o ponto zero da carta.",
+        "year": "2019",
+        "major": true,
+        "title": "Primeiro registo"
+      },
+      {
+        "note": "Cinco faixas independentes.",
+        "year": "2021",
+        "title": "Primeiro EP"
+      },
+      {
+        "note": "A órbita alargou-se.",
+        "year": "2023",
+        "major": true,
+        "title": "Luanda → Lisboa"
+      },
+      {
+        "note": "Sete cidades, um mês.",
+        "year": "2024",
+        "title": "Primeira tour"
+      },
+      {
+        "note": "Álbum de estreia em longo formato.",
+        "year": "2025",
+        "major": true,
+        "title": "«Sob os Astros»"
+      }
+    ],
+    "eras": [
+      {
+        "to": "2021",
+        "from": "2019",
+        "note": "Onde a rota começou — casa, Luanda",
+        "phase": "Decolagem",
+        "title": "A origem"
+      },
+      {
+        "to": "2023",
+        "from": "2022",
+        "note": "Entre mundos, com escala em estúdios alheios.",
+        "phase": "Trânsito",
+        "title": "O voo"
+      },
+      {
+        "from": "2024",
+        "note": "A trajetória continua a subir.",
+        "phase": "Órbita alta",
+        "title": "O presente"
+      }
+    ],
+    "collaborators": [
+      {
+        "name": "Mário Costa",
+        "role": "Produção",
+        "project": "Produção e co-autoria em 7 das 9 faixas do álbum."
+      },
+      {
+        "name": "Ana Duarte",
+        "role": "Voz",
+        "project": "Dueto na faixa-título e no fecho do álbum.",
+        "hot": true
+      },
+      {
+        "name": "Tomás R.",
+        "role": "Bateria",
+        "project": "Secção rítmica de todos os lançamentos desde o 1.º EP."
+      },
+      {
+        "name": "Rita Pinto",
+        "role": "Mistura",
+        "project": "Mistura e masterização de «Sob os Astros»."
+      },
+      {
+        "name": "Jonas M.",
+        "role": "Baixo",
+        "project": "Gravações e palcos desde 2021."
+      }
+    ],
+    "playerPlaylist": [
+      {
+        "title": "Prblms",
+        "audioPath": "t-1789571671800-ghqfnc.mp3",
+        "releaseTitle": "Me."
+      },
+      {
+        "title": "camarim",
+        "audioPath": "t-1789571695565-m1gn0g.mp3",
+        "releaseTitle": "Me."
+      },
+      {
+        "title": "se o tempo escrevesse",
+        "audioPath": "t-1789571682564-x767mw.mp3",
+        "releaseTitle": "Me."
+      }
+    ]
+  }
+}

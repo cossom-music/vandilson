@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { getMfaStatus } from "@/lib/mfa-server";
@@ -22,6 +22,9 @@ const SECTION_KEYS = new Set([
 
 /** Limpa o cache do conteúdo do site público. */
 function revalidateSiteContent() {
+  // Expira já o Data Cache do conteúdo (tag lida pelo getSiteContent).
+  // Sem isto, o TTL longo só mostraría as edições no ciclo seguinte.
+  updateTag("site-content");
   // Next 15: expiração de cache via revalidatePath (as páginas afetadas usam getSiteContent)
   revalidatePath("/");
   revalidatePath("/discografia");
@@ -566,6 +569,8 @@ async function validatedUpload(
   const name = `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${safeExt(mime)}`;
   const { error } = await supabase.storage.from(bucket).upload(name, file, {
     contentType: mime, // o MIME validado, nunca o do cliente
+    // Nome único por upload → cache imutável de 1 ano no browser/CDN.
+    cacheControl: "31536000",
     upsert: false,
   });
   if (error) return { ok: false, error: error.message };

@@ -5,6 +5,8 @@
   "description": "Website oficial de Vandilson Neto — Next.js + Three.js + Supabase",
   "scripts": {
     "dev": "next dev --turbopack",
+    "prebuild": "node scripts/snapshot-content.mjs",
+    "snapshot": "node scripts/snapshot-content.mjs --force",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",

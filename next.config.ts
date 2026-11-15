@@ -74,10 +74,14 @@ const nextConfig: NextConfig = {
     ];
   },
   images: {
+    // Capas/fotos têm nome único (upload gera timestamp+aleatório) → o
+    // otimizador pode servir a mesma variante durante 1 ano sem voltar a
+    // buscar o original ao Storage do Supabase (egress).
+    minimumCacheTTL: 31536000,
     // Só hosts de confiança: o Supabase exato deste projeto (sem wildcard)
-    // e o CDN de capas do oEmbed do Spotify. Nota: o site hoje usa <img>
-    // direto (não <Image>), por que estes patterns servem de guard para
-    // o otimizador caso venha a ser usado.
+    // e o CDN de capas do oEmbed do Spotify. As capas/fotos públicas passam
+    // pelo next/image (ReleasePlanet / SobrePanels), por isso o otimizador
+    // usa exatamente estes patterns.
     remotePatterns: [
       ...(supabaseHost ? [{ protocol: "https" as const, hostname: supabaseHost }] : []),
       {

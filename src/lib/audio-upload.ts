@@ -79,6 +79,9 @@ export async function uploadAudioDirect(file: File): Promise<AudioUploadResult> 
 
   const { error } = await supabaseBrowser.storage.from("audio").upload(name, file, {
     contentType: mime, // o MIME validado por magic bytes, nunca o do cliente
+    // Nome único (timestamp+aleatório) → cache imutável de 1 ano. Serve da
+    // cache do browser/CDN em visitas repetidas em vez de gastar egress.
+    cacheControl: "31536000",
     upsert: false,
   });
   if (error) return { ok: false, error: error.message };
