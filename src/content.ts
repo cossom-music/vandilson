@@ -224,7 +224,7 @@ export const seedContent: SiteContent = {
   ],
 
   contact: {
-    email: "booking@vandilsonneto.com",
+    email: "cossom99@gmail.com",
   },
 
   releases: [

@@ -4,7 +4,7 @@
     "artist": {
       "name": "Vandilson Neto",
       "firstName": "Vandilson",
-      "lastName": "Tha Greather",
+      "lastName": "",
       "tagline": "Bem-vindo ao meu universo",
       "shortBio": "Vandilson Neto é um artista que transforma histórias em canções — entre o íntimo e o infinito, a sua música viaja do acústico ao eletrónico com uma honestidade rara.",
       "longBio": [
@@ -13,7 +13,7 @@
         ""
       ],
       "photoAlt": "",
-      "photo": "https://filwbrejdoojtpwjptsp.supabase.co/storage/v1/object/public/covers/artist-1788869448399-zc6ker.png",
+      "photo": "/images/artist.png",
       "origin": "Angola",
       "base": "Porto",
       "orbit": "Mundo"
@@ -72,89 +72,16 @@
       }
     ],
     "contact": {
-      "email": "booking@vandilsonneto.com"
+      "email": "cossom99@gmail.com"
     },
     "releases": [
-      {
-        "id": "eed6a0d7-5e12-4ca9-8f4a-b79b3ddc6d4c",
-        "title": "Me.",
-        "year": "2023",
-        "type": "Álbum",
-        "description": "O novo single já está disponível em todas as plataformas. Ouça, partilhe e deixe-se levar pelo horizonte.",
-        "image": "https://filwbrejdoojtpwjptsp.supabase.co/storage/v1/object/public/covers/r-1788865719777-vfkk59.jpg",
-        "featured": true,
-        "tracklist": [
-          {
-            "title": "10.05",
-            "duration": "3:40",
-            "audioPath": "t-1789571651701-nwswfo.mp3"
-          },
-          {
-            "title": "Prblms",
-            "duration": "3:44",
-            "audioPath": "t-1789571671800-ghqfnc.mp3"
-          },
-          {
-            "title": "streets x toilet",
-            "duration": "3:33"
-          },
-          {
-            "title": "se o tempo escrevesse",
-            "duration": "3:59",
-            "audioPath": "t-1789571682564-x767mw.mp3"
-          },
-          {
-            "title": "nós fomos pra sempre",
-            "duration": "2:55"
-          },
-          {
-            "title": "camarim",
-            "duration": "3:03",
-            "audioPath": "t-1789571695565-m1gn0g.mp3"
-          },
-          {
-            "title": "se não houver palavras",
-            "duration": "3:54"
-          },
-          {
-            "title": "quando morrer não vou ao céu, o céu vem pra terra",
-            "duration": "0:50"
-          },
-          {
-            "title": "MTV",
-            "duration": "3:44"
-          }
-        ],
-        "curiosities": [
-          "Gravado numa só tarde, entre a maré baixa e o primeiro comboio.",
-          "O título nasceu de um mapa antigo comprado num mercado de pulgas em Lisboa."
-        ],
-        "facts": [
-          {
-            "label": "Lançamento",
-            "value": "2023 · Albúm"
-          },
-          {
-            "label": "Faixas",
-            "value": "9"
-          },
-          {
-            "label": "Duração",
-            "value": "29:00"
-          },
-          {
-            "label": "Produção",
-            "value": "Vandilson"
-          }
-        ]
-      },
       {
         "id": "84f71a8a-688c-45ec-ab20-54e3a6c1aea6",
         "title": "Melhor RnB em Português",
         "year": "2024",
         "type": "Álbum",
         "description": "Este projecto propõe trazer músicas originais e uma experiência autentica de versões re-interpretadas de músicas de outrs artistas do cenário RnB contemporâneo português.",
-        "image": "https://filwbrejdoojtpwjptsp.supabase.co/storage/v1/object/public/covers/r-1788867517197-amc3it.png",
+        "image": "/images/melhor-rnb-em-portugues.png",
         "featured": true,
         "tracklist": [
           {
@@ -180,65 +107,40 @@
         ]
       },
       {
-        "id": "51c27c4f-02f4-45d9-ac59-8bff7337eeb2",
-        "title": "Por que tão tarde?",
-        "year": "2021",
-        "type": "EP",
-        "description": "Cinco canções-carta, escritas para sítios onde o artista nunca esteve — mas sentiu.",
-        "image": "https://filwbrejdoojtpwjptsp.supabase.co/storage/v1/object/public/covers/r-1788868597363-fz8ow5.png",
+        "title": "Auto-denúncia",
+        "year": "2026",
+        "type": "Single",
+        "image": "/images/auto-denuncia.png",
         "featured": true,
         "tracklist": [
           {
-            "title": "Núpcias",
-            "duration": "3:23"
-          },
-          {
-            "title": "Eu quis comprar flores mas o whiskey custou menos",
-            "duration": "1:12"
+            "title": "Auto-denúncia"
           }
         ],
         "curiosities": [],
         "facts": [
           {
             "label": "Lançamento",
-            "value": "2021 · EP"
-          },
-          {
-            "label": "Faixas",
-            "value": "2"
-          },
-          {
-            "label": "Produção",
-            "value": "Vandilson"
+            "value": "2026 · Single"
           }
         ]
       },
       {
-        "id": "47aae658-8069-4ee6-9a31-a7365923654c",
-        "title": "Desculpa",
-        "year": "2018",
+        "title": "Cypher do Ano",
+        "year": "2026",
         "type": "Single",
-        "description": "O primeiro singe de Vandillson",
-        "image": null,
+        "image": "/images/cypher-do-ano.jpg",
         "featured": true,
-        "tracklist": [],
+        "tracklist": [
+          {
+            "title": "Cypher do Ano"
+          }
+        ],
         "curiosities": [],
         "facts": [
           {
             "label": "Lançamento",
-            "value": "2018 · Single"
-          },
-          {
-            "label": "Faixas",
-            "value": "1"
-          },
-          {
-            "label": "Produção",
-            "value": "Vandilson"
-          },
-          {
-            "label": "Letra",
-            "value": "Vandison"
+            "value": "2026 · Single"
           }
         ]
       }
