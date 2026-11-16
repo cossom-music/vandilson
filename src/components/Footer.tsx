@@ -58,10 +58,13 @@ export default function Footer() {
           {artist.tagline}
         </p>
 
+        {/* pb-6: a linha do e-mail (background do .contact-email) assenta no
+            fundo da caixa — com o mesmo espaço que o nav das redes (mt-6),
+            fica a meio caminho entre o e-mail e as redes, em vez de colada. */}
         <a
           ref={emailRef}
           href={`mailto:${contact.email}`}
-          className="contact-email mt-5 block text-center font-display text-lg text-cream"
+          className="contact-email mt-5 block pb-6 text-center font-display text-lg text-cream"
         >
           {contact.email}
         </a>
