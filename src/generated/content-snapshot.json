@@ -79,7 +79,7 @@
       {
         "id": "84f71a8a-688c-45ec-ab20-54e3a6c1aea6",
         "title": "Melhor RnB em Português",
-        "year": "2024",
+        "year": "2025",
         "type": "Álbum",
         "description": "Este projecto propõe trazer músicas originais e uma experiência autentica de versões re-interpretadas de músicas de outrs artistas do cenário RnB contemporâneo português.",
         "image": "/images/melhor-rnb-em-portugues.png",
@@ -93,17 +93,23 @@
           },
           {
             "title": "Poucas Palavras feat Wavy"
+          },
+          {
+            "title": "Opções feat Linne, Mizzaela"
+          },
+          {
+            "title": "Quis trazer flores, mas o whiskey custou menos"
           }
         ],
         "curiosities": [],
         "facts": [
           {
             "label": "Lançamento",
-            "value": "2024 · Álbum"
+            "value": "2025 · Álbum"
           },
           {
             "label": "Faixas",
-            "value": "3"
+            "value": "5"
           }
         ]
       },
