@@ -204,11 +204,17 @@ export function ReleasePlanetLinks() {
   const { socials } = useSiteContent();
   const urlFor = (label: string) => socials.find((s) => s.label === label && s.visible !== false)?.url ?? "#";
 
+  // Só entram as plataformas visíveis no CMS (ex.: Apple Music desligada na
+  // Sintonia) e com URL — sem links mortos para "#".
+  const labels = ["Spotify", "YouTube", "Apple Music"].filter((label) =>
+    socials.some((s) => s.label === label && s.visible !== false && s.url),
+  );
+
   return (
     <div className="mt-4 flex gap-3 text-xs text-mist">
-      {["Spotify", "YouTube", "Apple Music"].map((label) => (
+      {labels.map((label, i) => (
         <span key={label} className="flex items-center gap-3">
-          {label !== "Spotify" && <span className="text-white/20">·</span>}
+          {i > 0 && <span className="text-white/20">·</span>}
           <a
             href={urlFor(label)}
             target="_blank"

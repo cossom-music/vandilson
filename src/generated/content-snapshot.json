@@ -20,9 +20,9 @@
     },
     "socials": [
       {
-        "url": "https://instagram.com/vandilsonofficial",
+        "url": "https://instagram.com/vandilsonnn",
         "label": "Instagram",
-        "handle": "@vandilsonofficial"
+        "handle": "@vandilsonnn"
       },
       {
         "url": "https://youtube.com/@vandilsonofficial",
@@ -30,27 +30,27 @@
         "handle": "@vandilsonofficial"
       },
       {
-        "url": "",
+        "url": "https://www.tiktok.com/@vandilsonnn",
         "label": "TikTok",
-        "handle": "vandilson",
+        "handle": "@vandilsonnn",
         "visible": true
       },
       {
         "url": "https://music.apple.com/artist/vandilsonneto",
         "label": "Apple Music",
         "handle": "Vandilson Neto",
-        "visible": true
+        "visible": false
       },
       {
         "url": "https://www.facebook.com/VandilsonOficial",
         "label": "Facebook",
-        "handle": "@VandilsonOficial",
+        "handle": "VandilsonOficial",
         "visible": true
       },
       {
-        "url": "https://open.spotify.com/artist/vandilsonneto",
+        "url": "https://open.spotify.com/artist/3kyK4CE8T1oMKrxQ9Px02L",
         "label": "Spotify",
-        "handle": "Vandilson Neto"
+        "handle": "Vandilson"
       },
       {
         "url": "",

@@ -212,12 +212,14 @@ export const seedContent: SiteContent = {
 
   socials: [
     // Ordem fixa = ordem das órbitas na Sintonia (de dentro para fora)
-    { label: "Spotify", handle: "Vandilson Neto", url: "https://open.spotify.com/artist/vandilsonneto", visible: true },
-    { label: "Apple Music", handle: "Vandilson Neto", url: "https://music.apple.com/artist/vandilsonneto", visible: true },
-    { label: "Instagram", handle: "@vandilsonneto", url: "https://instagram.com/vandilsonneto", visible: true },
-    { label: "YouTube", handle: "@vandilsonneto", url: "https://youtube.com/@vandilsonneto", visible: true },
-    { label: "TikTok", handle: "", url: "", visible: false },
-    { label: "Facebook", handle: "", url: "", visible: false },
+    { label: "Spotify", handle: "Vandilson", url: "https://open.spotify.com/artist/3kyK4CE8T1oMKrxQ9Px02L", visible: true },
+    // Apple Music fica fora da Sintonia a pedido — a entrada mantém-se
+    // desligada para se poder religar no admin sem perder os dados.
+    { label: "Apple Music", handle: "Vandilson Neto", url: "https://music.apple.com/artist/vandilsonneto", visible: false },
+    { label: "Instagram", handle: "@vandilsonnn", url: "https://instagram.com/vandilsonnn", visible: true },
+    { label: "YouTube", handle: "@vandilsonofficial", url: "https://youtube.com/@vandilsonofficial", visible: true },
+    { label: "TikTok", handle: "@vandilsonnn", url: "https://www.tiktok.com/@vandilsonnn", visible: true },
+    { label: "Facebook", handle: "VandilsonOficial", url: "https://www.facebook.com/VandilsonOficial", visible: true },
     { label: "X", handle: "", url: "", visible: false },
     { label: "Threads", handle: "", url: "", visible: false },
     { label: "SoundCloud", handle: "", url: "", visible: false },
