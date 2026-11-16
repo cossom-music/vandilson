@@ -8,15 +8,16 @@
       "tagline": "Bem-vindo ao meu universo",
       "shortBio": "Vandilson Neto é um artista que transforma histórias em canções — entre o íntimo e o infinito, a sua música viaja do acústico ao eletrónico com uma honestidade rara.",
       "longBio": [
-        "Vandilson Neto começou a escrever canções como quem escreve cartas — com urgência, verdade e a certeza de que alguém, algures, as precisa de ouvir. O seu som vive entre o popular e o experimental, com letras que falam de saudade, cidade, amor e partida.",
-        "Dos palcos pequenos aos festivais, a sua carreira tem sido construída canção a canção, sempre com o pé na terra e os olhos no horizonte. Cada disco é uma viagem — e o mundo, como o globo que gira no site, é o mapa.",
-        ""
+        "Vandilson Neto é um artista angolano nascido aos 10 de Setembro, neto de Agostinho Neto e Rosa Madalena.",
+        "Vandilson Neto começou a escrever canções como quem escreve cartas — com urgência, verdade e a certeza de que alguém, algures, as precisava de ouvir. O seu som vive entre o popular e o experimental, com letras que falam de saudade, cidade, amor e partida."
       ],
       "photoAlt": "",
       "photo": "/images/artist.png",
-      "origin": "Angola",
-      "base": "Porto",
-      "orbit": "Mundo"
+      "origin": "",
+      "base": "",
+      "orbit": "",
+      "bioTitle": "",
+      "bioQuote": "— «cada lançamento é uma viagem e o mundo é um mapa»"
     },
     "socials": [
       {
